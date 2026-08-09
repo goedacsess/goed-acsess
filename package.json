@@ -1,0 +1,58 @@
+{
+  "name": "iservis-pro",
+  "version": "2.3.0",
+  "description": "Software Kasir Servis iPhone",
+  "main": "main.js",
+  "author": "iServis Pro",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.iservis.pro",
+    "productName": "iServis Pro",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "build/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "build/icon.png",
+      "target": [
+        "dmg"
+      ],
+      "extendInfo": {
+        "NSCameraUsageDescription": "Aplikasi ini membutuhkan akses kamera untuk fitur absensi wajah karyawan."
+      }
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/ios": "^5.7.8"
+  }
+}

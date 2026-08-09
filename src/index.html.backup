@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iServis - Kasir Servis iPhone</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  :root {
+    --primary: #0071e3;
+    --dark: #1d1d1f;
+    --gray: #86868b;
+    --light: #f5f5f7;
+    --green: #34c759;
+    --red: #ff3b30;
+    --orange: #ff9500;
+    --card: #ffffff;
+  }
+  body { background: var(--light); color: var(--dark); }
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 230px; height: 100vh;
+    background: var(--dark); color: #fff; padding: 20px 0; overflow-y: auto;
+  }
+  .logo { font-size: 22px; font-weight: 700; padding: 0 24px 24px; display: flex; align-items: center; gap: 8px; }
+  .logo span { color: var(--primary); }
+  .nav-item {
+    padding: 14px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    color: #d1d1d6; transition: 0.2s; font-size: 14px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--primary); color: #fff; }
+  .nav-item .ico { font-size: 18px; }
+  .main { margin-left: 230px; padding: 24px 32px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .topbar h1 { font-size: 26px; }
+  .topbar .date { color: var(--gray); font-size: 14px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .stat-card .label { color: var(--gray); font-size: 13px; margin-bottom: 8px; }
+  .stat-card .value { font-size: 24px; font-weight: 700; }
+  .stat-card .sub { font-size: 12px; margin-top: 6px; }
+  .green { color: var(--green); } .red { color: var(--red); } .orange { color: var(--orange); } .blue { color: var(--primary); }
+  .panel { background: var(--card); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .panel h2 { font-size: 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #eee; }
+  th { color: var(--gray); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:hover td { background: #fafafa; }
+  .btn {
+    background: var(--primary); color: #fff; border: none; padding: 10px 18px;
+    border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-red { background: var(--red); } .btn-green { background: var(--green); } .btn-gray { background: var(--gray); }
+  .btn-orange { background: var(--orange); }
+  input, select, textarea {
+    width: 100%; padding: 11px 14px; border: 1px solid #d2d2d7; border-radius: 10px;
+    font-size: 14px; margin-bottom: 12px; background: #fff;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  label { font-size: 13px; color: var(--gray); display: block; margin-bottom: 5px; font-weight: 500; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-bg.active { display: flex; }
+  .modal {
+    background: #fff; border-radius: 18px; padding: 28px; width: 90%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { margin-bottom: 18px; font-size: 20px; }
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-low { background: #ffe5e5; color: var(--red); }
+  .badge-ok { background: #e5f9eb; color: var(--green); }
+  .badge-mid { background: #fff2e0; color: var(--orange); }
+  .empty { text-align: center; padding: 40px; color: var(--gray); }
+  .ai-box { background: linear-gradient(135deg, #f0f7ff, #fff); border: 1px solid #d6e8ff; border-radius: 16px; padding: 24px; line-height: 1.7; }
+  .ai-box h3 { color: var(--primary); margin-bottom: 12px; }
+  .ai-box ul { margin: 10px 0 10px 20px; }
+  .ai-box li { margin-bottom: 8px; }
+  .ai-section { margin-bottom: 18px; }
+  .ai-tag { display:inline-block; background:var(--primary); color:#fff; font-size:11px; padding:3px 10px; border-radius:20px; margin-bottom:8px; }
+  .flex-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search-box { max-width: 280px; margin-bottom: 0; }
+  .audit-diff-pos { color: var(--green); font-weight: 600; }
+  .audit-diff-neg { color: var(--red); font-weight: 600; }
+  .progress { height: 8px; background: #eee; border-radius: 10px; overflow: hidden; margin-top: 6px; }
+  .progress-bar { height: 100%; border-radius: 10px; }
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .logo span, .nav-item span:not(.ico) { display: none; }
+    .main { margin-left: 60px; padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">📱 <span>iServis<span style="color:var(--primary)"></span></span></div>
+  <div class="nav-item active" onclick="nav('dashboard',this)"><span class="ico">📊</span><span>Dashboard</span></div>
+  <div class="nav-item" onclick="nav('kasir',this)"><span class="ico">🧾</span><span>Kasir / Transaksi</span></div>
+  <div class="nav-item" onclick="nav('stok',this)"><span class="ico">📦</span><span>Data Stok</span></div>
+  <div class="nav-item" onclick="nav('audit',this)"><span class="ico">✅</span><span>Stock Audit</span></div>
+  <div class="nav-item" onclick="nav('pembelian',this)"><span class="ico">🛒</span><span>Pembelian Stok</span></div>
+  <div class="nav-item" onclick="nav('pengeluaran',this)"><span class="ico">💸</span><span>Pengeluaran</span></div>
+  <div class="nav-item" onclick="nav('ai',this)"><span class="ico">🤖</span><span>AI Review Bisnis</span></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="date" id="todayDate"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="dashboard">
+    <div class="cards" id="dashCards"></div>
+    <div class="panel">
+      <h2>Transaksi Servis Terakhir</h2>
+      <div id="dashRecent"></div>
+    </div>
+    <div class="panel">
+      <h2>⚠️ Stok Menipis</h2>
+      <div id="dashLowStock"></div>
+    </div>
+  </div>
+
+  <!-- KASIR -->
+  <div class="page" id="kasir">
+    <div class="panel">
+      <h2>Transaksi Servis Baru <button class="btn" onclick="openServiceModal()">+ Transaksi Baru</button></h2>
+      <div class="flex-row" style="margin-bottom:16px">
+        <input class="search-box" placeholder="🔍 Cari customer / device..." oninput="renderTransaksi(this.value)">
+      </div>
+      <div id="transaksiTable"></div>
+    </div>
+  </div>
+
+  <!-- STOK -->
+  <div class="page" id="stok">
+    <div class="panel">
+      <h2>Data Stok Sparepart <button class="btn" onclick="openStockModal()">+ Tambah Item</button></h2>
+      <div class="flex-row" style="margin-bottom:16px">
+        <input class="search-box" placeholder="🔍 Cari sparepart..." oninput="renderStok(this.value)">
+      </div>
+      <div id="stokTable"></div>
+    </div>
+  </div>
+
+  <!-- AUDIT -->
+  <div class="page" id="audit">
+    <div class="panel">
+      <h2>Stock Audit (Stock Opname)</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Masukkan jumlah fisik aktual untuk membandingkan dengan stok sistem. Selisih akan tercatat.</p>
+      <div id="auditTable"></div>
+      <button class="btn btn-green" style="margin-top:16px" onclick="saveAudit()">💾 Simpan Hasil Audit</button>
+    </div>
+    <div class="panel">
+      <h2>Riwayat Audit</h2>
+      <div id="auditHistory"></div>
+    </div>
+  </div>
+
+  <!-- PEMBELIAN -->
+  <div class="page" id="pembelian">
+    <div class="panel">
+      <h2>Pembelian Stok <button class="btn" onclick="openPurchaseModal()">+ Catat Pembelian</button></h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">💡 Pembelian stok dianggap sebagai aset (modal), TIDAK dikurangkan dari profit. Biaya baru terhitung saat sparepart terpakai.</p>
+      <div id="pembelianTable"></div>
+    </div>
+  </div>
+
+  <!-- PENGELUARAN -->
+  <div class="page" id="pengeluaran">
+    <div class="panel">
+      <h2>Pengeluaran Operasional <button class="btn" onclick="openExpenseModal()">+ Catat Pengeluaran</button></h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Pengeluaran operasional (sewa, listrik, gaji, dll) yang mengurangi profit.</p>
+      <div id="pengeluaranTable"></div>
+    </div>
+  </div>
+
+  <!-- AI REVIEW -->
+  <div class="page" id="ai">
+    <div class="panel">
+      <h2>🤖 AI Business Review</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Analisis cerdas berdasarkan data bisnis Anda untuk rekomendasi perbaikan.</p>
+      <button class="btn" onclick="generateAIReview()">✨ Generate Review Bisnis</button>
+      <div id="aiResult" style="margin-top:20px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* ============ DATA STORE ============ */
+const DB = {
+  get(k){ return JSON.parse(localStorage.getItem('iservis_'+k) || '[]'); },
+  set(k,v){ localStorage.setItem('iservis_'+k, JSON.stringify(v)); }
+};
+let stock = DB.get('stock');
+let services = DB.get('services');
+let purchases = DB.get('purchases');
+let expenses = DB.get('expenses');
+let audits = DB.get('audits');
+
+// Seed demo data first time
+if(stock.length===0 && services.length===0){
+  stock = [
+    {id:gid(), name:'LCD iPhone 11', sku:'LCD-11', qty:5, min:3, cost:450000, price:750000},
+    {id:gid(), name:'Baterai iPhone 12', sku:'BAT-12', qty:2, min:5, cost:180000, price:350000},
+    {id:gid(), name:'Konektor Charge iPhone X', sku:'CON-X', qty:8, min:4, cost:75000, price:200000},
+    {id:gid(), name:'Kaca/Glass iPhone 13', sku:'GLS-13', qty:12, min:5, cost:35000, price:150000},
+  ];
+  DB.set('stock',stock);
+}
+
+function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function save(){ DB.set('stock',stock); DB.set('services',services); DB.set('purchases',purchases); DB.set('expenses',expenses); DB.set('audits',audits); }
+function rp(n){ return 'Rp '+ (n||0).toLocaleString('id-ID'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ============ NAVIGATION ============ */
+const titles = {dashboard:'Dashboard',kasir:'Kasir / Transaksi',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'AI Review Bisnis'};
+function nav(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pageTitle').textContent = titles[page];
+  renderAll();
+}
+
+/* ============ MODAL ============ */
+function showModal(html){ document.getElementById('modalContent').innerHTML = html; document.getElementById('modalBg').classList.add('active'); }
+function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
+document.getElementById('modalBg').onclick = e=>{ if(e.target.id==='modalBg') closeModal(); };
+
+/* ============ STOK ============ */
+function openStockModal(id){
+  const s = id ? stock.find(x=>x.id===id) : {name:'',sku:'',qty:0,min:3,cost:0,price:0};
+  showModal(`
+    <h3>${id?'Edit':'Tambah'} Sparepart</h3>
+    <label>Nama Sparepart</label><input id="m_name" value="${s.name}">
+    <label>Kode / SKU</label><input id="m_sku" value="${s.sku}">
+    <div class="form-grid">
+      <div><label>Jumlah Stok</label><input id="m_qty" type="number" value="${s.qty}"></div>
+      <div><label>Stok Minimum (alert)</label><input id="m_min" type="number" value="${s.min}"></div>
+      <div><label>Harga Modal (beli)</label><input id="m_cost" type="number" value="${s.cost}"></div>
+      <div><label>Harga Jual</label><input id="m_price" type="number" value="${s.price}"></div>
+    </div>
+    <div class="flex-row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-gray" onclick="closeModal()">Batal</button>
+      <button class="btn" onclick="saveStock('${id||''}')">Simpan</button>
+    </div>`);
+}
+function saveStock(id){
+  const data = {
+    name:val('m_name'), sku:val('m_sku'), qty:+val('m_qty'), min:+val('m_min'),
+    cost:+val('m_cost'), price:+val('m_price')
+  };
+  if(!data.name){ alert('Nama wajib diisi'); return; }
+  if(id){ Object.assign(stock.find(x=>x.id===id), data); }
+  else { data.id=gid(); stock.push(data); }
+  save(); closeModal(); renderAll();
+}
+function delStock(id){ if(confirm('Hapus item ini?')){ stock=stock.filter(x=>x.id!==id); save(); renderAll(); } }
+function val(id){ return document.getElementById(id).value; }
+
+function renderStok(q=''){
+  const list = stock.filter(s=>(s.name+s.sku).toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){ document.getElementById('stokTable').innerHTML='<div class="empty">Belum ada data stok</div>'; return; }
+  let totalModal=0;
+  let rows = list.map(s=>{
+    totalModal += s.qty*s.cost;
+    const badge = s.qty<=s.min ? '<span class="badge badge-low">Menipis</span>' : (s.qty<=s.min*2?'<span class="badge badge-mid">Sedang</span>':'<span class="badge badge-ok">Aman</span>');
+    const margin = s.price-s.cost;
+    return `<tr>
+      <td><b>${s.name}</b><br><span style="color:var(--gray);font-size:12px">${s.sku||'-'}</span></td>
+      <td>${s.qty} ${badge}</td>
+      <td>${rp(s.cost)}</td>
+      <td>${rp(s.price)}</td>
+      <td class="green">${rp(margin)}</td>
+      <td>${rp(s.qty*s.cost)}</td>
+      <td>
+        <button class="btn btn-sm btn-gray" onclick="openStockModal('${s.id}')">Edit</button>
+        <button class="btn btn-sm btn-red" onclick="delStock('${s.id}')">Hapus</button>
+      </td></tr>`;
+  }).join('');
+  document.getElementById('stokTable').innerHTML = `<table>
+    <tr><th>Sparepart</th><th>Stok</th><th>Modal</th><th>Harga Jual</th><th>Margin/unit</th><th>Total Modal</th><th></th></tr>
+    ${rows}
+    <tr style="background:#f5f5f7;font-weight:700"><td colspan="5">TOTAL NILAI MODAL STOK</td><td colspan="2">${rp(totalModal)}</td></tr>
+  </table>`;
+}
+
+/* ============ KASIR / SERVICE ============ */
+function openServiceModal(){
+  const opts = stock.map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty}) - ${rp(s.price)}</option>`).join('');
+  showModal(`
+    <h3>Transaksi Servis Baru</h3>
+    <label>Nama Customer</label><input id="s_cust">
+    <label>Device / iPhone</label><input id="s_device" placeholder="cth: iPhone 12 Pro">
+    <label>Jenis Kerusakan / Servis</label><input id="s_issue" placeholder="cth: Ganti LCD">
+    <label>Sparepart Digunakan (opsional)</label>
+    <select id="s_part"><option value="">-- Tanpa sparepart --</option>${opts}</select>
+    <div class="form-grid">
+      <div><label>Biaya Jasa Servis</label><input id="s_jasa" type="number" value="0"></div>
+      <div><label>Harga Jual Sparepart</label><input id="s_partprice" type="number" value="0"></div>
+    </div>
+    <div id="s_costnote" style="font-size:12px;color:var(--gray);margin-bottom:12px"></div>
+    <div class="flex-row" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal()">Batal</button>
+      <button class="btn btn-green" onclick="saveService()">Simpan Transaksi</button>
+    </div>`);
+  document.getElementById('s_part').onchange = function(){
+    const s = stock.find(x=>x.id===this.value);
+    if(s){ document.getElementById('s_partprice').value = s.price;
+      document.getElementById('s_costnote').textContent = `Modal sparepart: ${rp(s.cost)} | Stok tersisa: ${s.qty}`; }
+    else { document.getElementById('s_partprice').value=0; document.getElementById('s_costnote').textContent=''; }
+  };
+}
+function saveService(){
+  const partId = val('s_part');
+  let partCost=0, partName='', partPrice=+val('s_partprice');
+  if(partId){
+    const s = stock.find(x=>x.id===partId);
+    if(s.qty<1){ alert('Stok sparepart habis!'); return; }
+    s.qty -= 1; partCost = s.cost; partName = s.name;
+  }
+  const jasa = +val('s_jasa');
+  const t = {
+    id:gid(), date:todayStr(), cust:val('s_cust')||'Umum', device:val('s_device'),
+    issue:val('s_issue'), partId, partName, partCost, partPrice, jasa,
+    revenue: jasa + partPrice, cogs: partCost
+  };
+  services.unshift(t); save(); closeModal(); renderAll();
+}
+function delService(id){
+  if(!confirm('Hapus transaksi & kembalikan stok?')) return;
+  const t = services.find(x=>x.id===id);
+  if(t && t.partId){ const s=stock.find(x=>x.id===t.partId); if(s) s.qty+=1; }
+  services = services.filter(x=>x.id!==id); save(); renderAll();
+}
+function renderTransaksi(q=''){
+  const list = services.filter(s=>(s.cust+s.device+s.issue).toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){ document.getElementById('transaksiTable').innerHTML='<div class="empty">Belum ada transaksi</div>'; return; }
+  let rows = list.map(t=>`<tr>
+    <td>${t.date}</td>
+    <td><b>${t.cust}</b><br><span style="color:var(--gray);font-size:12px">${t.device}</span></td>
+    <td>${t.issue}<br><span style="color:var(--gray);font-size:12px">${t.partName||'tanpa part'}</span></td>
+    <td>${rp(t.revenue)}</td>
+    <td class="orange">${rp(t.cogs)}</td>
+    <td class="green"><b>${rp(t.revenue-t.cogs)}</b></td>
+    <td><button class="btn btn-sm btn-red" onclick="delService('${t.id}')">Hapus</button></td>
+  </tr>`).join('');
+  document.getElementById('transaksiTable').innerHTML=`<table>
+    <tr><th>Tanggal</th><th>Customer</th><th>Servis</th><th>Pendapatan</th><th>Modal Part</th><th>Profit Kotor</th><th></th></tr>${rows}</table>`;
+}
+
+/* ============ AUDIT ============ */
+function renderAudit(){
+  if(!stock.length){ document.getElementById('auditTable').innerHTML='<div class="empty">Tidak ada stok untuk diaudit</div>'; return; }
+  let rows = stock.map(s=>`<tr>
+    <td><b>${s.name}</b></td>
+    <td>${s.qty}</td>
+    <td><input type="number" id="audit_${s.id}" value="${s.qty}" style="width:100px;margin:0" oninput="calcAuditRow('${s.id}',${s.qty})"></td>
+    <td id="diff_${s.id}">0</td>
+  </tr>`).join('');
+  document.getElementById('auditTable').innerHTML=`<table>
+    <tr><th>Sparepart</th><th>Stok Sistem</th><th>Stok Fisik Aktual</th><th>Selisih</th></tr>${rows}</table>`;
+  renderAuditHistory();
+}
+function calcAuditRow(id, sysQty){
+  const phys = +document.getElementById('audit_'+id).value;
+  const diff = phys - sysQty;
+  const el = document.getElementById('diff_'+id);
+  el.textContent = (diff>0?'+':'')+diff;
+  el.className = diff>0?'audit-diff-pos':(diff<0?'audit-diff-neg':'');
+}
+function saveAudit(){
+  const items = stock.map(s=>{
+    const phys = +document.getElementById('audit_'+s.id).value;
+    return {name:s.name, system:s.qty, physical:phys, diff:phys-s.qty, id:s.id};
+  });
+  // apply physical to system
+  items.forEach(it=>{ const s=stock.find(x=>x.id===it.id); if(s) s.qty=it.physical; });
+  audits.unshift({id:gid(), date:todayStr(), items});
+  save();
+  alert('Audit tersimpan. Stok sistem telah disesuaikan dengan fisik.');
+  renderAll();
+}
+function renderAuditHistory(){
+  if(!audits.length){ document.getElementById('auditHistory').innerHTML='<div class="empty">Belum ada riwayat audit</div>'; return; }
+  let html = audits.slice(0,5).map(a=>{
+    const disc = a.items.filter(i=>i.diff!==0);
+    return `<div style="border-bottom:1px solid #eee;padding:12px 0">
+      <b>${a.date}</b> — ${disc.length} item selisih
+      ${disc.map(i=>`<div style="font-size:13px;color:var(--gray)">${i.name}: sistem ${i.system} → fisik ${i.physical} (<span class="${i.diff>0?'audit-diff-pos':'audit-diff-neg'}">${i.diff>0?'+':''}${i.diff}</span>)</div>`).join('')}
+    </div>`;
+  }).join('');
+  document.getElementById('auditHistory').innerHTML = html;
+}
+
+/* ============ PEMBELIAN ============ */
+function openPurchaseModal(){
+  const opts = stock.map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty})</option>`).join('');
+  showModal(`
+    <h3>Catat Pembelian Stok</h3>
+    <label>Sparepart</label>
+    <select id="p_item"><option value="">-- Pilih item existing --</option>${opts}<option value="NEW">+ Item baru</option></select>
+    <div id="p_newfields" style="display:none">
+      <label>Nama Item Baru</label><input id="p_name">
+      <label>SKU</label><input id="p_sku">
+      <label>Harga Jual</label><input id="p_price" type="number" value="0">
+    </div>
+    <div class="form-grid">
+      <div><label>Qty Beli</label><input id="p_qty" type="number" value="1"></div>
+      <div><label>Harga Modal /unit</label><input id="p_cost" type="number" value="0"></div>
+    </div>
+    <label>Supplier (opsional)</label><input id="p_supplier">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Pembelian ini menambah aset stok & modal, tidak mengurangi profit.</div>
+    <div class="flex-row" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal()">Batal</button>
+      <button class="btn" onclick="savePurchase()">Simpan</button>
+    </div>`);
+  document.getElementById('p_item').onchange=function(){
+    document.getElementById('p_newfields').style.display = this.value==='NEW'?'block':'none';
+    const s=stock.find(x=>x.id===this.value);
+    if(s) document.getElementById('p_cost').value=s.cost;
+  };
+}
+function savePurchase(){
+  const sel = val('p_item');
+  const qty=+val('p_qty'), cost=+val('p_cost');
+  if(qty<=0){ alert('Qty harus > 0'); return; }
+  let itemName='', itemId='';
+  if(sel==='NEW'){
+    const ns={id:gid(), name:val('p_name'), sku:val('p_sku'), qty:qty, min:3, cost:cost, price:+val('p_price')};
+    if(!ns.name){ alert('Nama item baru wajib'); return; }
+    stock.push(ns); itemName=ns.name; itemId=ns.id;
+  } else if(sel){
+    const s=stock.find(x=>x.id===sel); s.qty+=qty; s.cost=cost; itemName=s.name; itemId=s.id;
+  } else { alert('Pilih item'); return; }
+  purchases.unshift({id:gid(), date:todayStr(), itemId, itemName, qty, cost, total:qty*cost, supplier:val('p_supplier')});
+  save(); closeModal(); renderAll();
+}
+function delPurchase(id){ if(confirm('Hapus catatan pembelian? (stok tidak otomatis dikurangi)')){ purchases=purchases.filter(x=>x.id!==id); save(); renderAll(); } }
+function renderPembelian(){
+  if(!purchases.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian</div>'; return; }
+  let total=0;
+  let rows=purchases.map(p=>{ total+=p.total; return `<tr>
+    <td>${p.date}</td><td><b>${p.itemName}</b></td><td>${p.qty}</td>
+    <td>${rp(p.cost)}</td><td>${rp(p.total)}</td><td>${p.supplier||'-'}</td>
+    <td><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pembelianTable').innerHTML=`<table>
+    <tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th></th></tr>${rows}
+    <tr style="background:#f5f5f7;font-weight:700"><td colspan="4">TOTAL PEMBELIAN (Modal/Aset)</td><td colspan="3">${rp(total)}</td></tr></table>`;
+}
+
+/* ============ PENGELUARAN ============ */
+function openExpenseModal(){
+  showModal(`
+    <h3>Catat Pengeluaran</h3>
+    <label>Kategori</label>
+    <select id="e_cat"><option>Sewa Tempat</option><option>Listrik & Air</option><option>Gaji Karyawan</option><option>Internet</option><option>Peralatan</option><option>Marketing</option><option>Transport</option><option>Lainnya</option></select>
+    <label>Keterangan</label><input id="e_desc">
+    <label>Jumlah (Rp)</label><input id="e_amount" type="number" value="0">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">⚠️ Pengeluaran ini mengurangi profit bisnis.</div>
+    <div class="flex-row" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal()">Batal</button>
+      <button class="btn btn-red" onclick="saveExpense()">Simpan</button>
+    </div>`);
+}
+function saveExpense(){
+  const amount=+val('e_amount');
+  if(amount<=0){ alert('Jumlah harus > 0'); return; }
+  expenses.unshift({id:gid(), date:todayStr(), cat:val('e_cat'), desc:val('e_desc'), amount});
+  save(); closeModal(); renderAll();
+}
+function delExpense(id){ if(confirm('Hapus?')){ expenses=expenses.filter(x=>x.id!==id); save(); renderAll(); } }
+function renderPengeluaran(){
+  if(!expenses.length){ document.getElementById('pengeluaranTable').innerHTML='<div class="empty">Belum ada pengeluaran</div>'; return; }
+  let total=0;
+  let rows=expenses.map(e=>{ total+=e.amount; return `<tr>
+    <td>${e.date}</td><td><span class="badge badge-mid">${e.cat}</span></td><td>${e.desc||'-'}</td>
+    <td class="red">${rp(e.amount)}</td>
+    <td><button class="btn btn-sm btn-red" onclick="delExpense('${e.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pengeluaranTable').innerHTML=`<table>
+    <tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th></th></tr>${rows}
+    <tr style="background:#f5f5f7;font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="2" class="red">${rp(total)}</td></tr></table>`;
+}
+
+/* ============ DASHBOARD ============ */
+function calcStats(){
+  const revenue = services.reduce((a,s)=>a+s.revenue,0);
+  const cogs = services.reduce((a,s)=>a+s.cogs,0);
+  const grossProfit = revenue - cogs;
+  const totalExpense = expenses.reduce((a,e)=>a+e.amount,0);
+  const netProfit = grossProfit - totalExpense;
+  const stockValue = stock.reduce((a,s)=>a+s.qty*s.cost,0);
+  const totalPurchase = purchases.reduce((a,p)=>a+p.total,0);
+  return {revenue,cogs,grossProfit,totalExpense,netProfit,stockValue,totalPurchase,serviceCount:services.length};
+}
+function renderDashboard(){
+  const st = calcStats();
+  document.getElementById('dashCards').innerHTML=`
+    <div class="stat-card"><div class="label">Total Pendapatan</div><div class="value blue">${rp(st.revenue)}</div><div class="sub">${st.serviceCount} transaksi servis</div></div>
+    <div class="stat-card"><div class="label">Profit Kotor</div><div class="value green">${rp(st.grossProfit)}</div><div class="sub">setelah modal sparepart</div></div>
+    <div class="stat-card"><div class="label">Total Pengeluaran</div><div class="value red">${rp(st.totalExpense)}</div><div class="sub">operasional</div></div>
+    <div class="stat-card"><div class="label">Profit Bersih</div><div class="value ${st.netProfit>=0?'green':'red'}">${rp(st.netProfit)}</div><div class="sub">profit kotor - pengeluaran</div></div>
+    <div class="stat-card"><div class="label">Nilai Modal Stok</div><div class="value orange">${rp(st.stockValue)}</div><div class="sub">aset sparepart</div></div>
+    <div class="stat-card"><div class="label">Total Pembelian Stok</div><div class="value">${rp(st.totalPurchase)}</div><div class="sub">tidak kurangi profit</div></div>`;
+  // recent
+  if(services.length){
+    document.getElementById('dashRecent').innerHTML=`<table><tr><th>Tanggal</th><th>Customer</th><th>Servis</th><th>Profit</th></tr>`+
+      services.slice(0,5).map(t=>`<tr><td>${t.date}</td><td>${t.cust}</td><td>${t.issue}</td><td class="green">${rp(t.revenue-t.cogs)}</td></tr>`).join('')+`</table>`;
+  } else document.getElementById('dashRecent').innerHTML='<div class="empty">Belum ada transaksi</div>';
+  // low stock
+  const low = stock.filter(s=>s.qty<=s.min);
+  if(low.length){
+    document.getElementById('dashLowStock').innerHTML='<table><tr><th>Sparepart</th><th>Stok</th><th>Min</th></tr>'+
+      low.map(s=>`<tr><td>${s.name}</td><td class="red">${s.qty}</td><td>${s.min}</td></tr>`).join('')+'</table>';
+  } else document.getElementById('dashLowStock').innerHTML='<div class="empty">✅ Semua stok aman</div>';
+}
+
+/* ============ AI REVIEW ============ */
+function generateAIReview(){
+  const st = calcStats();
+  const margin = st.revenue? (st.grossProfit/st.revenue*100):0;
+  const netMargin = st.revenue? (st.netProfit/st.revenue*100):0;
+  const low = stock.filter(s=>s.qty<=s.min);
+  const dead = stock.filter(s=>s.qty>s.min*3);
+  const avgTrx = st.serviceCount? st.revenue/st.serviceCount:0;
+
+  // Top performing parts
+  const partMap={};
+  services.forEach(s=>{ if(s.partName){ partMap[s.partName]=(partMap[s.partName]||0)+1; }});
+  const topPart = Object.entries(partMap).sort((a,b)=>b[1]-a[1])[0];
+
+  // Expense breakdown
+  const expMap={};
+  expenses.forEach(e=>{ expMap[e.cat]=(expMap[e.cat]||0)+e.amount; });
+  const topExp = Object.entries(expMap).sort((a,b)=>b[1]-a[1])[0];
+
+  let insights=[], actions=[], warnings=[];
+
+  // analysis
+  if(st.serviceCount===0){
+    document.getElementById('aiResult').innerHTML='<div class="ai-box"><h3>Belum ada data cukup</h3><p>Mulai catat transaksi servis untuk mendapatkan review bisnis.</p></div>';
+    return;
+  }
+  if(margin>50) insights.push(`Margin kotor Anda <b>${margin.toFixed(1)}%</b> — sangat sehat untuk bisnis servis. Pertahankan!`);
+  else if(margin>30) insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> cukup baik, namun ada ruang untuk ditingkatkan.`);
+  else insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> tergolong rendah. Pertimbangkan menaikkan biaya jasa atau menekan harga modal sparepart.`);
+
+  if(st.netProfit<0) warnings.push(`Profit bersih Anda <b>MINUS ${rp(Math.abs(st.netProfit))}</b>. Pengeluaran melebihi profit kotor — segera evaluasi biaya operasional.`);
+  else insights.push(`Profit bersih <b>${rp(st.netProfit)}</b> (net margin ${netMargin.toFixed(1)}%).`);
+
+  if(topPart) insights.push(`Sparepart terlaris: <b>${topPart[0]}</b> (${topPart[1]}x dipakai). Pastikan stok ini selalu tersedia.`);
+  if(topExp) insights.push(`Pengeluaran terbesar: <b>${topExp[0]}</b> sebesar ${rp(topExp[1])} (${(topExp[1]/st.totalExpense*100).toFixed(0)}% dari total).`);
+
+  insights.push(`Rata-rata nilai per transaksi: <b>${rp(avgTrx)}</b>.`);
+
+  // warnings
+  if(low.length) warnings.push(`<b>${low.length} sparepart menipis</b>: ${low.map(s=>s.name).join(', ')}. Risiko kehilangan customer karena stok kosong.`);
+  if(dead.length) warnings.push(`<b>${dead.length} item overstock</b>: ${dead.map(s=>s.name).join(', ')}. Modal mengendap — pertimbangkan promo/bundling.`);
+  if(st.stockValue > st.revenue && st.revenue>0) warnings.push(`Nilai modal stok (${rp(st.stockValue)}) melebihi total pendapatan. Modal terlalu banyak terikat di stok.`);
+
+  // actions
+  actions.push('Naikkan harga jasa untuk servis kompleks (data recovery, kerusakan board) yang nilai tambahnya tinggi.');
+  if(low.length) actions.push(`Segera restock: ${low.map(s=>s.name).join(', ')}.`);
+  if(netMargin<15) actions.push('Target net margin minimal 20-25% — tinjau ulang pengeluaran operasional terbesar.');
+  actions.push('Tawarkan layanan tambahan: pasang tempered glass, anti-air, garansi servis berbayar untuk menambah revenue per customer.');
+  actions.push('Bangun database customer untuk program loyalitas / reminder servis berkala (cleaning, ganti baterai).');
+  if(dead.length) actions.push(`Buat promo bundling untuk item overstock: ${dead.map(s=>s.name).join(', ')}.`);
+  actions.push('Lakukan stock audit rutin (mingguan) untuk mencegah kehilangan/selisih stok yang menggerus profit.');
+
+  const score = Math.max(0, Math.min(100, Math.round(netMargin*1.5 + margin*0.5 + (low.length?0:15) - (st.netProfit<0?40:0))));
+  let grade = score>=75?'A (Sangat Baik)':score>=60?'B (Baik)':score>=40?'C (Cukup)':'D (Perlu Perbaikan)';
+  let gColor = score>=60?'var(--green)':score>=40?'var(--orange)':'var(--red)';
+
+  document.getElementById('aiResult').innerHTML=`
+    <div class="ai-box">
+      <div class="ai-section">
+        <span class="ai-tag">SKOR KESEHATAN BISNIS</span>
+        <h3 style="color:${gColor};font-size:32px">${score}/100 — ${grade}</h3>
+        <div class="progress"><div class="progress-bar" style="width:${score}%;background:${gColor}"></div></div>
+      </div>
+      <div class="ai-section">
+        <span class="ai-tag">📊 RINGKASAN KEUANGAN</span>
+        <ul>
+          <li>Pendapatan total: <b>${rp(st.revenue)}</b> dari ${st.serviceCount} servis</li>
+          <li>Profit kotor: <b class="green">${rp(st.grossProfit)}</b> (margin ${margin.toFixed(1)}%)</li>
+          <li>Pengeluaran operasional: <b class="red">${rp(st.totalExpense)}</b></li>
+          <li>Profit bersih: <b style="color:${st.netProfit>=0?'var(--green)':'var(--red)'}">${rp(st.netProfit)}</b></li>
+          <li>Modal stok (aset): <b>${rp(st.stockValue)}</b></li>
+        </ul>
+      </div>
+      <div class="ai-section">
+        <span class="ai-tag">💡 INSIGHT</span>
+        <ul>${insights.map(i=>`<li>${i}</li>`).join('')}</ul>
+      </div>
+      ${warnings.length?`<div class="ai-section">
+        <span class="ai-tag" style="background:var(--red)">⚠️ PERINGATAN</span>
+        <ul>${warnings.map(w=>`<li>${w}</li>`).join('')}</ul>
+      </div>`:''}
+      <div class="ai-section">
+        <span class="ai-tag" style="background:var(--green)">🎯 REKOMENDASI AKSI</span>
+        <ul>${actions.map(a=>`<li>${a}</li>`).join('')}</ul>
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-top:10px;border-top:1px solid #eee;padding-top:12px">
+        Review dihasilkan otomatis berdasarkan data per ${todayStr()}. Update data secara rutin untuk akurasi lebih baik.
+      </div>
+    </div>`;
+}
+
+/* ============ RENDER ALL ============ */
+function renderAll(){
+  renderDashboard(); renderStok(); renderTransaksi(); renderAudit(); renderPembelian(); renderPengeluaran();
+}
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+renderAll();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iServis Pro - Kasir Servis iPhone</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
+  :root{ --primary:#0071e3; --dark:#1d1d1f; --gray:#86868b; --light:#f5f5f7; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --purple:#5e5ce6; --card:#fff; }
+  body{ background:var(--light); color:var(--dark); }
+  /* LOGIN */
+  .login-bg{ position:fixed; inset:0; background:linear-gradient(135deg,#1d1d1f,#0071e3); display:flex; align-items:center; justify-content:center; z-index:500; }
+  .login-card{ background:#fff; padding:40px; border-radius:20px; width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .login-card h2{ text-align:center; margin-bottom:8px; }
+  .login-card p{ text-align:center; color:var(--gray); font-size:13px; margin-bottom:24px; }
+  .hint{ font-size:12px; color:var(--gray); text-align:center; margin-top:14px; line-height:1.6; }
+  /* LAYOUT */
+  .sidebar{ position:fixed; left:0; top:0; width:230px; height:100vh; background:var(--dark); color:#fff; padding:20px 0; overflow-y:auto; }
+  .logo{ font-size:22px; font-weight:700; padding:0 24px 16px; display:flex; align-items:center; gap:8px; }
+  .logo span{ color:var(--primary); }
+  .branch-sel{ padding:0 16px 16px; }
+  .branch-sel select{ width:100%; padding:8px; border-radius:8px; border:none; background:#2c2c2e; color:#fff; font-size:13px; }
+  .nav-item{ padding:13px 24px; cursor:pointer; display:flex; align-items:center; gap:12px; color:#d1d1d6; transition:.2s; font-size:14px; }
+  .nav-item:hover{ background:rgba(255,255,255,.08); color:#fff; }
+  .nav-item.active{ background:var(--primary); color:#fff; }
+  .nav-item .ico{ font-size:18px; }
+  .nav-divider{ height:1px; background:#3a3a3c; margin:10px 24px; }
+  .userbox{ padding:12px 24px; font-size:13px; color:#d1d1d6; border-top:1px solid #3a3a3c; margin-top:10px; }
+  .main{ margin-left:230px; padding:24px 32px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .topbar h1{ font-size:26px; }
+  .topbar .date{ color:var(--gray); font-size:14px; }
+  .page{ display:none; } .page.active{ display:block; }
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-bottom:24px; }
+  .stat-card{ background:var(--card); border-radius:16px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .stat-card .label{ color:var(--gray); font-size:13px; margin-bottom:8px; }
+  .stat-card .value{ font-size:23px; font-weight:700; }
+  .stat-card .sub{ font-size:12px; margin-top:6px; }
+  .green{color:var(--green);} .red{color:var(--red);} .orange{color:var(--orange);} .blue{color:var(--primary);} .purple{color:var(--purple);}
+  .panel{ background:var(--card); border-radius:16px; padding:24px; margin-bottom:24px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .panel h2{ font-size:18px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th,td{ text-align:left; padding:11px 9px; border-bottom:1px solid #eee; }
+  th{ color:var(--gray); font-weight:600; font-size:11px; text-transform:uppercase; }
+  tr:hover td{ background:#fafafa; }
+  .btn{ background:var(--primary); color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-size:14px; font-weight:500; transition:.2s; }
+  .btn:hover{ opacity:.9; } .btn-sm{ padding:6px 11px; font-size:12px; }
+  .btn-red{background:var(--red);} .btn-green{background:var(--green);} .btn-gray{background:var(--gray);} .btn-orange{background:var(--orange);} .btn-purple{background:var(--purple);}
+  input,select,textarea{ width:100%; padding:11px 14px; border:1px solid #d2d2d7; border-radius:10px; font-size:14px; margin-bottom:12px; background:#fff; }
+  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary); }
+  label{ font-size:13px; color:var(--gray); display:block; margin-bottom:5px; font-weight:500; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+  .modal-bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:100; align-items:center; justify-content:center; }
+  .modal-bg.active{ display:flex; }
+  .modal{ background:#fff; border-radius:18px; padding:28px; width:90%; max-width:540px; max-height:90vh; overflow-y:auto; }
+  .modal h3{ margin-bottom:18px; font-size:20px; }
+  .badge{ padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+  .badge-low{background:#ffe5e5;color:var(--red);} .badge-ok{background:#e5f9eb;color:var(--green);} .badge-mid{background:#fff2e0;color:var(--orange);}
+  .empty{ text-align:center; padding:40px; color:var(--gray); }
+  .ai-box{ background:linear-gradient(135deg,#f0f7ff,#fff); border:1px solid #d6e8ff; border-radius:16px; padding:24px; line-height:1.7; }
+  .ai-box h3{ color:var(--primary); margin-bottom:12px; }
+  .ai-box ul{ margin:10px 0 10px 20px; } .ai-box li{ margin-bottom:8px; }
+  .ai-section{ margin-bottom:18px; }
+  .ai-tag{ display:inline-block; background:var(--primary); color:#fff; font-size:11px; padding:3px 10px; border-radius:20px; margin-bottom:8px; }
+  .flex-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .search-box{ max-width:260px; margin-bottom:0; }
+  .audit-diff-pos{ color:var(--green); font-weight:600; } .audit-diff-neg{ color:var(--red); font-weight:600; }
+  .progress{ height:8px; background:#eee; border-radius:10px; overflow:hidden; margin-top:6px; }
+  .progress-bar{ height:100%; border-radius:10px; }
+  .st-pill{ padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none; }
+  .st-antri{background:#e0e0e8;color:#555;} .st-proses{background:#fff2e0;color:var(--orange);} .st-selesai{background:#e0f0ff;color:var(--primary);} .st-diambil{background:#e5f9eb;color:var(--green);} .st-batal{background:#ffe5e5;color:var(--red);}
+  .hidden{ display:none!important; }
+  @media(max-width:768px){ .sidebar{width:58px;} .logo span,.nav-item span:not(.ico),.branch-sel,.userbox{display:none;} .main{margin-left:58px;padding:14px;} .form-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-bg" id="loginScreen">
+  <div class="login-card">
+    <h2>📱 iServis Pro</h2>
+    <p>Sistem Kasir Servis iPhone</p>
+    <label>Username</label><input id="lg_user" placeholder="username">
+    <label>Password</label><input id="lg_pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" style="width:100%" onclick="doLogin()">Masuk</button>
+    <div class="hint">Default akun:<br><b>admin / admin</b> (Owner - akses penuh)<br><b>kasir / kasir</b> (Kasir - terbatas)</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+<div class="sidebar">
+  <div class="logo">📱 <span>iServis<b style="color:var(--primary)">Pro</b></span></div>
+  <div class="branch-sel">
+    <select id="branchSelect" onchange="switchBranch(this.value)"></select>
+  </div>
+  <div class="nav-item active" onclick="nav('dashboard',this)"><span class="ico">📊</span><span>Dashboard</span></div>
+  <div class="nav-item" onclick="nav('kasir',this)"><span class="ico">🧾</span><span>Kasir / Servis</span></div>
+  <div class="nav-item" onclick="nav('stok',this)"><span class="ico">📦</span><span>Data Stok</span></div>
+  <div class="nav-item" onclick="nav('audit',this)"><span class="ico">✅</span><span>Stock Audit</span></div>
+  <div class="nav-item" onclick="nav('pembelian',this)"><span class="ico">🛒</span><span>Pembelian Stok</span></div>
+  <div class="nav-item" onclick="nav('pengeluaran',this)"><span class="ico">💸</span><span>Pengeluaran</span></div>
+  <div class="nav-item" onclick="nav('ai',this)"><span class="ico">🤖</span><span>AI Review</span></div>
+  <div class="nav-divider adminOnly"></div>
+  <div class="nav-item adminOnly" onclick="nav('cabang',this)"><span class="ico">🏢</span><span>Kelola Cabang</span></div>
+  <div class="nav-item adminOnly" onclick="nav('users',this)"><span class="ico">👥</span><span>Kelola User</span></div>
+  <div class="userbox" id="userBox"></div>
+  <div class="nav-item" onclick="doLogout()"><span class="ico">🚪</span><span>Logout</span></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="date" id="todayDate"></div>
+  </div>
+
+  <div class="page active" id="dashboard">
+    <div class="cards" id="dashCards"></div>
+    <div class="panel"><h2>Transaksi Servis Terakhir</h2><div id="dashRecent"></div></div>
+    <div class="panel"><h2>⚠️ Stok Menipis</h2><div id="dashLowStock"></div></div>
+  </div>
+
+  <div class="page" id="kasir">
+    <div class="panel">
+      <h2>Transaksi Servis
+        <span class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="exportExcel('services')">📥 Export Excel</button>
+          <button class="btn" onclick="openServiceModal()">+ Transaksi Baru</button>
+        </span>
+      </h2>
+      <div class="flex-row" style="margin-bottom:16px">
+        <input class="search-box" placeholder="🔍 Cari customer/device..." oninput="renderTransaksi(this.value)">
+        <select class="search-box" id="filterStatus" onchange="renderTransaksi()">
+          <option value="">Semua Status</option><option>Antri</option><option>Proses</option><option>Selesai</option><option>Diambil</option><option>Batal</option>
+        </select>
+      </div>
+      <div id="transaksiTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="stok">
+    <div class="panel">
+      <h2>Data Stok Sparepart
+        <span class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="exportExcel('stock')">📥 Export Excel</button>
+          <button class="btn" onclick="openStockModal()">+ Tambah Item</button>
+        </span>
+      </h2>
+      <div class="flex-row" style="margin-bottom:16px"><input class="search-box" placeholder="🔍 Cari sparepart..." oninput="renderStok(this.value)"></div>
+      <div id="stokTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="audit">
+    <div class="panel">
+      <h2>Stock Audit (Stock Opname)</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Masukkan jumlah fisik aktual untuk dibandingkan dengan stok sistem.</p>
+      <div id="auditTable"></div>
+      <button class="btn btn-green" style="margin-top:16px" onclick="saveAudit()">💾 Simpan Hasil Audit</button>
+    </div>
+    <div class="panel"><h2>Riwayat Audit</h2><div id="auditHistory"></div></div>
+  </div>
+
+  <div class="page" id="pembelian">
+    <div class="panel">
+      <h2>Pembelian Stok
+        <span class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="exportExcel('purchases')">📥 Export Excel</button>
+          <button class="btn" onclick="openPurchaseModal()">+ Catat Pembelian</button>
+        </span>
+      </h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">💡 Pembelian stok = aset/modal, TIDAK dikurangkan dari profit.</p>
+      <div id="pembelianTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="pengeluaran">
+    <div class="panel">
+      <h2>Pengeluaran Operasional
+        <span class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="exportExcel('expenses')">📥 Export Excel</button>
+          <button class="btn" onclick="openExpenseModal()">+ Catat Pengeluaran</button>
+        </span>
+      </h2>
+      <div id="pengeluaranTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="ai">
+    <div class="panel">
+      <h2>🤖 AI Business Review</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Analisis cerdas berdasarkan data cabang aktif.</p>
+      <button class="btn" onclick="generateAIReview()">✨ Generate Review Bisnis</button>
+      <div id="aiResult" style="margin-top:20px"></div>
+    </div>
+  </div>
+
+  <div class="page" id="cabang">
+    <div class="panel">
+      <h2>🏢 Kelola Cabang <button class="btn" onclick="openBranchModal()">+ Tambah Cabang</button></h2>
+      <div id="branchTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="users">
+    <div class="panel">
+      <h2>👥 Kelola User <button class="btn" onclick="openUserModal()">+ Tambah User</button></h2>
+      <div id="userTable"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalContent"></div></div>
+
+<script>
+/* ============ STORE ============ */
+const S = {
+  get(k,d){ return JSON.parse(localStorage.getItem('iservis_'+k) || JSON.stringify(d)); },
+  set(k,v){ localStorage.setItem('iservis_'+k, JSON.stringify(v)); }
+};
+function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function val(id){ return document.getElementById(id).value; }
+
+/* Global data */
+let branches = S.get('branches', [{id:'b1',name:'Cabang Pusat',addr:'',phone:''}]);
+let users = S.get('users', [
+  {id:'u1',name:'Owner',user:'admin',pass:'admin',role:'owner'},
+  {id:'u2',name:'Kasir 1',user:'kasir',pass:'kasir',role:'kasir'}
+]);
+let stock = S.get('stock', []);
+let services = S.get('services', []);
+let purchases = S.get('purchases', []);
+let expenses = S.get('expenses', []);
+let audits = S.get('audits', []);
+let currentUser = null;
+let currentBranch = branches[0].id;
+
+/* Seed demo for first branch */
+if(stock.length===0 && services.length===0){
+  stock = [
+    {id:gid(),branch:'b1',name:'LCD iPhone 11',sku:'LCD-11',qty:5,min:3,cost:450000,price:750000},
+    {id:gid(),branch:'b1',name:'Baterai iPhone 12',sku:'BAT-12',qty:2,min:5,cost:180000,price:350000},
+    {id:gid(),branch:'b1',name:'Konektor Charge iPhone X',sku:'CON-X',qty:8,min:4,cost:75000,price:200000},
+    {id:gid(),branch:'b1',name:'Glass iPhone 13',sku:'GLS-13',qty:12,min:5,cost:35000,price:150000},
+  ];
+  S.set('stock',stock);
+}
+function saveAll(){ S.set('branches',branches); S.set('users',users); S.set('stock',stock); S.set('services',services); S.set('purchases',purchases); S.set('expenses',expenses); S.set('audits',audits); }
+
+/* Branch-filtered getters */
+const bStock = ()=> stock.filter(x=>x.branch===currentBranch);
+const bServices = ()=> services.filter(x=>x.branch===currentBranch);
+const bPurchases = ()=> purchases.filter(x=>x.branch===currentBranch);
+const bExpenses = ()=> expenses.filter(x=>x.branch===currentBranch);
+const bAudits = ()=> audits.filter(x=>x.branch===currentBranch);
+const branchName = id => (branches.find(b=>b.id===id)||{}).name||'-';
+
+/* ============ AUTH ============ */
+function doLogin(){
+  const u=val('lg_user').trim(), p=val('lg_pass');
+  const found = users.find(x=>x.user===u && x.pass===p);
+  if(!found){ alert('Username / password salah'); return; }
+  currentUser = found;
+  sessionStorage.setItem('iservis_session', JSON.stringify(found));
+  initApp();
+}
+function doLogout(){ sessionStorage.removeItem('iservis_session'); location.reload(); }
+function initApp(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('userBox').innerHTML = `👤 <b>${currentUser.name}</b><br><span style="font-size:11px;text-transform:uppercase">${currentUser.role}</span>`;
+  // role visibility
+  document.querySelectorAll('.adminOnly').forEach(el=> el.style.display = currentUser.role==='owner'?'':'none');
+  renderBranchSelect();
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderAll();
+}
+(function autoLogin(){ const s=sessionStorage.getItem('iservis_session'); if(s){ currentUser=JSON.parse(s); initApp(); } })();
+
+/* ============ BRANCH ============ */
+function renderBranchSelect(){
+  document.getElementById('branchSelect').innerHTML = branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>🏢 ${b.name}</option>`).join('');
+}
+function switchBranch(id){ currentBranch=id; renderAll(); }
+function openBranchModal(id){
+  const b = id? branches.find(x=>x.id===id):{name:'',addr:'',phone:''};
+  showModal(`<h3>${id?'Edit':'Tambah'} Cabang</h3>
+    <label>Nama Cabang</label><input id="b_name" value="${b.name}">
+    <label>Alamat</label><input id="b_addr" value="${b.addr||''}">
+    <label>Telepon</label><input id="b_phone" value="${b.phone||''}">
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveBranch('${id||''}')">Simpan</button></div>`);
+}
+function saveBranch(id){
+  const d={name:val('b_name'),addr:val('b_addr'),phone:val('b_phone')};
+  if(!d.name){alert('Nama wajib');return;}
+  if(id) Object.assign(branches.find(x=>x.id===id),d);
+  else branches.push({id:gid(),...d});
+  saveAll(); closeModal(); renderBranchSelect(); renderBranchTable();
+}
+function delBranch(id){
+  if(branches.length<=1){alert('Minimal harus ada 1 cabang');return;}
+  if(confirm('Hapus cabang ini? Data terkait tidak ikut terhapus.')){
+    branches=branches.filter(x=>x.id!==id);
+    if(currentBranch===id) currentBranch=branches[0].id;
+    saveAll(); renderBranchSelect(); renderAll();
+  }
+}
+function renderBranchTable(){
+  document.getElementById('branchTable').innerHTML = `<table><tr><th>Nama</th><th>Alamat</th><th>Telepon</th><th></th></tr>`+
+    branches.map(b=>`<tr><td><b>${b.name}</b></td><td>${b.addr||'-'}</td><td>${b.phone||'-'}</td>
+    <td><button class="btn btn-sm btn-gray" onclick="openBranchModal('${b.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="delBranch('${b.id}')">Hapus</button></td></tr>`).join('')+`</table>`;
+}
+
+/* ============ USERS ============ */
+function openUserModal(id){
+  const u=id? users.find(x=>x.id===id):{name:'',user:'',pass:'',role:'kasir'};
+  showModal(`<h3>${id?'Edit':'Tambah'} User</h3>
+    <label>Nama Lengkap</label><input id="u_name" value="${u.name}">
+    <label>Username</label><input id="u_user" value="${u.user}">
+    <label>Password</label><input id="u_pass" value="${u.pass}">
+    <label>Role</label><select id="u_role"><option value="kasir" ${u.role==='kasir'?'selected':''}>Kasir (terbatas)</option><option value="owner" ${u.role==='owner'?'selected':''}>Owner (akses penuh)</option></select>
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveUser('${id||''}')">Simpan</button></div>`);
+}
+function saveUser(id){
+  const d={name:val('u_name'),user:val('u_user'),pass:val('u_pass'),role:val('u_role')};
+  if(!d.name||!d.user||!d.pass){alert('Semua field wajib');return;}
+  if(users.some(x=>x.user===d.user && x.id!==id)){alert('Username sudah dipakai');return;}
+  if(id) Object.assign(users.find(x=>x.id===id),d);
+  else users.push({id:gid(),...d});
+  saveAll(); closeModal(); renderUserTable();
+}
+function delUser(id){
+  if(users.length<=1){alert('Minimal 1 user');return;}
+  if(id===currentUser.id){alert('Tidak bisa hapus akun yang sedang login');return;}
+  if(confirm('Hapus user?')){ users=users.filter(x=>x.id!==id); saveAll(); renderUserTable(); }
+}
+function renderUserTable(){
+  document.getElementById('userTable').innerHTML=`<table><tr><th>Nama</th><th>Username</th><th>Role</th><th></th></tr>`+
+    users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.user}</td><td><span class="badge ${u.role==='owner'?'badge-ok':'badge-mid'}">${u.role}</span></td>
+    <td><button class="btn btn-sm btn-gray" onclick="openUserModal('${u.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="delUser('${u.id}')">Hapus</button></td></tr>`).join('')+`</table>`;
+}
+
+/* ============ MODAL ============ */
+function showModal(h){ document.getElementById('modalContent').innerHTML=h; document.getElementById('modalBg').classList.add('active'); }
+function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
+document.getElementById('modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
+
+/* ============ NAV ============ */
+const titles={dashboard:'Dashboard',kasir:'Kasir / Servis',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'AI Review',cabang:'Kelola Cabang',users:'Kelola User'};
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pageTitle').textContent=titles[page];
+  renderAll();
+}
+
+/* ============ STOK ============ */
+function openStockModal(id){
+  const s=id? stock.find(x=>x.id===id):{name:'',sku:'',qty:0,min:3,cost:0,price:0};
+  showModal(`<h3>${id?'Edit':'Tambah'} Sparepart</h3>
+    <label>Nama Sparepart</label><input id="m_name" value="${s.name}">
+    <label>Kode / SKU</label><input id="m_sku" value="${s.sku}">
+    <div class="form-grid">
+      <div><label>Jumlah Stok</label><input id="m_qty" type="number" value="${s.qty}"></div>
+      <div><label>Stok Minimum</label><input id="m_min" type="number" value="${s.min}"></div>
+      <div><label>Harga Modal</label><input id="m_cost" type="number" value="${s.cost}"></div>
+      <div><label>Harga Jual</label><input id="m_price" type="number" value="${s.price}"></div>
+    </div>
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveStock('${id||''}')">Simpan</button></div>`);
+}
+function saveStock(id){
+  const d={name:val('m_name'),sku:val('m_sku'),qty:+val('m_qty'),min:+val('m_min'),cost:+val('m_cost'),price:+val('m_price')};
+  if(!d.name){alert('Nama wajib');return;}
+  if(id) Object.assign(stock.find(x=>x.id===id),d);
+  else stock.push({id:gid(),branch:currentBranch,...d});
+  saveAll(); closeModal(); renderAll();
+}
+function delStock(id){ if(confirm('Hapus item?')){ stock=stock.filter(x=>x.id!==id); saveAll(); renderAll(); } }
+function renderStok(q=''){
+  const list=bStock().filter(s=>(s.name+s.sku).toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){ document.getElementById('stokTable').innerHTML='<div class="empty">Belum ada data stok di cabang ini</div>'; return; }
+  let tot=0;
+  let rows=list.map(s=>{ tot+=s.qty*s.cost;
+    const b=s.qty<=s.min?'<span class="badge badge-low">Menipis</span>':(s.qty<=s.min*2?'<span class="badge badge-mid">Sedang</span>':'<span class="badge badge-ok">Aman</span>');
+    return `<tr><td><b>${s.name}</b><br><span style="color:var(--gray);font-size:12px">${s.sku||'-'}</span></td>
+      <td>${s.qty} ${b}</td><td>${rp(s.cost)}</td><td>${rp(s.price)}</td><td class="green">${rp(s.price-s.cost)}</td><td>${rp(s.qty*s.cost)}</td>
+      <td><button class="btn btn-sm btn-gray" onclick="openStockModal('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="delStock('${s.id}')">Hapus</button></td></tr>`;
+  }).join('');
+  document.getElementById('stokTable').innerHTML=`<table><tr><th>Sparepart</th><th>Stok</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Total Modal</th><th></th></tr>${rows}
+    <tr style="background:#f5f5f7;font-weight:700"><td colspan="5">TOTAL NILAI MODAL STOK</td><td colspan="2">${rp(tot)}</td></tr></table>`;
+}
+
+/* ============ KASIR / SERVICE + STATUS + NOTA ============ */
+const STATUSES=['Antri','Proses','Selesai','Diambil','Batal'];
+const stClass={Antri:'st-antri',Proses:'st-proses',Selesai:'st-selesai',Diambil:'st-diambil',Batal:'st-batal'};
+function openServiceModal(){
+  const opts=bStock().map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty}) - ${rp(s.price)}</option>`).join('');
+  showModal(`<h3>Transaksi Servis Baru</h3>
+    <div class="form-grid">
+      <div><label>Nama Customer</label><input id="s_cust"></div>
+      <div><label>No. HP Customer</label><input id="s_phone"></div>
+    </div>
+    <label>Device / iPhone</label><input id="s_device" placeholder="cth: iPhone 12 Pro">
+    <label>Jenis Kerusakan / Servis</label><input id="s_issue" placeholder="cth: Ganti LCD">
+    <label>Sparepart Digunakan (opsional)</label>
+    <select id="s_part"><option value="">-- Tanpa sparepart --</option>${opts}</select>
+    <div class="form-grid">
+      <div><label>Biaya Jasa</label><input id="s_jasa" type="number" value="0"></div>
+      <div><label>Harga Jual Sparepart</label><input id="s_partprice" type="number" value="0"></div>
+    </div>
+    <label>Status Awal</label><select id="s_status">${STATUSES.map(x=>`<option>${x}</option>`).join('')}</select>
+    <div id="s_costnote" style="font-size:12px;color:var(--gray);margin-bottom:12px"></div>
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="saveService()">Simpan</button></div>`);
+  document.getElementById('s_part').onchange=function(){
+    const s=stock.find(x=>x.id===this.value);
+    if(s){ document.getElementById('s_partprice').value=s.price; document.getElementById('s_costnote').textContent=`Modal: ${rp(s.cost)} | Stok: ${s.qty}`; }
+    else { document.getElementById('s_partprice').value=0; document.getElementById('s_costnote').textContent=''; }
+  };
+}
+function saveService(){
+  const partId=val('s_part'); let partCost=0,partName='',partPrice=+val('s_partprice');
+  if(partId){ const s=stock.find(x=>x.id===partId); if(s.qty<1){alert('Stok habis!');return;} s.qty-=1; partCost=s.cost; partName=s.name; }
+  const jasa=+val('s_jasa');
+  const inv = 'INV'+Date.now().toString().slice(-7);
+  services.unshift({ id:gid(),branch:currentBranch,inv,date:todayStr(),cust:val('s_cust')||'Umum',phone:val('s_phone'),device:val('s_device'),issue:val('s_issue'),partId,partName,partCost,partPrice,jasa,revenue:jasa+partPrice,cogs:partCost,status:val('s_status') });
+  saveAll(); closeModal(); renderAll();
+}
+function delService(id){
+  if(!confirm('Hapus & kembalikan stok?'))return;
+  const t=services.find(x=>x.id===id); if(t&&t.partId){ const s=stock.find(x=>x.id===t.partId); if(s)s.qty+=1; }
+  services=services.filter(x=>x.id!==id); saveAll(); renderAll();
+}
+function changeStatus(id){
+  const t=services.find(x=>x.id===id);
+  const opts=STATUSES.map(x=>`<button class="btn btn-sm ${stClass[x].replace('st-','st-')}" style="margin:4px" onclick="setStatus('${id}','${x}')">${x}</button>`).join('');
+  showModal(`<h3>Ubah Status — ${t.inv}</h3><p style="color:var(--gray);margin-bottom:16px">${t.cust} • ${t.device}</p>${opts}<div style="margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
+}
+function setStatus(id,st){ services.find(x=>x.id===id).status=st; saveAll(); closeModal(); renderAll(); }
+function renderTransaksi(q=''){
+  const fs=document.getElementById('filterStatus')?document.getElementById('filterStatus').value:'';
+  let list=bServices().filter(s=>(s.cust+s.device+s.issue+s.inv).toLowerCase().includes(q.toLowerCase()));
+  if(fs) list=list.filter(s=>s.status===fs);
+  if(!list.length){ document.getElementById('transaksiTable').innerHTML='<div class="empty">Belum ada transaksi</div>'; return; }
+  let rows=list.map(t=>`<tr>
+    <td><b>${t.inv}</b><br><span style="color:var(--gray);font-size:12px">${t.date}</span></td>
+    <td><b>${t.cust}</b><br><span style="color:var(--gray);font-size:12px">${t.device}</span></td>
+    <td>${t.issue}<br><span style="color:var(--gray);font-size:12px">${t.partName||'tanpa part'}</span></td>
+    <td>${rp(t.revenue)}</td>
+    <td class="green"><b>${rp(t.revenue-t.cogs)}</b></td>
+    <td><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
+    <td><button class="btn btn-sm btn-purple" onclick="printNota('${t.id}')">🧾 Nota</button> <button class="btn btn-sm btn-red" onclick="delService('${t.id}')">Hapus</button></td>
+  </tr>`).join('');
+  document.getElementById('transaksiTable').innerHTML=`<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Total</th><th>Profit</th><th>Status</th><th></th></tr>${rows}</table>`;
+}
+
+/* ============ NOTA / STRUK ============ */
+function printNota(id){
+  const t=services.find(x=>x.id===id);
+  const b=branches.find(x=>x.id===t.branch)||{};
+  const w=window.open('','','width=380,height=600');
+  w.document.write(`<html><head><title>Nota ${t.inv}</title><style>
+    body{font-family:'Courier New',monospace;font-size:13px;padding:16px;color:#000;}
+    .c{text-align:center;} .line{border-top:1px dashed #000;margin:8px 0;}
+    table{width:100%;font-size:13px;} td{padding:2px 0;} .r{text-align:right;}
+    h2{margin:0;} .small{font-size:11px;}
+  </style></head><body>
+    <div class="c"><h2>${b.name||'iServis'}</h2>
+    <div class="small">${b.addr||''}<br>${b.phone?'Telp: '+b.phone:''}</div></div>
+    <div class="line"></div>
+    <table>
+      <tr><td>No</td><td class="r">${t.inv}</td></tr>
+      <tr><td>Tanggal</td><td class="r">${t.date}</td></tr>
+      <tr><td>Kasir</td><td class="r">${currentUser.name}</td></tr>
+      <tr><td>Customer</td><td class="r">${t.cust}</td></tr>
+      ${t.phone?`<tr><td>No.HP</td><td class="r">${t.phone}</td></tr>`:''}
+      <tr><td>Device</td><td class="r">${t.device||'-'}</td></tr>
+    </table>
+    <div class="line"></div>
+    <table>
+      <tr><td>${t.issue||'Servis'}</td><td class="r">${rp(t.jasa)}</td></tr>
+      ${t.partName?`<tr><td>${t.partName}</td><td class="r">${rp(t.partPrice)}</td></tr>`:''}
+    </table>
+    <div class="line"></div>
+    <table>
+      <tr><td><b>TOTAL</b></td><td class="r"><b>${rp(t.revenue)}</b></td></tr>
+      <tr><td>Status</td><td class="r">${t.status}</td></tr>
+    </table>
+    <div class="line"></div>
+    <div class="c small">Terima kasih atas kepercayaan Anda 🙏<br>Garansi servis berlaku sesuai ketentuan.<br><br>** ${new Date().toLocaleString('id-ID')} **</div>
+    <div class="line"></div>
+  </body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
+}
+
+/* ============ AUDIT ============ */
+function renderAudit(){
+  const list=bStock();
+  if(!list.length){ document.getElementById('auditTable').innerHTML='<div class="empty">Tidak ada stok</div>'; renderAuditHistory(); return; }
+  let rows=list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.qty}</td>
+    <td><input type="number" id="audit_${s.id}" value="${s.qty}" style="width:100px;margin:0" oninput="calcAuditRow('${s.id}',${s.qty})"></td>
+    <td id="diff_${s.id}">0</td></tr>`).join('');
+  document.getElementById('auditTable').innerHTML=`<table><tr><th>Sparepart</th><th>Stok Sistem</th><th>Stok Fisik</th><th>Selisih</th></tr>${rows}</table>`;
+  renderAuditHistory();
+}
+function calcAuditRow(id,sys){ const p=+document.getElementById('audit_'+id).value,d=p-sys,el=document.getElementById('diff_'+id); el.textContent=(d>0?'+':'')+d; el.className=d>0?'audit-diff-pos':(d<0?'audit-diff-neg':''); }
+function saveAudit(){
+  const items=bStock().map(s=>{ const p=+document.getElementById('audit_'+s.id).value; return {name:s.name,system:s.qty,physical:p,diff:p-s.qty,id:s.id}; });
+  items.forEach(it=>{ const s=stock.find(x=>x.id===it.id); if(s)s.qty=it.physical; });
+  audits.unshift({id:gid(),branch:currentBranch,date:todayStr(),by:currentUser.name,items});
+  saveAll(); alert('Audit tersimpan & stok disesuaikan.'); renderAll();
+}
+function renderAuditHistory(){
+  const list=bAudits();
+  if(!list.length){ document.getElementById('auditHistory').innerHTML='<div class="empty">Belum ada riwayat</div>'; return; }
+  document.getElementById('auditHistory').innerHTML=list.slice(0,5).map(a=>{ const d=a.items.filter(i=>i.diff!==0);
+    return `<div style="border-bottom:1px solid #eee;padding:12px 0"><b>${a.date}</b> oleh ${a.by||'-'} — ${d.length} selisih
+    ${d.map(i=>`<div style="font-size:13px;color:var(--gray)">${i.name}: ${i.system}→${i.physical} (<span class="${i.diff>0?'audit-diff-pos':'audit-diff-neg'}">${i.diff>0?'+':''}${i.diff}</span>)</div>`).join('')}</div>`;
+  }).join('');
+}
+
+/* ============ PEMBELIAN ============ */
+function openPurchaseModal(){
+  const opts=bStock().map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty})</option>`).join('');
+  showModal(`<h3>Catat Pembelian Stok</h3>
+    <label>Sparepart</label><select id="p_item"><option value="">-- Pilih existing --</option>${opts}<option value="NEW">+ Item baru</option></select>
+    <div id="p_newfields" style="display:none"><label>Nama Item Baru</label><input id="p_name"><label>SKU</label><input id="p_sku"><label>Harga Jual</label><input id="p_price" type="number" value="0"></div>
+    <div class="form-grid"><div><label>Qty Beli</label><input id="p_qty" type="number" value="1"></div><div><label>Modal/unit</label><input id="p_cost" type="number" value="0"></div></div>
+    <label>Supplier</label><input id="p_supplier">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Menambah aset stok, tidak mengurangi profit.</div>
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="savePurchase()">Simpan</button></div>`);
+  document.getElementById('p_item').onchange=function(){ document.getElementById('p_newfields').style.display=this.value==='NEW'?'block':'none'; const s=stock.find(x=>x.id===this.value); if(s)document.getElementById('p_cost').value=s.cost; };
+}
+function savePurchase(){
+  const sel=val('p_item'),qty=+val('p_qty'),cost=+val('p_cost');
+  if(qty<=0){alert('Qty > 0');return;}
+  let itemName='',itemId='';
+  if(sel==='NEW'){ const ns={id:gid(),branch:currentBranch,name:val('p_name'),sku:val('p_sku'),qty,min:3,cost,price:+val('p_price')}; if(!ns.name){alert('Nama wajib');return;} stock.push(ns); itemName=ns.name; itemId=ns.id; }
+  else if(sel){ const s=stock.find(x=>x.id===sel); s.qty+=qty; s.cost=cost; itemName=s.name; itemId=s.id; }
+  else {alert('Pilih item');return;}
+  purchases.unshift({id:gid(),branch:currentBranch,date:todayStr(),itemId,itemName,qty,cost,total:qty*cost,supplier:val('p_supplier')});
+  saveAll(); closeModal(); renderAll();
+}
+function delPurchase(id){ if(confirm('Hapus catatan?')){ purchases=purchases.filter(x=>x.id!==id); saveAll(); renderAll(); } }
+function renderPembelian(){
+  const list=bPurchases();
+  if(!list.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian</div>'; return; }
+  let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td>${p.date}</td><td><b>${p.itemName}</b></td><td>${p.qty}</td><td>${rp(p.cost)}</td><td>${rp(p.total)}</td><td>${p.supplier||'-'}</td><td><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pembelianTable').innerHTML=`<table><tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="4">TOTAL PEMBELIAN (Modal/Aset)</td><td colspan="3">${rp(tot)}</td></tr></table>`;
+}
+
+/* ============ PENGELUARAN ============ */
+function openExpenseModal(){
+  showModal(`<h3>Catat Pengeluaran</h3>
+    <label>Kategori</label><select id="e_cat"><option>Sewa Tempat</option><option>Listrik & Air</option><option>Gaji Karyawan</option><option>Internet</option><option>Peralatan</option><option>Marketing</option><option>Transport</option><option>Lainnya</option></select>
+    <label>Keterangan</label><input id="e_desc"><label>Jumlah (Rp)</label><input id="e_amount" type="number" value="0">
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">⚠️ Mengurangi profit bisnis.</div>
+    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-red" onclick="saveExpense()">Simpan</button></div>`);
+}
+function saveExpense(){ const a=+val('e_amount'); if(a<=0){alert('Jumlah > 0');return;} expenses.unshift({id:gid(),branch:currentBranch,date:todayStr(),cat:val('e_cat'),desc:val('e_desc'),amount:a}); saveAll(); closeModal(); renderAll(); }
+function delExpense(id){ if(confirm('Hapus?')){ expenses=expenses.filter(x=>x.id!==id); saveAll(); renderAll(); } }
+function renderPengeluaran(){
+  const list=bExpenses();
+  if(!list.length){ document.getElementById('pengeluaranTable').innerHTML='<div class="empty">Belum ada pengeluaran</div>'; return; }
+  let tot=0; let rows=list.map(e=>{tot+=e.amount; return `<tr><td>${e.date}</td><td><span class="badge badge-mid">${e.cat}</span></td><td>${e.desc||'-'}</td><td class="red">${rp(e.amount)}</td><td><button class="btn btn-sm btn-red" onclick="delExpense('${e.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pengeluaranTable').innerHTML=`<table><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="2" class="red">${rp(tot)}</td></tr></table>`;
+}
+
+/* ============ EXPORT EXCEL (CSV) ============ */
+function exportExcel(type){
+  let rows=[], name='';
+  if(type==='services'){ name='Transaksi_Servis'; rows.push(['Invoice','Tanggal','Customer','No HP','Device','Servis','Sparepart','Jasa','Harga Part','Total','Modal','Profit','Status']);
+    bServices().forEach(t=>rows.push([t.inv,t.date,t.cust,t.phone||'',t.device,t.issue,t.partName||'',t.jasa,t.partPrice,t.revenue,t.cogs,t.revenue-t.cogs,t.status])); }
+  else if(type==='stock'){ name='Data_Stok'; rows.push(['Nama','SKU','Stok','Min','Modal','Harga Jual','Margin','Total Modal']);
+    bStock().forEach(s=>rows.push([s.name,s.sku,s.qty,s.min,s.cost,s.price,s.price-s.cost,s.qty*s.cost])); }
+  else if(type==='purchases'){ name='Pembelian_Stok'; rows.push(['Tanggal','Item','Qty','Modal/unit','Total','Supplier']);
+    bPurchases().forEach(p=>rows.push([p.date,p.itemName,p.qty,p.cost,p.total,p.supplier||''])); }
+  else if(type==='expenses'){ name='Pengeluaran'; rows.push(['Tanggal','Kategori','Keterangan','Jumlah']);
+    bExpenses().forEach(e=>rows.push([e.date,e.cat,e.desc||'',e.amount])); }
+  if(rows.length<=1){ alert('Tidak ada data untuk diekspor'); return; }
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`${name}_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`; a.click();
+}
+
+/* ============ DASHBOARD ============ */
+function calcStats(){
+  const sv=bServices(), ex=bExpenses(), pu=bPurchases(), sk=bStock();
+  const revenue=sv.reduce((a,s)=>a+s.revenue,0), cogs=sv.reduce((a,s)=>a+s.cogs,0);
+  const grossProfit=revenue-cogs, totalExpense=ex.reduce((a,e)=>a+e.amount,0), netProfit=grossProfit-totalExpense;
+  const stockValue=sk.reduce((a,s)=>a+s.qty*s.cost,0), totalPurchase=pu.reduce((a,p)=>a+p.total,0);
+  return {revenue,cogs,grossProfit,totalExpense,netProfit,stockValue,totalPurchase,serviceCount:sv.length};
+}
+function renderDashboard(){
+  const st=calcStats();
+  const inProgress=bServices().filter(s=>s.status==='Antri'||s.status==='Proses').length;
+  document.getElementById('dashCards').innerHTML=`
+    <div class="stat-card"><div class="label">Total Pendapatan</div><div class="value blue">${rp(st.revenue)}</div><div class="sub">${st.serviceCount} servis</div></div>
+    <div class="stat-card"><div class="label">Profit Kotor</div><div class="value green">${rp(st.grossProfit)}</div><div class="sub">setelah modal part</div></div>
+    <div class="stat-card"><div class="label">Pengeluaran</div><div class="value red">${rp(st.totalExpense)}</div><div class="sub">operasional</div></div>
+    <div class="stat-card"><div class="label">Profit Bersih</div><div class="value ${st.netProfit>=0?'green':'red'}">${rp(st.netProfit)}</div><div class="sub">profit kotor - pengeluaran</div></div>
+    <div class="stat-card"><div class="label">Modal Stok</div><div class="value orange">${rp(st.stockValue)}</div><div class="sub">aset sparepart</div></div>
+    <div class="stat-card"><div class="label">Servis Dikerjakan</div><div class="value purple">${inProgress}</div><div class="sub">antri + proses</div></div>`;
+  const sv=bServices();
+  document.getElementById('dashRecent').innerHTML = sv.length? `<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Status</th><th>Profit</th></tr>`+
+    sv.slice(0,5).map(t=>`<tr><td>${t.inv}</td><td>${t.cust}</td><td>${t.issue}</td><td><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td><td class="green">${rp(t.revenue-t.cogs)}</td></tr>`).join('')+`</table>` : '<div class="empty">Belum ada transaksi</div>';
+  const low=bStock().filter(s=>s.qty<=s.min);
+  document.getElementById('dashLowStock').innerHTML = low.length? '<table><tr><th>Sparepart</th><th>Stok</th><th>Min</th></tr>'+low.map(s=>`<tr><td>${s.name}</td><td class="red">${s.qty}</td><td>${s.min}</td></tr>`).join('')+'</table>' : '<div class="empty">✅ Semua stok aman</div>';
+}
+
+/* ============ AI REVIEW ============ */
+function generateAIReview(){
+  const st=calcStats(), sv=bServices(), ex=bExpenses(), sk=bStock();
+  const margin=st.revenue?st.grossProfit/st.revenue*100:0, netMargin=st.revenue?st.netProfit/st.revenue*100:0;
+  const low=sk.filter(s=>s.qty<=s.min), dead=sk.filter(s=>s.qty>s.min*3), avgTrx=st.serviceCount?st.revenue/st.serviceCount:0;
+  const partMap={}; sv.forEach(s=>{ if(s.partName) partMap[s.partName]=(partMap[s.partName]||0)+1; });
+  const topPart=Object.entries(partMap).sort((a,b)=>b[1]-a[1])[0];
+  const expMap={}; ex.forEach(e=>{ expMap[e.cat]=(expMap[e.cat]||0)+e.amount; });
+  const topExp=Object.entries(expMap).sort((a,b)=>b[1]-a[1])[0];
+  const pending=sv.filter(s=>s.status==='Selesai').length;
+
+  if(st.serviceCount===0){ document.getElementById('aiResult').innerHTML='<div class="ai-box"><h3>Belum ada data cukup</h3><p>Mulai catat transaksi servis di cabang ini untuk review.</p></div>'; return; }
+  let insights=[],actions=[],warnings=[];
+  if(margin>50)insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> — sangat sehat. Pertahankan!`);
+  else if(margin>30)insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> cukup baik, masih bisa ditingkatkan.`);
+  else insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> rendah. Naikkan jasa atau tekan modal part.`);
+  if(st.netProfit<0)warnings.push(`Profit bersih <b>MINUS ${rp(Math.abs(st.netProfit))}</b>. Pengeluaran melebihi profit kotor!`);
+  else insights.push(`Profit bersih <b>${rp(st.netProfit)}</b> (net margin ${netMargin.toFixed(1)}%).`);
+  if(topPart)insights.push(`Sparepart terlaris: <b>${topPart[0]}</b> (${topPart[1]}x). Jaga ketersediaan.`);
+  if(topExp)insights.push(`Pengeluaran terbesar: <b>${topExp[0]}</b> ${rp(topExp[1])} (${(topExp[1]/st.totalExpense*100).toFixed(0)}%).`);
+  insights.push(`Rata-rata nilai/transaksi: <b>${rp(avgTrx)}</b>.`);
+  if(pending>0)insights.push(`Ada <b>${pending} servis berstatus "Selesai"</b> belum diambil customer — ingatkan untuk pengambilan.`);
+  if(low.length)warnings.push(`<b>${low.length} part menipis</b>: ${low.map(s=>s.name).join(', ')}. Risiko kehilangan customer.`);
+  if(dead.length)warnings.push(`<b>${dead.length} item overstock</b>: ${dead.map(s=>s.name).join(', ')}. Modal mengendap.`);
+  if(st.stockValue>st.revenue&&st.revenue>0)warnings.push(`Modal stok (${rp(st.stockValue)}) > total pendapatan. Modal terlalu terikat.`);
+  actions.push('Naikkan harga jasa servis kompleks (board, data recovery) yang bernilai tambah tinggi.');
+  if(low.length)actions.push(`Segera restock: ${low.map(s=>s.name).join(', ')}.`);
+  if(netMargin<15)actions.push('Target net margin minimal 20-25% — tinjau pengeluaran terbesar.');
+  actions.push('Tawarkan layanan tambahan: tempered glass, anti-air, garansi berbayar.');
+  actions.push('Bangun database customer untuk program loyalitas & reminder servis berkala.');
+  if(dead.length)actions.push(`Buat promo bundling item overstock: ${dead.map(s=>s.name).join(', ')}.`);
+  actions.push('Lakukan stock audit rutin mingguan untuk cegah selisih stok.');
+  if(branches.length>1)actions.push('Bandingkan performa antar cabang untuk replikasi strategi cabang terbaik.');
+
+  const score=Math.max(0,Math.min(100,Math.round(netMargin*1.5+margin*0.5+(low.length?0:15)-(st.netProfit<0?40:0))));
+  const grade=score>=75?'A (Sangat Baik)':score>=60?'B (Baik)':score>=40?'C (Cukup)':'D (Perlu Perbaikan)';
+  const gColor=score>=60?'var(--green)':score>=40?'var(--orange)':'var(--red)';
+  document.getElementById('aiResult').innerHTML=`<div class="ai-box">
+    <div class="ai-section"><span class="ai-tag">SKOR KESEHATAN — ${branchName(currentBranch)}</span>
+      <h3 style="color:${gColor};font-size:32px">${score}/100 — ${grade}</h3>
+      <div class="progress"><div class="progress-bar" style="width:${score}%;background:${gColor}"></div></div></div>
+    <div class="ai-section"><span class="ai-tag">📊 RINGKASAN KEUANGAN</span><ul>
+      <li>Pendapatan: <b>${rp(st.revenue)}</b> (${st.serviceCount} servis)</li>
+      <li>Profit kotor: <b class="green">${rp(st.grossProfit)}</b> (margin ${margin.toFixed(1)}%)</li>
+      <li>Pengeluaran: <b class="red">${rp(st.totalExpense)}</b></li>
+      <li>Profit bersih: <b style="color:${st.netProfit>=0?'var(--green)':'var(--red)'}">${rp(st.netProfit)}</b></li>
+      <li>Modal stok: <b>${rp(st.stockValue)}</b></li></ul></div>
+    <div class="ai-section"><span class="ai-tag">💡 INSIGHT</span><ul>${insights.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+    ${warnings.length?`<div class="ai-section"><span class="ai-tag" style="background:var(--red)">⚠️ PERINGATAN</span><ul>${warnings.map(w=>`<li>${w}</li>`).join('')}</ul></div>`:''}
+    <div class="ai-section"><span class="ai-tag" style="background:var(--green)">🎯 REKOMENDASI AKSI</span><ul>${actions.map(a=>`<li>${a}</li>`).join('')}</ul></div>
+    <div style="font-size:12px;color:var(--gray);margin-top:10px;border-top:1px solid #eee;padding-top:12px">Review otomatis per ${todayStr()} untuk cabang ${branchName(currentBranch)}.</div>
+  </div>`;
+}
+
+/* ============ RENDER ALL ============ */
+function renderAll(){
+  renderDashboard(); renderStok(); renderTransaksi(); renderAudit(); renderPembelian(); renderPengeluaran();
+  if(currentUser&&currentUser.role==='owner'){ renderBranchTable(); renderUserTable(); }
+}
+</script>
+</body>
+</html>
+<!-- Supabase library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Modul sinkronisasi -->
+<script src="sync.js"></script>
