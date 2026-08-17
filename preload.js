@@ -6,7 +6,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (event, data) => callback(data)),
+  onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (event, data) => callback(data)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (event, data) => callback(data)),
   checkUpdateNow: () => ipcRenderer.invoke('check-update-now'),
+  quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   getCameraStatus: () => ipcRenderer.invoke('get-camera-status'),

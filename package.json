@@ -1,6 +1,6 @@
 {
   "name": "iservis-pro",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Software Kasir Servis iPhone",
   "main": "main.js",
   "author": "iServis Pro",
@@ -8,11 +8,13 @@
     "start": "electron .",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win"
+    "dist:win": "electron-builder --win",
+    "publish:mac": "electron-builder --mac --publish always"
   },
   "devDependencies": {
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "@electron/notarize": "^2.3.2"
   },
   "build": {
     "appId": "com.iservis.pro",
@@ -27,15 +29,22 @@
       "src/**/*",
       "build/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "goedacsess",
+      "repo": "goed-acsess"
+    },
     "mac": {
       "category": "public.app-category.business",
       "icon": "build/icon.png",
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ],
       "extendInfo": {
         "NSCameraUsageDescription": "Aplikasi ini membutuhkan akses kamera untuk fitur absensi wajah karyawan."
-      }
+      },
+      "notarize": false
     },
     "win": {
       "icon": "build/icon.png",
@@ -47,12 +56,14 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
-    }
+    },
+    "afterSign": "scripts/notarize.js"
   },
   "dependencies": {
     "@capacitor/android": "^5.7.8",
     "@capacitor/cli": "^5.7.8",
     "@capacitor/core": "^5.7.8",
-    "@capacitor/ios": "^5.7.8"
+    "@capacitor/ios": "^5.7.8",
+    "electron-updater": "^6.3.9"
   }
 }

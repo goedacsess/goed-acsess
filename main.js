@@ -1,73 +1,35 @@
 const { app, BrowserWindow, Menu, dialog, shell, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
-const https = require('https');
+const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 
-/* ============ CEK UPDATE via GitHub Releases ============ */
-const GITHUB_USER = 'goedacsess';
-const GITHUB_REPO = 'goed-acsess';
+/* ============ AUTO UPDATE (download + install otomatis via GitHub Releases) ============ */
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
-// Ambil hanya angka.angka.angka dari tag, abaikan prefix apapun (v, v., V, release-, dst)
-function cleanVersion(v) {
-  const match = String(v).match(/(\d+(?:\.\d+)*)/);
-  return match ? match[1] : '0.0.0';
-}
-
-// Bandingkan 2 nomor versi, misal "1.2.0" vs "1.10.0"
-function compareVersions(v1, v2) {
-  const clean = v => cleanVersion(v).split('.').map(Number);
-  const a1 = clean(v1), a2 = clean(v2);
-  for (let i = 0; i < Math.max(a1.length, a2.length); i++) {
-    const n1 = a1[i] || 0, n2 = a2[i] || 0;
-    if (n1 > n2) return 1;
-    if (n1 < n2) return -1;
-  }
-  return 0;
-}
+autoUpdater.on('update-available', (info) => {
+  if (mainWindow) mainWindow.webContents.send('update-available', { version: info.version });
+});
+autoUpdater.on('download-progress', (progress) => {
+  if (mainWindow) mainWindow.webContents.send('update-progress', { percent: Math.round(progress.percent) });
+});
+autoUpdater.on('update-downloaded', (info) => {
+  if (mainWindow) mainWindow.webContents.send('update-downloaded', { version: info.version });
+});
+autoUpdater.on('error', (err) => {
+  console.log('Auto update error:', err.message);
+});
 
 function checkForUpdates() {
-  const options = {
-    hostname: 'api.github.com',
-    path: `/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`,
-    method: 'GET',
-    headers: { 'User-Agent': 'GoedAcsess-App' }
-  };
-
-  const req = https.request(options, (res) => {
-    let data = '';
-    res.on('data', chunk => { data += chunk; });
-    res.on('end', () => {
-      try {
-        const json = JSON.parse(data);
-        if (!json.tag_name) return; // belum ada release / repo masih kosong
-        const latestVersion = cleanVersion(json.tag_name);
-        const currentVersion = app.getVersion();
-        if (compareVersions(latestVersion, currentVersion) > 0 && mainWindow) {
-          const asset = (json.assets || []).find(a => a.name.endsWith('.dmg'));
-          const downloadUrl = asset ? asset.browser_download_url : json.html_url;
-          mainWindow.webContents.send('update-available', {
-            version: latestVersion,
-            currentVersion,
-            url: downloadUrl,
-            notes: json.body || ''
-          });
-        }
-      } catch (e) {
-        console.log('Cek update gagal (parse):', e.message);
-      }
-    });
-  });
-
-  req.on('error', (e) => {
-    console.log('Cek update gagal (koneksi):', e.message);
-  });
-
-  req.end();
+  autoUpdater.checkForUpdates().catch(e => console.log('Cek update gagal:', e.message));
 }
 
 ipcMain.handle('check-update-now', () => {
   checkForUpdates();
+});
+ipcMain.handle('quit-and-install', () => {
+  autoUpdater.quitAndInstall();
 });
 ipcMain.handle('open-external', (event, url) => {
   shell.openExternal(url);

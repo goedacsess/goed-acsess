@@ -6,111 +6,183 @@
 <title>Goed Acsess - Kasir Servis iPhone</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
-  :root{ --primary:#0F6E56; --dark:#1E2A32; --gray:#7c8a86; --light:#F4F6F5; --green:#0F6E56; --red:#A83E3E; --orange:#B8863D; --purple:#5B6B8C; --card:#fff;
-    --bg:var(--light); --text:var(--dark); --card-bg:var(--card); --border:#eee; --border-strong:#ddd; --input-bg:#fff; --hover-bg:#fafafa; }
-  body.dark-mode{ --bg:#14181b; --text:#e8eaeb; --card-bg:#1e2429; --gray:#8a959a; --border:#2a3136; --border-strong:#3a4147; --input-bg:#232a2f; --hover-bg:#232a2f; --light:#14181b; }
-  body.dark-mode .badge-low{background:#3a2422;} body.dark-mode .badge-ok{background:#1c2e28;} body.dark-mode .badge-mid{background:#33290f;}
-  body.dark-mode .st-antri{background:#2a3136;color:#c5cdd0;}
-  body{ background:var(--bg); color:var(--text); transition:background .2s,color .2s; }
-  h1,h2,h3,.logo,.login-card h2,.nav-item span:not(.ico){ font-family:'Kanit','Segoe UI',Tahoma,sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',Tahoma,sans-serif; -webkit-tap-highlight-color:transparent; }
+  :root{
+    --primary:#0F6E56; --primary-dark:#0B5744; --primary-light:#E5F1EC;
+    --dark:#1E2A32; --gray:#7c8a86; --light:#F4F6F5;
+    --green:#0F6E56; --red:#A83E3E; --orange:#B8863D; --purple:#5B6B8C; --card:#fff;
+    --bg:var(--light); --text:var(--dark); --card-bg:var(--card);
+    --border:#ececea; --border-strong:#dde1df; --input-bg:#fff; --hover-bg:#F7F9F8; --stripe-bg:#FAFBFA;
+    --shadow-xs:0 1px 2px rgba(20,30,26,.045);
+    --shadow-sm:0 1px 3px rgba(20,30,26,.06), 0 1px 2px rgba(20,30,26,.04);
+    --shadow-md:0 4px 10px rgba(20,30,26,.06), 0 2px 4px rgba(20,30,26,.05);
+    --shadow-lg:0 16px 40px rgba(20,30,26,.14), 0 4px 12px rgba(20,30,26,.08);
+    --radius-sm:9px; --radius-md:13px; --radius-lg:18px;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  body.dark-mode{
+    --bg:#12161a; --text:#e9edec; --card-bg:#1b2126; --gray:#8b9793;
+    --border:#262e33; --border-strong:#333d43; --input-bg:#20272c; --hover-bg:#212930; --stripe-bg:#191f24; --light:#12161a;
+    --primary-light:#173026; --dark:#e9edec;
+    --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+    --shadow-sm:0 1px 3px rgba(0,0,0,.35);
+    --shadow-md:0 4px 14px rgba(0,0,0,.4);
+    --shadow-lg:0 20px 48px rgba(0,0,0,.55);
+  }
+  body.dark-mode .badge-low{background:#3a2422;} body.dark-mode .badge-ok{background:#173026;} body.dark-mode .badge-mid{background:#33290f;} body.dark-mode .badge-info{background:#242840;}
+  body.dark-mode .st-antri{background:#262e33;color:#c5cdd0;}
+  body.dark-mode .panel,body.dark-mode .stat-card,body.dark-mode .modal{border:1px solid var(--border);}
+  body.dark-mode ::-webkit-scrollbar-thumb{background:#3a444b;}
+
+  html{ scroll-behavior:smooth; }
+  body{ background:var(--bg); color:var(--text); transition:background .25s var(--ease),color .25s var(--ease); font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3,.logo,.login-card h2,.nav-item span:not(.ico){ font-family:'Kanit','Inter','Segoe UI',Tahoma,sans-serif; letter-spacing:.1px; }
+  ::selection{ background:var(--primary); color:#fff; }
+  *:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; border-radius:4px; }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#d3d9d6; border-radius:20px; border:2px solid transparent; background-clip:padding-box; }
+
   /* LOGIN / LOADING */
-  .login-bg{ position:fixed; inset:0; background:linear-gradient(135deg,#1E2A32,#0F6E56); display:flex; align-items:center; justify-content:center; z-index:500; }
-  .login-card{ background:#fff; padding:40px; border-radius:20px; width:360px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
-  .login-card h2{ text-align:center; margin-bottom:8px; }
-  .login-card p{ text-align:center; color:var(--gray); font-size:13px; margin-bottom:24px; }
-  .hint{ font-size:12px; color:var(--gray); text-align:center; margin-top:14px; line-height:1.6; }
+  .login-bg{ position:fixed; inset:0; background:radial-gradient(circle at 20% 15%,#1a3b32,#0d1c18 55%),linear-gradient(150deg,#1E2A32,#0F6E56 130%); display:flex; align-items:center; justify-content:center; z-index:500; padding:20px; }
+  .login-card{ background:#fff; padding:42px 38px; border-radius:22px; width:380px; max-width:100%; box-shadow:0 30px 80px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.15); animation:cardIn .5s var(--ease); }
+  .login-card h2{ text-align:center; margin-bottom:8px; font-size:24px; }
+  .login-card p{ text-align:center; color:var(--gray); font-size:13.5px; margin-bottom:26px; }
+  .hint{ font-size:12px; color:var(--gray); text-align:center; margin-top:16px; line-height:1.7; }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(14px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
+
   /* LAYOUT */
-  .sidebar{ position:fixed; left:0; top:0; width:230px; height:100vh; background:var(--dark); color:#fff; padding:20px 0; overflow-y:auto; }
-  .logo{ font-size:20px; font-weight:700; padding:0 24px 16px; display:flex; align-items:center; gap:8px; }
-  .logo span{ color:var(--primary); }
+  .sidebar{ position:fixed; left:0; top:0; width:230px; height:100vh; background:linear-gradient(180deg,#1E2A32,#182129); color:#fff; padding:22px 0; overflow-y:auto; display:flex; flex-direction:column; box-shadow:2px 0 12px rgba(0,0,0,.08); }
+  .sidebar::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.15); }
+  .logo{ font-size:19px; font-weight:700; padding:0 22px 20px; display:flex; align-items:center; gap:9px; letter-spacing:.2px; }
+  .logo span{ color:#3ecfa8; }
   .branch-sel{ padding:0 16px 16px; }
-  .branch-sel select{ width:100%; padding:8px; border-radius:8px; border:none; background:#2c2c2e; color:#fff; font-size:13px; }
-  .branch-label{ padding:8px 10px; background:#2c2c2e; border-radius:8px; font-size:13px; color:#fff; }
-  .update-banner{ position:fixed; top:0; left:0; right:0; background:linear-gradient(90deg,#0F6E56,#137a5e); color:#fff; padding:12px 24px; display:flex; justify-content:center; align-items:center; gap:16px; z-index:600; font-size:14px; box-shadow:0 2px 10px rgba(0,0,0,.15); flex-wrap:wrap; }
-  .nav-item{ padding:13px 24px; cursor:pointer; display:flex; align-items:center; gap:12px; color:#d1d1d6; transition:.2s; font-size:14px; }
-  .nav-item:hover{ background:rgba(255,255,255,.08); color:#fff; }
-  .nav-item.active{ background:var(--primary); color:#fff; }
-  .nav-item .ico{ display:inline-flex; align-items:center; justify-content:center; width:20px; min-width:20px; }
-  .nav-item .ico svg{ width:18px; height:18px; display:block; }
-  .nav-divider{ height:1px; background:#3a3a3c; margin:10px 24px; }
-  .userbox{ padding:12px 24px; font-size:13px; color:#d1d1d6; border-top:1px solid #3a3a3c; margin-top:10px; }
-  .main{ margin-left:230px; padding:24px 32px; }
-  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
-  .topbar h1{ font-size:26px; }
-  .topbar .date{ color:var(--gray); font-size:14px; }
-  .page{ display:none; } .page.active{ display:block; }
+  .branch-sel select{ width:100%; padding:9px 10px; border-radius:9px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.06); color:#fff; font-size:13px; transition:background .2s; }
+  .branch-sel select:hover{ background:rgba(255,255,255,.1); }
+  .branch-label{ padding:9px 12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); border-radius:9px; font-size:13px; color:#fff; }
+  .update-banner{ position:fixed; top:0; left:0; right:0; background:linear-gradient(90deg,#0F6E56,#137a5e); color:#fff; padding:12px 24px; display:flex; justify-content:center; align-items:center; gap:16px; z-index:600; font-size:14px; box-shadow:0 2px 14px rgba(0,0,0,.2); flex-wrap:wrap; }
+  .nav-item{ margin:2px 10px; padding:11px 14px; cursor:pointer; display:flex; align-items:center; gap:12px; color:#aeb7bc; transition:.18s var(--ease); font-size:13.5px; font-weight:500; border-radius:10px; position:relative; }
+  .nav-item:hover{ background:rgba(255,138,61,.08); color:#fff; }
+  .nav-item.active{ background:linear-gradient(90deg,rgba(255,122,48,.22),rgba(255,122,48,.05)); color:#fff; font-weight:600; }
+  .nav-item.active::before{ content:''; position:absolute; left:-10px; top:4px; bottom:4px; width:4px; border-radius:0 4px 4px 0; background:linear-gradient(180deg,#FF9A4D,#FF5A1F); box-shadow:0 0 10px rgba(255,90,31,.6); }
+  .nav-item .ico{ display:inline-flex; align-items:center; justify-content:center; width:19px; min-width:19px; opacity:.92; }
+  .nav-item .ico svg{ width:17px; height:17px; display:block; }
+  .nav-divider{ height:1px; background:rgba(255,255,255,.08); margin:12px 24px; }
+  .userbox{ padding:14px 24px; font-size:12.5px; color:#9aa4a9; border-top:1px solid rgba(255,255,255,.08); margin-top:auto; }
+  .main{ margin-left:230px; padding:26px 34px 60px; min-height:100vh; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:26px; }
+  .topbar h1{ font-size:25px; font-weight:600; letter-spacing:.2px; }
+  .topbar .date{ color:var(--gray); font-size:13.5px; }
+  .page{ display:none; } .page.active{ display:block; animation:pageIn .35s var(--ease); }
+  @keyframes pageIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
   .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-bottom:24px; }
-  .stat-card{ background:var(--card-bg); border-radius:16px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-  .stat-card .label{ color:var(--gray); font-size:13px; margin-bottom:8px; }
-  .stat-card .value{ font-size:23px; font-weight:700; }
-  .stat-card .sub{ font-size:12px; margin-top:6px; }
+  .stat-card{ background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 22px; box-shadow:var(--shadow-sm); transition:transform .2s var(--ease),box-shadow .2s var(--ease); }
+  .stat-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
+  .stat-card .label{ color:var(--gray); font-size:12.5px; margin-bottom:9px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+  .stat-card .value{ font-size:24px; font-weight:700; letter-spacing:-.2px; }
+  .stat-card .sub{ font-size:12px; margin-top:7px; color:var(--gray); }
   .green{color:var(--green);} .red{color:var(--red);} .orange{color:var(--orange);} .blue{color:var(--primary);} .purple{color:var(--purple);}
-  .panel{ background:var(--card-bg); border-radius:16px; padding:24px; margin-bottom:24px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-  .panel h2{ font-size:18px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-  table{ width:100%; border-collapse:collapse; font-size:14px; }
-  th,td{ text-align:left; padding:11px 9px; border-bottom:1px solid var(--border); }
-  th{ color:var(--gray); font-weight:600; font-size:11px; text-transform:uppercase; }
+
+  .panel{ background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 26px; margin-bottom:22px; box-shadow:var(--shadow-sm); }
+  .panel h2{ font-size:17px; font-weight:600; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; letter-spacing:.1px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th,td{ text-align:left; padding:12px 10px; border-bottom:1px solid var(--border); }
+  th{ color:var(--gray); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; background:var(--stripe-bg); }
+  th:first-child{ border-top-left-radius:8px; border-bottom-left-radius:8px; }
+  th:last-child{ border-top-right-radius:8px; border-bottom-right-radius:8px; }
+  tbody tr{ transition:background .15s var(--ease); }
   tr:hover td{ background:var(--hover-bg); }
-  .btn{ background:var(--primary); color:#fff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-size:14px; font-weight:500; transition:.2s; }
-  .btn:hover{ opacity:.9; } .btn-sm{ padding:6px 11px; font-size:12px; }
-  .btn-red{background:var(--red);} .btn-green{background:var(--green);} .btn-gray{background:var(--gray);} .btn-orange{background:var(--orange);} .btn-purple{background:var(--purple);}
-  input,select,textarea{ width:100%; padding:11px 14px; border:1px solid var(--border-strong); border-radius:10px; font-size:14px; margin-bottom:12px; background:var(--input-bg); color:var(--text); }
-  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary); }
-  label{ font-size:13px; color:var(--gray); display:block; margin-bottom:5px; font-weight:500; }
+
+  .btn{ background:var(--primary); color:#fff; border:none; padding:10px 19px; border-radius:var(--radius-sm); cursor:pointer; font-size:13.5px; font-weight:600; transition:.18s var(--ease); box-shadow:0 1px 2px rgba(15,110,86,.15); letter-spacing:.1px; }
+  .btn:hover{ filter:brightness(1.07); transform:translateY(-1px); box-shadow:0 4px 10px rgba(15,110,86,.25); }
+  .btn:active{ transform:translateY(0); filter:brightness(.97); }
+  .btn-sm{ padding:6.5px 12px; font-size:12px; border-radius:8px; }
+  .btn-red{background:var(--red); box-shadow:0 1px 2px rgba(168,62,62,.15);}
+  .btn-green{background:var(--green); box-shadow:0 1px 2px rgba(15,110,86,.15);}
+  .btn-gray{background:var(--gray); box-shadow:none;}
+  .btn-orange{background:var(--orange); box-shadow:0 1px 2px rgba(184,134,61,.15);}
+  .btn-purple{background:var(--purple); box-shadow:0 1px 2px rgba(91,107,140,.15);}
+
+  input,select,textarea{ width:100%; padding:10.5px 14px; border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); font-size:14px; margin-bottom:12px; background:var(--input-bg); color:var(--text); transition:border-color .15s var(--ease),box-shadow .15s var(--ease); font-family:inherit; }
+  input::placeholder,textarea::placeholder{ color:var(--gray); opacity:.7; }
+  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3.5px var(--primary-light); }
+  label{ font-size:12.5px; color:var(--gray); display:block; margin-bottom:6px; font-weight:600; letter-spacing:.15px; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
-  .modal-bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:100; align-items:center; justify-content:center; }
-  .modal-bg.active{ display:flex; }
-  .modal{ background:var(--card-bg); border-radius:18px; padding:28px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; }
-  .modal h3{ margin-bottom:18px; font-size:20px; }
-  .badge{ padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; }
-  .badge-low{background:#f5e6e4;color:var(--red);} .badge-ok{background:#e2ede9;color:var(--green);} .badge-mid{background:#f3e9d9;color:var(--orange);}
-  .empty{ text-align:center; padding:40px; color:var(--gray); }
-  .ai-box{ background:linear-gradient(135deg,#eef4f2,#fff); border:1px solid #d8e6e1; border-radius:16px; padding:24px; line-height:1.7; }
-  .ai-box h3{ color:var(--primary); margin-bottom:12px; }
+
+  .modal-bg{ display:none; position:fixed; inset:0; background:rgba(15,20,18,.5); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal-bg.active{ display:flex; animation:fadeIn .2s var(--ease); }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  .modal{ background:var(--card-bg); border-radius:20px; padding:30px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); animation:modalIn .25s var(--ease); }
+  @keyframes modalIn{ from{opacity:0; transform:translateY(16px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .modal h3{ margin-bottom:20px; font-size:19px; font-weight:600; }
+
+  .badge{ padding:4px 11px; border-radius:20px; font-size:11.5px; font-weight:700; letter-spacing:.15px; display:inline-block; }
+  .badge-low{background:#f5e6e4;color:var(--red);} .badge-ok{background:#e2ede9;color:var(--green);} .badge-mid{background:#f3e9d9;color:var(--orange);} .badge-info{background:#e7e9f5;color:var(--purple);}
+
+  .empty{ text-align:center; padding:48px 20px; color:var(--gray); font-size:13.5px; }
+
+  .ai-box{ background:linear-gradient(160deg,var(--primary-light),var(--card-bg) 65%); border:1px solid var(--border); border-radius:var(--radius-lg); padding:26px; line-height:1.75; box-shadow:var(--shadow-sm); }
+  .ai-box h3{ color:var(--primary); margin-bottom:12px; font-size:16px; font-weight:600; }
   .ai-box ul{ margin:10px 0 10px 20px; } .ai-box li{ margin-bottom:8px; }
   .ai-section{ margin-bottom:18px; }
-  .ai-tag{ display:inline-block; background:var(--primary); color:#fff; font-size:11px; padding:3px 10px; border-radius:20px; margin-bottom:8px; }
+  .ai-tag{ display:inline-block; background:var(--primary); color:#fff; font-size:10.5px; font-weight:700; letter-spacing:.4px; padding:4px 11px; border-radius:20px; margin-bottom:9px; }
+
   .flex-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .search-box{ max-width:260px; margin-bottom:0; }
-  .audit-diff-pos{ color:var(--green); font-weight:600; } .audit-diff-neg{ color:var(--red); font-weight:600; }
-  .progress{ height:8px; background:#eee; border-radius:10px; overflow:hidden; margin-top:6px; }
-  .progress-bar{ height:100%; border-radius:10px; }
-  .st-pill{ padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none; }
-  .st-antri{background:#e4e6e5;color:#555;} .st-proses{background:#f3e9d9;color:var(--orange);} .st-selesai{background:#e2e8ed;color:var(--primary);} .st-diambil{background:#e2ede9;color:var(--green);} .st-batal{background:#f5e6e4;color:var(--red);}
+
+  .audit-diff-pos{ color:var(--green); font-weight:700; } .audit-diff-neg{ color:var(--red); font-weight:700; }
+
+  .progress{ height:7px; background:var(--border); border-radius:10px; overflow:hidden; margin-top:7px; }
+  .progress-bar{ height:100%; border-radius:10px; transition:width .3s var(--ease); }
+
+  .st-pill{ padding:4.5px 12px 4.5px 10px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer; border:none; letter-spacing:.1px; display:inline-flex; align-items:center; gap:6px; transition:filter .15s; }
+  .st-pill:hover{ filter:brightness(.96); }
+  .st-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.75; flex-shrink:0; }
+  .st-antri{background:#e4e6e5;color:#5c6663;} .st-proses{background:#f3e9d9;color:var(--orange);} .st-selesai{background:#e2e8ed;color:var(--primary);} .st-diambil{background:#e2ede9;color:var(--green);} .st-batal{background:#f5e6e4;color:var(--red);}
+
   .hidden{ display:none!important; }
+
   /* MULTI ITEM */
   .part-row{ display:grid; grid-template-columns:1fr 120px 120px 36px; gap:8px; align-items:start; margin-bottom:8px; }
   .part-row input, .part-row select{ margin-bottom:0; }
-  .part-row .btn-del-part{ background:var(--red); color:#fff; border:none; border-radius:8px; width:36px; height:40px; cursor:pointer; font-size:16px; margin-top:0; }
+  .part-row .btn-del-part{ background:var(--red); color:#fff; border:none; border-radius:9px; width:36px; height:40px; cursor:pointer; font-size:16px; margin-top:0; transition:.15s; }
+  .part-row .btn-del-part:hover{ filter:brightness(1.08); }
+
   /* PERMISSION GRID */
   .perm-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-  .perm-item{ display:flex; align-items:center; gap:10px; background:#f5f5f7; padding:10px 14px; border-radius:10px; }
-  .perm-item label{ margin:0; font-size:14px; color:var(--dark); font-weight:400; cursor:pointer; }
+  .perm-item{ display:flex; align-items:center; gap:10px; background:var(--hover-bg); border:1px solid var(--border); padding:11px 14px; border-radius:var(--radius-sm); transition:border-color .15s; }
+  .perm-item:has(input:checked){ border-color:var(--primary); background:var(--primary-light); }
+  .perm-item label{ margin:0; font-size:13.5px; color:var(--text); font-weight:500; cursor:pointer; }
   .perm-item input[type=checkbox]{ width:18px; height:18px; margin:0; cursor:pointer; accent-color:var(--primary); }
+
   /* ICON EDITOR */
   .icon-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:12px; }
-  .icon-opt{ font-size:22px; text-align:center; padding:8px; border-radius:8px; cursor:pointer; border:2px solid transparent; }
-  .icon-opt:hover, .icon-opt.selected{ border-color:var(--primary); background:#e2ede9; }
+  .icon-opt{ font-size:22px; text-align:center; padding:9px; border-radius:10px; cursor:pointer; border:2px solid transparent; transition:.15s; }
+  .icon-opt:hover{ background:var(--hover-bg); }
+  .icon-opt.selected{ border-color:var(--primary); background:var(--primary-light); }
+
   .hamburger-btn{ display:none; background:none; border:none; cursor:pointer; padding:8px; color:var(--dark); }
-  .sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:400; }
-  .sidebar-backdrop.show{ display:block; }
+  .sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(1px); z-index:400; }
+  .sidebar-backdrop.show{ display:block; animation:fadeIn .2s var(--ease); }
+
   @media(max-width:900px){
     .hamburger-btn{ display:flex; align-items:center; }
-    .sidebar{ transform:translateX(-100%); transition:transform .25s ease; z-index:500; width:260px; }
+    .sidebar{ transform:translateX(-100%); transition:transform .28s var(--ease); z-index:500; width:260px; }
     .sidebar.mobile-open{ transform:translateX(0); }
     .logo span,.nav-item span:not(.ico),.branch-sel,.userbox{ display:inline !important; }
-    .main{ margin-left:0; padding:14px; }
-    .topbar{ position:sticky; top:0; background:var(--bg); z-index:50; padding:10px 0; margin-bottom:14px; }
+    .main{ margin-left:0; padding:16px 14px 40px; }
+    .topbar{ position:sticky; top:0; background:var(--bg); z-index:50; padding:10px 0; margin-bottom:16px; }
     .topbar h1{ font-size:20px; }
     .form-grid{ grid-template-columns:1fr; }
-    .cards{ grid-template-columns:1fr 1fr; }
+    .cards{ grid-template-columns:1fr 1fr; gap:12px; }
     .part-row{ grid-template-columns:1fr; gap:6px; }
     .part-row .btn-del-part{ width:100%; }
-    .panel{ padding:16px; border-radius:12px; overflow-x:auto; }
-    .modal{ width:94%; max-width:none; padding:20px; max-height:92vh; }
+    .panel{ padding:18px 16px; border-radius:var(--radius-md); overflow-x:auto; }
+    .modal{ width:94%; max-width:none; padding:22px 20px; max-height:92vh; border-radius:18px; }
     table{ font-size:13px; min-width:520px; }
     .perm-grid{ grid-template-columns:1fr; }
     .flex-row{ gap:8px; }
@@ -118,6 +190,72 @@
     input,select,textarea,.btn{ font-size:16px; }
   }
   @media(max-width:480px){ .cards{ grid-template-columns:1fr; } }
+  @media(max-width:900px){ .sidebar.collapsed{ width:260px; } .sidebar.collapsed ~ .main{ margin-left:0; } }
+
+  /* ===== LOGIN SCREEN (exact reference design) ===== */
+  .login-bg{ position:fixed; inset:0; background:linear-gradient(128deg,#070908 0%,#070908 40%,#0a1f14 68%,#12331f 100%); display:flex; align-items:center; justify-content:center; z-index:500; padding:24px; }
+  .login-content{ width:400px; max-width:100%; }
+  .login-content .login-logo-img{ display:block; width:96px; height:auto; margin:0 auto 20px; }
+  .login-content h2{ color:#fff; font-size:26px; font-weight:800; letter-spacing:1.5px; text-align:center; margin-bottom:6px; }
+  .login-content p{ color:#c7cdc9; font-size:14.5px; text-align:center; margin-bottom:34px; }
+  .login-content .login-version{ color:#7d8783; font-size:12.5px; text-align:center; margin-bottom:36px; }
+  .login-content label{ color:#e7eae8; font-size:14px; font-weight:500; margin-bottom:8px; }
+  .login-content input{ background:#83888a; border:none; color:#181c1a; font-weight:700; font-size:15.5px; padding:15px 16px; border-radius:10px; margin-bottom:20px; }
+  .login-content input::placeholder{ color:#40453f; opacity:.75; font-weight:600; }
+  .login-content input:focus{ box-shadow:0 0 0 3px rgba(255,90,31,.45); }
+  .login-content .btn{ background:linear-gradient(90deg,#FF5B21,#FF3B0F); padding:16px; font-size:16px; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(255,61,15,.35); }
+  .login-content .btn:hover{ filter:brightness(1.05); transform:none; }
+  .login-content .hint{ color:#9aa39e; font-size:13px; margin-top:24px; text-align:center; }
+  .login-content .hint b{ color:#fff; }
+
+  /* ===== LOADING SPINNER (replaces emoji) ===== */
+  .spinner{ width:40px; height:40px; border:3.5px solid rgba(15,110,86,.15); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ===== SIDEBAR COLLAPSE TOGGLE ===== */
+  .sidebar-toggle-btn{ position:fixed; top:50%; left:230px; transform:translate(-50%,-50%); width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; border:3px solid var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:510; box-shadow:var(--shadow-md); transition:left .28s var(--ease); padding:0; }
+  .sidebar-toggle-btn:hover{ filter:brightness(1.08); }
+  .sidebar-toggle-btn svg{ transition:transform .25s var(--ease); }
+  .sidebar.collapsed ~ .sidebar-toggle-btn{ left:68px; }
+  .sidebar.collapsed ~ .sidebar-toggle-btn svg{ transform:rotate(180deg); }
+  .sidebar.collapsed{ width:68px; }
+  .sidebar.collapsed .logo span,.sidebar.collapsed .nav-item span:not(.ico),.sidebar.collapsed .branch-sel,.sidebar.collapsed .userbox{ display:none; }
+  .sidebar.collapsed .logo{ justify-content:center; padding:0 0 16px; }
+  .sidebar.collapsed .nav-item{ justify-content:center; padding:11px 0; margin:2px 10px; }
+  .sidebar.collapsed .nav-item.active::before{ left:-10px; }
+  .sidebar.collapsed ~ .main{ margin-left:68px; }
+  @media(max-width:900px){
+    .sidebar-toggle-btn{ left:14px!important; top:50%; transform:translateY(-50%); }
+    .sidebar.mobile-open ~ .sidebar-toggle-btn{ left:246px!important; }
+    .sidebar.mobile-open ~ .sidebar-toggle-btn svg{ transform:rotate(180deg); }
+  }
+
+  /* ===== SIDEBAR — deep green/black gradient ===== */
+  .sidebar{ background:linear-gradient(165deg,#0c1210 0%,#0e1a16 38%,#123526 75%,#163d2f 100%); }
+
+  /* ===== TOOLBAR ACTION BUTTONS (tidy secondary actions) ===== */
+  .btn.btn-tool{ background:var(--card-bg); color:var(--text); border:1.5px solid var(--border-strong); box-shadow:none; font-weight:600; }
+  .btn.btn-tool:hover{ background:var(--hover-bg); border-color:var(--primary); color:var(--primary); transform:translateY(-1px); box-shadow:var(--shadow-xs); }
+  .btn.btn-tool:active{ transform:translateY(0); }
+  .toolbar-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  /* ===== TABLE ROW ACTIONS (icon buttons instead of stacked full buttons) ===== */
+  .row-actions{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; justify-content:flex-end; }
+  .btn-icon{ width:32px; height:32px; padding:0; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .btn-icon svg{ margin:0!important; }
+
+  /* ===== SEARCHABLE SELECT (combobox for sparepart/item search) ===== */
+  .ss-wrap{ position:relative; }
+  .ss-input{ cursor:text; }
+  .ss-dropdown{ position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--card-bg); border:1px solid var(--border-strong); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; z-index:80; }
+  .ss-dropdown.hidden{ display:none; }
+  .ss-item{ padding:9px 13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13.5px; border-bottom:1px solid var(--border); transition:background .1s; }
+  .ss-item:last-child{ border-bottom:none; }
+  .ss-item:hover{ background:var(--primary-light); }
+  .ss-item .ss-sub{ color:var(--gray); font-size:11.5px; white-space:nowrap; flex-shrink:0; }
+  .ss-empty{ padding:14px; text-align:center; color:var(--gray); font-size:13px; }
+  .part-row .ss-input{ margin-bottom:0; }
+  @media(max-width:900px){ .row-actions{ justify-content:flex-start; flex-wrap:wrap; } }
 </style>
 </head>
 <body>
@@ -126,7 +264,7 @@
 <div class="update-banner hidden" id="updateBanner">
   <span id="updateBannerText"></span>
   <div class="flex-row">
-    <button class="btn btn-sm" style="background:#fff;color:var(--green)" onclick="downloadUpdate()">⬇️ Download Sekarang</button>
+    <button class="btn btn-sm" id="updateActionBtn" style="background:#fff;color:var(--green);display:none" onclick="installUpdateNow()">🔄 Restart & Install</button>
     <button class="btn btn-sm" style="background:rgba(255,255,255,.25)" onclick="dismissUpdateBanner()">Nanti saja</button>
   </div>
 </div>
@@ -136,19 +274,20 @@
   <div class="login-card" style="text-align:center">
     <h2><img src="data:image/png;base64,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" alt="logo" style="width:40px;height:40px;border-radius:8px;vertical-align:middle;margin-right:8px"> Goed Acsess</h2>
     <p style="margin-bottom:6px">Menghubungkan ke server...</p>
-    <div style="font-size:36px;margin-top:10px">⏳</div>
+    <div class="spinner" style="margin:14px auto 0"></div>
   </div>
 </div>
 
 <!-- LOGIN -->
 <div class="login-bg hidden" id="loginScreen">
-  <div class="login-card">
-    <h2 id="loginLogo"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAmEklEQVR42u2de3SU1fX3v+ecZ2Yyud8AEy6iWAkIuCpQkItYW6kWVhXfxguIImhtQdu6XmttXb+Gam1t67JFKq1AURAL5fLipSj2lWqs8qqICmIMAkJi7vdkcpnMPOec9w/mTANKmQkJzDyzP2vNAhICM+c5+3v23meffRjOPKywsJADwObNm2XPb9x2220DhBAFjLGxSqnRjLERWushAHIApANIAiBAELGLBNAFwAeggTFWCeCQ1rpECPERgNKVK1c29PyBGTNmWAMHDtSbN29WAPQZNcYz9R9prdnll18uiouLbfO1xYsXpwYCga8BuALAVK31aMbYQMuyzM984UUQsQ5j7AsvALBtGwBqAZQwxt5ijP3LsqzdK1asaO8pBq+//rpkjGlHCEBRUREvKSlhZrUvLCx0Z2ZmfgPA9VrrKy3LGiyEgJQSUkoopaC1VowxrbVmoQFlZ1KsCKJv1rxjK5aZy4wxzjmHEAJCCNi2Ddu2Kxhj/wSwiXP+r5UrVwZDdiJGjx6tf/nLX6p4FQBWWFjIjeEvWLBgqMvlukVrfbNlWQWMMdi2DSmlAqBCRs7J0AmnCwMAFRIHLoTgLpfLLH6fAHiGc77uySefrDRC0J+hQb8YW+hNSwBYtGjRBZzzHwKY73K5MkOqpxhjSmstmPGPCCIx3QRjC9yyLG5ZFoLBYLPWel0gEFi+bt26wyfaVMwKQFFREV+6dKlmjOlFixYNEkL8RGt9p8vlSg0EAlBK2QA4Y4zToyeIL4oBAMU5t9xuN4LBoA/AX2zb/v1TTz1VX1RUxAGgL8OCPhOAGTNmWCbBd8cdd9zJGCuyLCvPGD5jTJB7TxAR5w9kDyGoZIwtXbly5eoTbS0WBCAc6y9atGiUEOJxy7K+GQwGIaUkwyeI0xQCIYTlcrlg2/Y/bdv+4Zo1aw70VW7gtFzxkEuiN2/eLG+//fY7hBDvCCG+6ff7bSmlZoxZZPwE0fvFlTFmSSm13++3hRAzLct6Z+HChQtD+QBtwoIz7gGYpERhYaE3IyPjCZfLdVsgEIDWWoKKdQiiP5CMMREKC1ZXVFTctWPHju7TSRD2SgBMDLJgwYKhQojNbrd7kt/vtwFQVp8g+jkmACCTkpKsQCCwKxgMXr9u3brK3uYFWG+N/+abb77Y4/G8IIQYFggE7JC7TxDEmREC2+PxWLZtH+nu7v7O+vXr9/dGBKJy1YuKiqy1a9fa8+fPv9Ttdr/COT+HjJ8gzgrctm1bCJHDOb9+7NixxS+88MLnM2bMsMrKyiLeJozYAzDqMn/+/EtdLtcOAOlSSor3CeIs5wWEEAJAS3d398xnn312dzQ5gYgEwPyDt9xyyzghxOsAsqSUkjEm6IAOQZw9GGMIbRUKAI2BQOCyZ599tiRSETjlFkJRUREPGf9gxtg/AGTZti0BkPETxNnPBQCACNlkjsvl2n7rrbees3nzZhnJFuGp3Hc2cOBAPnHiRI/W+hXLskYFg0GK+QkiBnMCUkrbsqxsKeW0kSNHPlNfX69LSkp6LwAzZsywXnrpJXnRRRetTkpK+nZ3dzcZP0HEsAjYtm17PJ5hAPI2btz4/KmSguK/xf0vvfSSnDt37qKkpKRfdHd3BwG4aIwJIi5EYEJBQcGRf/zjHx8UFhaKkpISHbEAFBUV8RUrVuibbrrpK0KI56WUXGtNNf0EER8wpZTmnF85bty4jRs3bmwuKirixcXFXxCBL00SlJSUsGP5Bb1KCJF8bLePjJ8g4kUApJRaCJEmpVwFQIds+tQegNk+uOmmm273eDx3U9xPEHEdClwwatSoo5s2bfrSUOBEAWCFhYUYNmxYtpTyOa11UqgvH63+BBFnhBrpagBTxo0b99eCggJ/cXHxyT2AwsJCsWLFClVQUPArj8fzjWAwSJV+BBHHoYDWWrrd7vRAIIAVK1b83xO9gLBxm8Tf3LlzzwXwtG3bQmtNTToJwgH5AMbYJRdeeOG6rVu3tvVMCIaTgCbxZ9v2TyzL8iqlFBk/QcS/ACillMvlSrEs63/jhISg+Q0HoObMmZNnWdanjLEU09Kcxo8g4j8dEGrT0RYMBi/ctm1bXci2tQCAGTNmiLKyMjV69OgfeTyeq0ytP40bQTgnF+ByuZIB1JeUlOwyFYLhDH9hYaFLSlliWdaI0GUd1LqbIJyDEkJw27YPNDY2jikuLpYAtDVjxgxRXFxsK6UutyxrhG3bZPwE4Ty4bdvKsqyROTk50wG8VlhYKMKGrpSaG7qQUNFYEYQzvYCQjc8FgLq6umOZgSuvvDIlJSXlsBBiUGjLgJJ/BOEwtNZKCMGllJUZGRkXrF271m8BgNfr/ZplWYOCwaBijHFq9EEQjg4DBre2tk4A8KYFAIyxbxj3P1T8QxCEQ8MAzjkPBoPfCAuA1nqaUooppcj7JwhnhwHsWI0fpgMAu/baa3OklKWc81ylFMX/BOFsAdCccyalrBVCFFjBYHC0ECI3pAqM4n+CcDRMKQXG2EClVIHFGBvLOUcwGJShm3wJgnC2F6BcLhcPBoNjLa31RaFzwzQyBJEgYUDI5kdbWusRoT9Q7E8QiSEAZsG/gGuth4Tif4IgEigPoLUeYmmtcygBSBCJJwAAci0AaRQCEERChgJpllIqibb+CSKxPICQt++1aOuPIBJy9QcAYVHcTxCJKwIkAARBAkAQBAkAQRAkAARBJIYAUPMPgkhgyAMgCAoBCIIgASAIgnIABEFQDoAgCAoBCIIgASAIggSAIAjnCAAlAQkigSEPgCAoBCAIggSAIAgSAIIgEkMAKAlIEAkMeQAEQSEAQRAkAARBkAAQBJEYAkBJQIJIYMgDIAgKAQiCIAEgCIIEgCCIxBAASgISRAJDHgBBkAAQBEECQBAECQBBEIkBJQEJgjwAgiBIAAiCIAEgCIIEgCAIh0NJQIIgD4AgCBIAgiBIAAiCIAEgCMLhUBKQIMgDIAiCBIAgCBIAgiAoB0AQBHkAxIkwxsIv4FhzxXhDa32sKSTncTn+PT8DzWESgH6fcMZQbNtGMBhEIBCAUuqYG8U5OOfhiRkXrh/nEEIgEAjEzfvWWkMpBaUUtNYQQsDlcsHtdsOyLAAIf48gAegTI2GMIRAIoLOzEwCQnp6O4cOHY/jw4Rg2bBjy8vKQlZWFlJQUuFyumP9MSil4vV4cOHAA77zzDhYsWICOjo648ASCwSA6OjrQ3NyMmpoalJeXo6ysDJWVlWhubgYAeL1eeDweAICUkiYxCUD0CCGgtYbP54OUEoMHD8bMmTMxZcoUjBs3DoMHD0ZaWlp41YknV1QphbS0NKSlpeHo0aO48sor0dLSAiFE3IVeUkr4fD5UVVVh//792LVrF959912Ul5eDMYbU1FRwzskr+G8CQEPwH/fSGH5LSwvcbjemTp2Ka6+9FtOmTUNeXh445+ju7kYgEEB7e/sXJlU8uNLGhe7s7ERHRwdaW1vh8/niQgC+bLyFEBgxYgRGjRqFwsJC1NbW4u2338bzzz+PN998Ex0dHUhPTz9OCOIpVCMP4Ayu+j6fD5xzXH311ViwYAG+9rWvweVyobOzE62trcflA+Ixedbzs3LOIaWEECL853gVbr/fHw7RUlNTcc0112D27NnYt28f1q9fjxdffBE+nw/p6elhESQRIAEIG4Nt22hpacHkyZNxzz334LLLLoNSKrzKm4SZ07Bt2xGusfEETFjQ0tICxhjGjBmDxx57DPPnz8fy5cuxY8cOeDweJCUlUX4gRELXAViWhfb2djDGUFRUhI0bN2L69OlobW1Fe3t72PCdtloYNzgYDDouNjZiwDlHZ2cnmpubcdFFF2HVqlV44oknMGDAgLjJeZAA9LPxNzU1YdSoUdi0aRPuuusuBAIBtLW1xbVLnIgewEknd0jAOzs70dbWhjlz5mDbtm2YNWsWmpqajksokgAkmNvf2NiIa665Bps2bcKYMWPQ0NBwnCvpdBhjkFImRFLMCEFTUxOysrLw5JNP4v7770dHRweUUgkh9iQAPSZDU1MT7rzzTqxYsQKWZcHn84W39BIJp3sAX+b1BQIB+Hw+3HvvvfjjH/8IKSWCwWDCikBCfWohBFpaWvDjH/8YDz30ENrb22HbdkLGg4wx2LYdrmZMpAWAc476+npcf/31+Mtf/hLOhySiCCTMJzYx/5133omf//zn4cqxvnjoPQuB4uVlPAAjAPH23vtiPjQ0NOCqq67Cn/70JyilIKVMuJyAlUjGP2fOHPziF78IbxP19mGbmvSe8WW81AYopeDxeOB2u6GUgsvlipuVz4y7lPK48e/tczQi8O1vfxu//vWvce+99yItLS2xwqJEcPt9Ph8uvvhiPPLII+jq6ur1KThTSeZ2u+H1eiGEgN/vh8/nQ0dHB7q7u2N+8mit4fV6UV1dDb/fj8rKyriZ8JZlwev1IjU1FV6vFwDQ1dUVHvfehHJGBObNm4cjR45g2bJlyMnJgW3biREK5ufnO1buGGPhLO+mTZswevRotLe3Rz1RzMqTnJwMj8eD6upqvPfee9i9ezdKS0tRU1MDn88XV/vqWmtIKcMHZ+JFAFJSUjBgwACMGDECl1xyCSZMmIDzzz8fjDH4fD4opXr1fIFjB4luvfVWvPHGG0hPT0+EYiHpaAEwWz9Lly7FkiVL0NDQEHW23xhJcnIy9u3bh40bN+LVV19FZWUlpJSwLAuWZcVdwZAJgeIpCWiE2BzJZowhJycHkyZNQmFhIS6//PLwrk60oYE5JVleXo7rrrsOnZ2dsCzL6eGAcwWAc46Ojg6MHz8eGzZs6NW5dyklMjIyUF1djeXLl2Pr1q1oa2tDSkpKeOWM14YU5j3HY9KrZ/4mGAyis7MTjDFMnjwZP/rRj3DZZZeFT3JGE+rZto2cnBysXr0aDzzwALKyspzuBThXABhj8Pv9WLduHaZNmxau8IvUOLTWyMzMxMsvv4yioiKUlZUhIyMDlmWFC2iI2HjOxsjNyn/LLbfgvvvug9vtRldXV1QhgdYaLpcLN954Iz744AOkpKQ4eatUOnIb0CT+Zs6cienTp0dt/MCxxh/Lli3D7bffjvr6euTk5IRXCTL+2MtlSCmRlpaG5ORkrFy5EvPmzUNNTQ1SU1OjWsWVUkhKSsLixYsT4jk7UgCUUnC73bjtttuiPvqptUZaWhoefvhh/OpXv0JaWho8Hk/CZIXjejkLbQ8OGDAAe/bswY033ojDhw9HJQJCCLS1teGKK67AlClTwofCSADiKPZvb2/HpZdeiokTJ0b1AKWUyMrKwvLly/H4448jNzf3uD3/03lPsfhyKsFgEJmZmaioqMBtt92GqqoqeL3eiJ+jCQPmzp3r+N4BjqsDMJntOXPmRJXFlVIiMzMT27dvx+9+9zvk5OT0SSsp030n1txmIQSSkpJOGVdH8zljyWW2bRvp6ekoKyvDD3/4Q6xfvx5CiIgMWgiB9vZ2zJgxAxdeeCGOHj0Kj8fjyJDAcprxd3d3Y+jQoZg2bRo6Ozsjmshaa3g8HlRWVqKoqAhut/u4fMDpGH9ycjLGjx8fc8bf0dGBTz755AvGYMawq6sr4pVPax1uihprIpCVlYVdu3bhscceQ1FREZqbmyPKB9m2jezsbFx55ZV4/PHH4fV6Hbkj4CgB4Jyjq6sLkyZNQl5eXsSNH4yhLl26FOXl5X1SCcY5h9/vx8iRI7F+/fqYySQrpZCamor3338f11133XHjY5poTJs2Dddcc01E3YKNeD799NM4cOAAkpKSYkoEgsEgsrOz8fTTT+Nb3/oWxo8fH9HnMt2gr7jiCqxevdqxOwGOLAWeOnVqxKuXUgopKSnYu3cvtm3bhoyMjD5L+JmS4+7ubti2HROxpKmM7O7uPqkHVVBQgIULF0a0e2IE5ZVXXsH+/fvh9XpjzlU2n/eJJ57AmjVrohLwgoICnHfeefjss8+QlJTkOCFwlADYto2MjAyMHTsW3d3dERmcqe3fsGEDfD5fnxd/mCrBWDlpZuL7k70XIwJtbW0RuctKKQQCgXBlXiwipUR6ejreeOMNvPvuu5g0aVJEyWHbtpGZmYlx48ahpKQkfP7AUV6zk9z/QCCAIUOGYMiQIQgEAhG5r263G5WVldi5cyeSk5P7VOFNvB1vWWTTGSmaV6x/RiNszz33XFTJYcYYxo0bB6fiGAEwTR3OO++8iPd9Tez/3nvvobKyss8zvVprWJYFzjkVD8VA6OP1erFr1y7U1dVFlLA0TVMuuOACeDweR+YBHLUZLKXEueeeG7XCv/vuu/32cJ3YVTgeMcnKiooKlJaWRpSsNItKfn4+0tLSHNkwxFECwBjDOeecE7Hxm0RPaWlpn5/8MhMlEXsNxvL88Pv9+OSTTyLesjQHwjIzMx25DegoAeCcIycnJ6IHa+LztrY21NTU9Mseds8QgIgdETh69GhEz9oUlXm93nB/APIAYtjF45xHdXrLVHz1pklINCFArI5VIoYmnHM0NDREbMxGxPs6QUwC0E8P11zRHcnDNZnh/trCMpOHMRZzScBENH5zB0JXV1fE7rwRy1ircuwrLCc+5FgyBFMDEG382Jt6fCLysaXErAMFwBSlRLrimvjO4/Ggu7u7zw3OVBlmZmZGdcGoqVwznW6IvjN8rTWSk5MjfhYmD9CbjlIkAGf44Uop4fP5In5QUkqkpqYiPT0dzc3NfZqxN+Ly4Ycf4mc/+xn8fn9EAmNc1EsuuSTcm448gb4V5QEDBkRcm2G2Ap36HBznATQ2NkZsaKaLzODBg3Ho0KE+Pchi9p1LS0vx/vvvRzzhLMtCa2srfvrTnyIpKQkdHR1ktX3M8OHDI36GPS8XFUI4Lg/guBxAVVVVxA/JGOmYMWOwc+fOPnfxzL+fnJwcVW2Cy+XC5MmTEQwGyVr7eIFISkrCqFGjIj6cZVkWWlpaHHuluKMEwLIsHD16NOKsvin1nDRpEtxud7+ou9Y64tOFZldiwIABGD16dMRhAxHZ2JqzIiNHjoTf7z/lHDG7ONXV1Whvb4+qq1C84JjZZa65OnLkCFpbWyOq7DPn37/61a9ixIgREU2Kfn0YoX4GkydPRn5+vmMTT2dzbKdMmYLc3NyIFgkjAAcPHoz4dCkJwFnCnOyrrq5GWVlZxCu66QU/a9asqFtI98dnsCwLc+bMcXwvurMxth6PB9/5znei6s2gtcZHH33k2GfhKP/SVPZ98MEHEQuAuUCksLAQeXl5Z03pTSvzKVOmYOrUqf3ejTaRKgHN2E6bNi3iXgA94/99+/Y5tiegI7sCv/nmmxGrvIm7zzvvPCxYsAA+n++seAEm47xkyZKIs83GY2hqaorK60nE1d+yLPzgBz+IqlNUUlISSktLw01BqRQ4DvIAycnJ2LNnT1SdXIUQaG1txaJFizBhwoSoLhLpC4wR33zzzeFrrSJZocznfeedd1BWVubYVaovxnbu3LmYNm1axGNrQsrXX3/d0bUYjvpUpp97XV1d1B1+lFLweDx45JFHkJqaGlFHob6aoK2trRg/fjzuu+++iCeo8V601ti+fTtZ+knGtq2tDRdffDF+8pOfRBVWWZaF5uZmvPrqqzHX6JQEIIJkz3PPPReVO28uFBk7diweffRRBAKBqC+X7M0EbW9vR15eHpYvXx5uPR3pKTWv14vS0lL8+9//RmpqqpPvsOtV3N/Z2Yns7GwsW7YMqampEYeFUkqkpKTgrbfeQmlpqSO3/xwrAMYt3rdvH1577bVwJ5dIDbKlpQWzZ8/GY489hu7ubgQCgX5p6uFyudDa2oqBAwfiqaeewvDhw6NyNaWUSEpKwqZNm8JlzOT+/+c5dnR0ICUlBatWrUJBQUFErcB7elZKKWzYsMHxY+XYKhPOOdasWRP1IR8hBJqbm1FYWIjVq1cjJSUFLS0tfdbYQwgBzjnq6+sxbtw4bNy4EaNGjYrKWzGr/8GDB7F169aoRM7Rkzl04KqpqQlDhgzB+vXrMXHixKiq+Ex5+K5duxLCs3Ls5aCpqal4++238cILL0Td699Mom9+85vYunUrLrvsMjQ2NsLv94cNOJotNNNll3MOn8+Hzs5OLFq0CBs2bMDQoUOj3nmQUoZvwa2vrw/3QEh0w+/q6kJzczNmz56NLVu2YOzYsWHxjuZZKaXw5z//OWbucuhXb8mpH8xs4yxbtgxf//rXo4qvjRvZ2tqKc889F2vXrsWWLVuwatUqlJaWQgiB5OTk4ybWie63+X+01uHTZEIIXHrppbjrrrswY8YMtLe3R118ZHrcv/XWW9i8eTMyMjLQ1dV11sfbnLE/E2fte/4fUkq0t7fDtm0UFBRgyZIlmDNnDgKBAHw+X1TGb64D27JlC4qLi5GRkeF4z8qxAmDc5EOHDuEPf/gDfvOb36CxsTGqCWFWFcYY5s2bh6uvvho7duzAiy++iL1796K5uRlKqS/0xldKha+qdrlcGDRoEK666irMmTMH06dPD4cZ0d7Sa2oF/H4/Hn74Ydi2HTOXVQSDQQQCAQQCgX51mc3ZCuPRpaenY9KkSZgzZw5mzZqFzMxMtLa2hr2uaP5dj8eDmpoaPProo47d908YATCKnpWVhXXr1mHq1KmYNWsWmpqaohIBY6DNzc3hK6O/+93v4siRI9i7dy9KSkpQXl6OpqamcBVhcnIycnNzcf7552PMmDEYO3YsBg8eDK012tvbw4YcLVJK5ObmYunSpXjvvfeQk5PTqxXK/P99dV+B1hrZ2dnIy8vr15iZMQaPx4Ps7GwMGzYMY8eOxfjx4zFy5EgkJSXB5/P1+tSead5y//334+jRo31+QxQJwFn0BNxuNx544AGMHDkSw4YNQ0dHR9STxFwt3dzcDMYYzj33XFx44YXgnCMYDCIYDIZjRsuy4Ha7w+3A/H5/eFXqbQmuObOwbds2rFy5EllZWTERo5rW6g8++OAZ6ZrrdrvDXZzMCb+uri50dXVF1XXpxLHNzc3FmjVrsGXLloQx/oQRAI/Hg4aGBtx9993429/+Bo/H06tCn55upblC+8T4V2t93Pd6JqlOx5PJzMzEnj17cP/998dkxZ/X6z0jzU9PHF8jqr0dX+MlFhcX46GHHkq4eoqEOGxuEmcffvgh7rrrLgDH9uFP50H3vD/vxFX9xLv1TmdVtG0b6enpOHz4ML7//e+js7MzJjvUSilh23a4AWp/vcwpyZ5jfzpjm5GRgZKSEtx9993hfE4i1VMkTLcJo/Q7d+7E4sWLAQAejyemXT2z8h85cgQLFixAdXV1zPanP3EXoD9ffTm2hw4dwsKFC9HU1OTI679JAE546NnZ2dixYwcWLlyIjo6OcIlorIUtJubfu3cv5s2bh/Ly8ogvPSUiy6fs27cPN998M6qrq5GSkpKQY8sT8eFnZ2fjjTfewA033IBPP/00nE2PBfU3ibTc3Fw8//zzmDt3Lmpra8n4+wClFLTWGDBgAF5++WXMmzcPdXV1CWv8CSkAPcOBTz/9FNdffz02btyIzMxMeDwe2LZ9VmJAs+qnpaVBCIEHH3wQixcvRiAQQHJyMhl/H4xtcnIyvF4vfv/73+N73/se/H5/wo9twnactG0bqamp6O7uxj333IMlS5agtrYWubm54JyfMSFQSsG2bbjdbuTk5GD37t244YYbsHz5cqSmpsKyLDL+0zR8IQRyc3Px6aefYv78+fjtb38Lr9cLl8uV8GOb0HdXSykhhEBGRga2bduGXbt24Y477sBNN92EnJwctLe3hxtz9uWxYK11ONzwer3hisVVq1bh73//ezhGjbXcRDy5+qa/Q2ZmJmpra7FixQqsWbMGPp8vPLZ0ejLBBcAYo5QSmZmZ8Pl8ePDBB7Fp0ybMmzcPs2fPRn5+PmzbRldXV9ggo81Ia63DL+A/xSwAcODAAWzatAlbtmxBfX09MjIywqFIv7p+oa1LJzQf7Tm+5oZot9uNqqoqPPPMM1i3bh0OHz6M9PR0pKenk7CSAHy5N2BZFrKzs1FWVob/+Z//werVqzFz5kxcddVVGDt2LLKysqC1RiAQQDAYjChxyDkPVwaa2oO6ujr861//wvbt21FcXIympiakpaWFK9B6szKZ8wen+vmef+9UohgP7rEQAi6XCx6PJ9xg5cMPP8RLL72E7du3o6ysDMnJyeFEL4VTJACnnPgejwderxcNDQ1YvXo1nnnmGXzlK1/BxIkTMWHCBIwcORLnnHMO0tLS4Ha7v9QbMG5+d3c3WlpaUFFRgY8//hi7d+/Gnj178Pnnn4ePLWdnZ4cNs7ekpqYiKyvrlH0LTMOU9PT0k46Bx+NBenp6r88s9CcnngTs6upCXV0dDh48iN27d2PXrl0oKSkJNwQxY0urPglA1ELgcrmQlZUFpRQOHjyI/fv3Y+3atUhLS8PAgQORl5eHQYMGITs7G6mpqeGuvH6/Hz6fD42NjaipqUF1dTUaGhrQ0dEBxhi8Xi/S0tLCLvjprkqcc7z22muorKw8ZVtz0zextrb2C56COTdx6NAhbNy4MaouOmfquQQCAbS3t6OhoQHV1dUoLy9HRUUFGhsbEQgE4Ha7kZyc3Ceimgiw/Px8yoREETMDx3YQzOGfk4UBZqWyLAsulwuWZYVXU7Mf3Zd0dnZGNdlNrPxl79scsInF3EDPXIq5R9G8zFkE6o0YeeRLAnCarmgk10v1nLRnQqAiNaSTGUpf73qcCUGgjH7vBIBCgD5YiWKBvlz1TAhEJIBnS0NAECQABEGQABAEQQJAEAQJAEEQJAAEQZAAEARBAkAQBAkAQRAkAARBkAAQBEECQBAECQBBECQABEGQABAEQQJAEAQJAEEQJAAEQZAAEARBAkAQBAkAQRAkAARBkAAQBEECQBAECQBBECQABEGQABAEQQJAEAQJAEEQJAAEQZAAEARBAkAQBAkAQRAkAARBkAAQBEECQBAECQBBkAAQBEECQBAECQBBECQABEGQABAEQQJAEAQJAEEQJAAEQZAAEARBAkAQBAkAQRAkAARBxJsASBoGgkg8tNaSA/DTUBBEYtk+ADDGurjW2tfziwRBOB/GGLTWPs4Ya2CMkQAQRIJ5AADqOYBKGg+CSEgBqORa60MUAhBEQoYBhzhj7GMaCoJILNsHAK31x5bW+qPQ6i9oXAgiIeBaa805/4gLIUoAUCKQIBIk/g/tANR6PJ5SXlFR0QTAhAGKxocgHI0KLfb7P/vss1YeigXeJA+AIBLDAwAAxti/gdBZAKXUTq11+M8EQTg6/ofWemfY4Dnn7yqlahhjnLwAgnC0+8+VUhVut3uPEQCrurq6E8DLjDENOhxEEE4WAM0Ye6msrMwPwOI9YoK/aa0ZhQEE4Wj3nzHGNph8AMexzD/Ly8srVkodCoUBtBtAEA50/7XWpZWVlW/iWDGQNB6A2LNnTxDAX0O7ASQABOE8AQCA1QBshAr/jLuvAEBK+ZRSyhf6JiUDCcIZaABCKdWilFoX+po8UQBEXV1dLYCnOecMlAwkCKcgOedMa/3XmpqaegCWWeD5CSrBtNaPKqU6Q98jL4Ag4n/150qpdsuyHgvF/uEQv6cAKAC8urq6XGu9gnNO/QIJwhmrPwfw+Oeff14VsvkvFYCwCAghfqOUqqMdAYKIa0zhT3VSUtLvTjR+4MuPAPO2trbOtLS0Rs75tVprCaoNIIh4Xf2FlHLx559/vvvLBICd5AcFAJmXl7dTCHGFUkqC+gUQRNwZv1Lqn1VVVd8yNv2F1f6/JA6YlPIOrXV7SCgoIUgQ8YEGwJRSbUqp7/03+z2ZACgAvK6u7jOt9d2UECSIuFv9udZ6cU1NTdmXuf7/LQfQU0Usn8/3fmpq6lDO+QSttU35AIKIaWzOuSWlfLK6uvo3OLbnf9LF+1TGLAGIzMzMxVLKtznnFo6VERIEEaPGr5R6s7q6+u6Txf3RCIAGoEtKSgIul+s6pVQZY8yicIAgYs/tZ4xZSqnPpJT/C0DQ2O/pCIDJB4jy8vJqKeUsAI2MMUEiQBAxZfxCa10H4Nu1tbV1odX/lDU8kcbzEoCora39WEp5tda6hUSAIGLH+AE0AriqqqrqQCSuf7QCYETAqqmp2S2l/BaOtRIXlBMgiLMX85uVXyk1s6qq6gOcIul3OgKAkLFbtbW179q2/XWt9RFKDBLEWSHIObe01oeUUpdXV1e/HzL+qGyxN1t6RgT2CyGmaa3f6iECVCxEEP2LxrF9fpdS6o1gMDi9pqbmk5DbH/VC3NvyXgVAtLW1tQ0aNOjZQCAwiHM+EaE2Q6BaAYLor3ifh4p8/lxVVTW3s7OzLZqY/0TYab6hcIVRfn7+bQD+wDnPCJ0d4H3w7xMEcWzVV6Ha/mbG2I8rKyvXhezruPP9Z8oD6PnGGADh8/neT0tL+z9a669wzi8Mfd3u8SYJguiFu88YE5xzrpR6SQhxXUVFxev4T9u+0wq7+9IwwwmI/Pz8hQB+yTkfopQyeQNBQkAQkRs+AItzDq11uda6qKqq6ukTbe106csjvsq4/aHzA8+EvjaOc+4N3Tlg94PwEIRTUCHDF6E4v0Vr/Rjn/NbKysr/1yOs7rP6m/4yxHBSYtCgQecJIe4GcCvnPDt0L5nqIRiUMCQS3egVAM4Y46GruxsAPC2l/FPoNN9xNtWX9OdKbG4ZkgAwdOjQfNu2b2aMzWeMjQl9UOhjt5LKHn+fvAPC6e69Cv0q2DGMLXwEYF0wGFxfX19f08PwFfppi/1MGNuJbouVn59/OYDrAcxkjJ1rBgCA+bXnB+6ZRCRxIOLFyM2vPecxD13OgR5GfxTAKwA2V1VVvd7DTvrV8HEWDIrhhGKFvLy8ZK31BM751wFMBTAGQJ4ZpONGVFONERE/nGQOawDVAPYDeFNr/boQ4r2KioquHn/NlPLqM2WUZ3xsengFx2Uyhw0blmXbdoHWegxjbJTW+gIAQwDkMsbStdZJoePIBBGbS/+xpjl+AG0AGgB8zhg7rLUu4ZzvF0IcKC8vbz7hx6wTQoMzxv8HXhWrYlFQvMEAAAAASUVORK5CYII=" alt="logo" style="width:40px;height:40px;border-radius:8px;vertical-align:middle;margin-right:8px"> Goed Acsess</h2>
+  <div class="login-content">
+    <img id="loginLogo" src="data:image/png;base64,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" alt="logo" class="login-logo-img">
+    <h2 id="loginAppName">GOED ACSESS</h2>
     <p>Sistem Kasir Servis iPhone</p>
     <label>Username</label><input id="lg_user" placeholder="username">
     <label>Password</label><input id="lg_pass" type="password" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn" style="width:100%" onclick="doLogin()">Masuk</button>
-    <div class="hint" id="loginHint">Hubungi owner untuk akun login.</div>
+    <button class="btn" style="width:100%" onclick="doLogin()">Login</button>
+    <div class="hint" id="loginHint">Hubungi owner untuk <b>login</b>.</div>
   </div>
 </div>
 
@@ -164,6 +303,8 @@
   <div class="userbox" id="userBox"></div>
   <div class="nav-item" onclick="doLogout()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span>Logout</span></div>
 </div>
+
+<button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" aria-label="Buka/tutup menu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
 
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
 
@@ -185,13 +326,13 @@
   <div class="page" id="kasir">
     <div class="panel">
       <h2>Transaksi Servis
-        <span class="flex-row">
-          <button class="btn btn-orange btn-sm" onclick="document.getElementById('importKelolaFile').click()">Import dari Kelola</button>
+        <span class="toolbar-actions">
+          <button class="btn btn-sm btn-tool" onclick="document.getElementById('importKelolaFile').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 15V3"/><polyline points="7 8 12 3 17 8"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import dari Kelola</button>
           <input type="file" id="importKelolaFile" accept=".xlsx,.xls" style="display:none" onchange="handleKelolaFile(this.files[0])">
-          <button class="btn btn-gray btn-sm" onclick="downloadServiceTemplate()">Template</button>
-          <button class="btn btn-gray btn-sm" onclick="document.getElementById('importServiceFile').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 15V3"/><polyline points="7 8 12 3 17 8"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import CSV</button>
+          <button class="btn btn-sm btn-tool" onclick="downloadServiceTemplate()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Template</button>
+          <button class="btn btn-sm btn-tool" onclick="document.getElementById('importServiceFile').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 15V3"/><polyline points="7 8 12 3 17 8"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import CSV</button>
           <input type="file" id="importServiceFile" accept=".csv" style="display:none" onchange="importServiceCSV(this.files[0])">
-          <button class="btn btn-green btn-sm" onclick="exportExcel('services')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
+          <button class="btn btn-sm btn-tool" onclick="exportExcel('services')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
           <button class="btn" onclick="openServiceModal()">+ Transaksi Baru</button>
         </span>
       </h2>
@@ -208,11 +349,11 @@
   <div class="page" id="stok">
     <div class="panel">
       <h2>Data Stok Sparepart
-        <span class="flex-row">
-          <button class="btn btn-gray btn-sm" onclick="downloadStockTemplate()">Template</button>
-          <button class="btn btn-gray btn-sm" onclick="document.getElementById('importStockFile').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 15V3"/><polyline points="7 8 12 3 17 8"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import CSV</button>
+        <span class="toolbar-actions">
+          <button class="btn btn-sm btn-tool" onclick="downloadStockTemplate()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Template</button>
+          <button class="btn btn-sm btn-tool" onclick="document.getElementById('importStockFile').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 15V3"/><polyline points="7 8 12 3 17 8"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Import CSV</button>
           <input type="file" id="importStockFile" accept=".csv" style="display:none" onchange="importStockCSV(this.files[0])">
-          <button class="btn btn-green btn-sm" onclick="exportExcel('stock')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
+          <button class="btn btn-sm btn-tool" onclick="exportExcel('stock')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
           <button class="btn" onclick="openStockModal()">+ Tambah Item</button>
         </span>
       </h2>
@@ -237,8 +378,8 @@
   <div class="page" id="pembelian">
     <div class="panel">
       <h2>Pembelian Stok
-        <span class="flex-row">
-          <button class="btn btn-green btn-sm" onclick="exportExcel('purchases')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
+        <span class="toolbar-actions">
+          <button class="btn btn-sm btn-tool" onclick="exportExcel('purchases')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
           <button class="btn" onclick="openPurchaseModal()">+ Catat Pembelian</button>
         </span>
       </h2>
@@ -250,8 +391,8 @@
   <div class="page" id="pengeluaran">
     <div class="panel">
       <h2>Pengeluaran Operasional
-        <span class="flex-row">
-          <button class="btn btn-green btn-sm" onclick="exportExcel('expenses')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
+        <span class="toolbar-actions">
+          <button class="btn btn-sm btn-tool" onclick="exportExcel('expenses')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>Export Excel</button>
           <button class="btn" onclick="openExpenseModal()">+ Catat Pengeluaran</button>
         </span>
       </h2>
@@ -457,6 +598,41 @@ function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function val(id){ return document.getElementById(id).value; }
+
+/* ============ SEARCHABLE SELECT (combobox pencarian barang) ============ */
+let ssData = {};
+function ssHTML(baseId, placeholder, initialLabel){
+  return `<div class="ss-wrap">
+    <input type="text" id="${baseId}_q" class="ss-input" placeholder="${placeholder||'Cari...'}" autocomplete="off" value="${initialLabel||''}" oninput="ssFilter('${baseId}')" onfocus="ssFilter('${baseId}')">
+    <input type="hidden" id="${baseId}">
+    <div class="ss-dropdown hidden" id="${baseId}_dd"></div>
+  </div>`;
+}
+function ssInit(baseId, options, onPick){
+  ssData[baseId] = {options, onPick};
+}
+function ssFilter(baseId){
+  const d = ssData[baseId]; if(!d) return;
+  const qEl = document.getElementById(baseId+'_q'); if(!qEl) return;
+  const q = (qEl.value||'').toLowerCase();
+  const dd = document.getElementById(baseId+'_dd');
+  const matches = d.options.filter(o=>o.label.toLowerCase().includes(q)).slice(0,60);
+  dd.innerHTML = matches.length ? matches.map(o=>`<div class="ss-item" onclick="ssPick('${baseId}','${String(o.value).replace(/'/g,"\\'")}')"><span>${o.label}</span>${o.sub?`<span class="ss-sub">${o.sub}</span>`:''}</div>`).join('') : '<div class="ss-empty">Tidak ditemukan</div>';
+  dd.classList.remove('hidden');
+}
+function ssPick(baseId, value){
+  const d = ssData[baseId]; if(!d) return;
+  const opt = d.options.find(o=>String(o.value)===String(value));
+  document.getElementById(baseId).value = value;
+  document.getElementById(baseId+'_q').value = opt?opt.label:'';
+  document.getElementById(baseId+'_dd').classList.add('hidden');
+  if(d.onPick) d.onPick(value);
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.ss-wrap')){
+    document.querySelectorAll('.ss-dropdown').forEach(el=>el.classList.add('hidden'));
+  }
+});
 
 // Helper: panggil Supabase, kasih peringatan kalau gagal (tanpa hentikan aplikasi)
 async function dbCall(promise, label, silent){
@@ -665,6 +841,10 @@ function initApp(){
   document.getElementById('userBox').innerHTML = `<b>${currentUser.name}</b><br><span style="font-size:11px;text-transform:uppercase">${currentUser.role}</span>`;
   if(currentUser.role==='kasir' && currentUser.branch && branches.some(b=>b.id===currentUser.branch)){
     currentBranch = currentUser.branch;
+  } else if(currentUser.role==='manajer' && currentUser.branch){
+    const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
+    const validBranch=myBranches.find(id=>branches.some(b=>b.id===id));
+    if(validBranch) currentBranch=validBranch;
   }
   applyAppSettings();
   buildNavMenu();
@@ -698,22 +878,33 @@ function initApp(){
 })();
 
 /* ============ CEK UPDATE APLIKASI ============ */
-let pendingUpdateUrl = null;
 function initUpdateChecker(){
   if(window.electronAPI && window.electronAPI.onUpdateAvailable){
     window.electronAPI.onUpdateAvailable((data)=>{
-      pendingUpdateUrl = data.url;
-      document.getElementById('updateBannerText').innerHTML = `Versi <b>${data.version}</b> tersedia! Kamu masih pakai versi ${data.currentVersion}.`;
+      document.getElementById('updateBannerText').innerHTML = `Versi <b>${data.version}</b> ditemukan, mendownload otomatis di latar belakang...`;
+      document.getElementById('updateActionBtn').style.display = 'none';
+      document.getElementById('updateBanner').classList.remove('hidden');
+    });
+  }
+  if(window.electronAPI && window.electronAPI.onUpdateProgress){
+    window.electronAPI.onUpdateProgress((data)=>{
+      document.getElementById('updateBannerText').innerHTML = `Mendownload update... ${data.percent}%`;
+    });
+  }
+  if(window.electronAPI && window.electronAPI.onUpdateDownloaded){
+    window.electronAPI.onUpdateDownloaded((data)=>{
+      document.getElementById('updateBannerText').innerHTML = `Versi <b>${data.version}</b> siap diinstall!`;
+      document.getElementById('updateActionBtn').style.display = 'inline-block';
       document.getElementById('updateBanner').classList.remove('hidden');
     });
   }
 }
-function downloadUpdate(){ if(pendingUpdateUrl && window.electronAPI) window.electronAPI.openExternal(pendingUpdateUrl); }
+function installUpdateNow(){ if(window.electronAPI && window.electronAPI.quitAndInstall) window.electronAPI.quitAndInstall(); }
 function dismissUpdateBanner(){ document.getElementById('updateBanner').classList.add('hidden'); }
 async function manualCheckUpdate(){
   if(!window.electronAPI){ alert('Fitur ini hanya berjalan di aplikasi desktop.'); return; }
   await window.electronAPI.checkUpdateNow();
-  alert('Sedang mengecek update di latar belakang. Kalau ada versi baru, notifikasi hijau akan muncul di atas dalam beberapa detik.');
+  alert('Sedang mengecek update di latar belakang. Kalau ada versi baru, akan otomatis terdownload dan notifikasi hijau muncul di atas.');
 }
 async function loadCurrentVersion(){
   if(window.electronAPI && window.electronAPI.getAppVersion){
@@ -739,7 +930,8 @@ function applyAppSettings(){
   const name = appSettings.name || 'Goed Acsess';
   document.title = name + ' - Kasir Servis iPhone';
   document.getElementById('sidebarLogo').innerHTML = '<img src="'+APP_LOGO+'" alt="logo" style="width:28px;height:28px;border-radius:6px;vertical-align:middle"> <span>'+name+'</span>';
-  document.getElementById('loginLogo').innerHTML = '<img src="'+APP_LOGO+'" alt="logo" style="width:40px;height:40px;border-radius:8px;vertical-align:middle;margin-right:8px"> '+name;
+  const loginNameEl = document.getElementById('loginAppName');
+  if(loginNameEl) loginNameEl.textContent = name.toUpperCase();
 }
 
 function buildNavMenu(){
@@ -776,12 +968,20 @@ function renderBranchSelect(){
   const wrap = document.getElementById('branchSelWrap');
   if(currentUser.role==='kasir'){
     wrap.innerHTML = `<div class="branch-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="4" y="3" width="16" height="18"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><path d="M10 21v-4h4v4"/></svg>${branchName(currentBranch)}</div>`;
+  } else if(currentUser.role==='manajer'){
+    const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
+    const myBranchObjs=branches.filter(b=>myBranches.includes(b.id));
+    wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${myBranchObjs.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>`;
   } else {
     wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>`;
   }
 }
 function switchBranch(id){
   if(currentUser.role==='kasir') return;
+  if(currentUser.role==='manajer'){
+    const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
+    if(!myBranches.includes(id)) return;
+  }
   currentBranch=id; renderAll();
 }
 function openBranchModal(id){
@@ -807,9 +1007,13 @@ async function saveBranch(id){
 }
 async function delBranch(id){
   if(branches.length<=1){alert('Minimal harus ada 1 cabang');return;}
-  const assignedKasir = users.filter(u=>u.role==='kasir' && u.branch===id);
-  if(assignedKasir.length){
-    alert('Tidak bisa hapus. Cabang ini masih ditugaskan ke kasir: '+assignedKasir.map(u=>u.name).join(', ')+'. Ubah dulu cabang kasir tersebut di menu Kelola User.');
+  const assignedUsers = users.filter(u=>{
+    if(u.role==='kasir') return u.branch===id;
+    if(u.role==='manajer') return (u.branch||'').split(',').map(x=>x.trim()).includes(id);
+    return false;
+  });
+  if(assignedUsers.length){
+    alert('Tidak bisa hapus. Cabang ini masih ditugaskan ke: '+assignedUsers.map(u=>u.name).join(', ')+'. Ubah dulu cabang user tersebut di menu Kelola User.');
     return;
   }
   if(confirm('Hapus cabang ini?')){
@@ -822,35 +1026,50 @@ async function delBranch(id){
 function renderBranchTable(){
   document.getElementById('branchTable').innerHTML=`<table><tr><th>Nama</th><th>Alamat</th><th>Telepon</th><th></th></tr>`+
     branches.map(b=>`<tr><td><b>${b.name}</b></td><td>${b.addr||'-'}</td><td>${b.phone||'-'}</td>
-    <td><button class="btn btn-sm btn-gray" onclick="openBranchModal('${b.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="delBranch('${b.id}')">Hapus</button></td></tr>`).join('')+`</table>`;
+    <td><div class="row-actions"><button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openBranchModal('${b.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button> <button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delBranch('${b.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></td></tr>`).join('')+`</table>`;
 }
 
 /* ============ USERS ============ */
 function openUserModal(id){
   const u=id? users.find(x=>x.id===id):{name:'',user:'',pass:'',role:'kasir',branch:currentBranch};
   const branchOpts = branches.map(b=>`<option value="${b.id}" ${u.branch===b.id?'selected':''}>${b.name}</option>`).join('');
+  const uBranchIds = (u.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const branchChecks = branches.map(b=>`<div class="perm-item"><input type="checkbox" id="ub_${b.id}" value="${b.id}" ${uBranchIds.includes(b.id)?'checked':''}><label for="ub_${b.id}">${b.name}</label></div>`).join('');
   showModal(`<h3>${id?'Edit':'Tambah'} User</h3>
     <label>Nama Lengkap</label><input id="u_name" value="${u.name}">
     <label>Username</label><input id="u_user" value="${u.user}">
     <label>Password</label><input id="u_pass" value="${u.pass}">
     <label>Role</label><select id="u_role" onchange="toggleUserBranchField()">
-      <option value="kasir" ${u.role==='kasir'?'selected':''}>Kasir (terbatas)</option>
+      <option value="kasir" ${u.role==='kasir'?'selected':''}>Kasir (1 cabang, akses terbatas)</option>
+      <option value="manajer" ${u.role==='manajer'?'selected':''}>Manajer (multi cabang, akses terbatas)</option>
       <option value="owner" ${u.role==='owner'?'selected':''}>Owner (akses penuh)</option>
     </select>
     <div id="u_branch_wrap" style="${u.role==='owner'?'display:none':''}">
       <label>Cabang yang Dikelola</label>
-      <select id="u_branch">${branchOpts}</select>
-      <div style="font-size:12px;color:var(--gray);margin-top:-6px;margin-bottom:12px">Kasir ini hanya bisa melihat & mengelola data cabang ini saja.</div>
+      <select id="u_branch" style="${u.role==='manajer'?'display:none':''}">${branchOpts}</select>
+      <div id="u_branches_wrap" class="perm-grid" style="${u.role==='manajer'?'display:grid':'display:none'}">${branchChecks}</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:${u.role==='manajer'?'0':'-6px'};margin-bottom:12px" id="u_branch_hint">${u.role==='manajer'?'Manajer bisa berpindah antar cabang yang dicentang, dengan hak akses seperti kasir (lihat Hak Akses Kasir di Pengaturan).':'Kasir ini hanya bisa melihat & mengelola data cabang ini saja.'}</div>
     </div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveUser('${id||''}')">Simpan</button></div>`);
 }
 function toggleUserBranchField(){
-  document.getElementById('u_branch_wrap').style.display = val('u_role')==='owner'?'none':'block';
+  const role = val('u_role');
+  document.getElementById('u_branch_wrap').style.display = role==='owner'?'none':'block';
+  document.getElementById('u_branch').style.display = role==='manajer'?'none':'block';
+  document.getElementById('u_branches_wrap').style.display = role==='manajer'?'grid':'none';
+  document.getElementById('u_branch_hint').textContent = role==='manajer'
+    ? 'Manajer bisa berpindah antar cabang yang dicentang, dengan hak akses seperti kasir (lihat Hak Akses Kasir di Pengaturan).'
+    : 'Kasir ini hanya bisa melihat & mengelola data cabang ini saja.';
 }
 async function saveUser(id){
   const role=val('u_role');
   const d={name:val('u_name'),user:val('u_user'),pass:val('u_pass'),role};
   if(role==='kasir'){ d.branch=val('u_branch'); if(!d.branch){alert('Pilih cabang untuk kasir ini');return;} }
+  else if(role==='manajer'){
+    const picked = branches.filter(b=>document.getElementById('ub_'+b.id)?.checked).map(b=>b.id);
+    if(!picked.length){alert('Pilih minimal 1 cabang untuk manajer ini');return;}
+    d.branch = picked.join(',');
+  }
   if(!d.name||!d.user||!d.pass){alert('Semua field wajib');return;}
   if(users.some(x=>x.user===d.user && x.id!==id)){alert('Username sudah dipakai');return;}
   if(id){
@@ -874,9 +1093,9 @@ async function delUser(id){
 }
 function renderUserTable(){
   document.getElementById('userTable').innerHTML=`<table><tr><th>Nama</th><th>Username</th><th>Role</th><th>Cabang</th><th></th></tr>`+
-    users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.user}</td><td><span class="badge ${u.role==='owner'?'badge-ok':'badge-mid'}">${u.role}</span></td>
-    <td>${u.role==='owner'?'<span style="color:var(--gray)">Semua cabang</span>':branchName(u.branch)}</td>
-    <td><button class="btn btn-sm btn-gray" onclick="openUserModal('${u.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="delUser('${u.id}')">Hapus</button></td></tr>`).join('')+`</table>`;
+    users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.user}</td><td><span class="badge ${u.role==='owner'?'badge-ok':u.role==='manajer'?'badge-info':'badge-mid'}">${u.role}</span></td>
+    <td>${u.role==='owner'?'<span style="color:var(--gray)">Semua cabang</span>':u.role==='manajer'?(u.branch?u.branch.split(',').map(x=>branchName(x.trim())).join(', '):'-'):branchName(u.branch)}</td>
+    <td><div class="row-actions"><button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openUserModal('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button> <button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delUser('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></td></tr>`).join('')+`</table>`;
 }
 
 /* ============ PENGATURAN ============ */
@@ -955,6 +1174,18 @@ function closeMobileMenu(){
   document.querySelector('.sidebar').classList.remove('mobile-open');
   document.getElementById('sidebarBackdrop').classList.remove('show');
 }
+function toggleSidebarCollapse(){
+  if(window.innerWidth<=900){ toggleMobileMenu(); return; }
+  const sb=document.querySelector('.sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('goedacsess_sidebar_collapsed', sb.classList.contains('collapsed')?'1':'0');
+}
+function initSidebarCollapse(){
+  if(window.innerWidth>900 && localStorage.getItem('goedacsess_sidebar_collapsed')==='1'){
+    document.querySelector('.sidebar').classList.add('collapsed');
+  }
+}
+initSidebarCollapse();
 
 /* ============ STOK ============ */
 const CATEGORY_LIST = ['LCD/Layar','Baterai','Konektor Charge','Kamera','Speaker/Mic','Casing/Body','Tombol','IC/Chip','Tools','Aksesoris','Lainnya'];
@@ -962,18 +1193,20 @@ const CATEGORY_LIST = ['LCD/Layar','Baterai','Konektor Charge','Kamera','Speaker
 function openStockModal(id){
   const s=id? stock.find(x=>x.id===id):{name:'',sku:'',category:'',qty:0,min:3,cost:0,price:0};
   const isOwner = currentUser.role==='owner';
+  const allCats=[...new Set([...CATEGORY_LIST, ...stock.map(x=>x.category).filter(Boolean)])].sort();
   showModal(`<h3>${id?'Edit':'Tambah'} Sparepart</h3>
     <label>Nama Sparepart</label><input id="m_name" value="${s.name}">
     <div class="form-grid">
       <div><label>Kode / SKU</label><input id="m_sku" value="${s.sku}"></div>
-      <div><label>Kategori</label><input id="m_category" list="categoryList" value="${s.category||''}" placeholder="Pilih atau ketik baru">
-        <datalist id="categoryList">${CATEGORY_LIST.map(c=>`<option value="${c}">`).join('')}</datalist>
+      <div><label>Kategori</label><input id="m_category" list="categoryList" value="${s.category||''}" placeholder="Pilih atau ketik kategori baru">
+        <datalist id="categoryList">${allCats.map(c=>`<option value="${c}">`).join('')}</datalist>
+        <div style="font-size:11.5px;color:var(--gray);margin-top:-8px;margin-bottom:12px">Belum ada kategorinya? Langsung ketik nama kategori baru di sini.</div>
       </div>
     </div>
     <div class="form-grid">
       <div><label>Jumlah Stok</label><input id="m_qty" type="number" value="${s.qty}"></div>
       <div><label>Stok Minimum</label><input id="m_min" type="number" value="${s.min}"></div>
-      ${isOwner || canAccess('lihat_modal') ? `<div><label>Harga Modal</label><input id="m_cost" type="number" value="${s.cost}"></div>` : `<div><label>Harga Modal</label><input type="text" value="(tersembunyi)" disabled style="background:#f5f5f7;color:var(--gray)"><input type="hidden" id="m_cost" value="${s.cost}"></div>`}
+      ${isOwner || canAccess('lihat_modal') ? `<div><label>Harga Modal</label><input id="m_cost" type="number" value="${s.cost}"></div>` : `<div><label>Harga Modal</label><input type="text" value="(tersembunyi)" disabled style="background:var(--hover-bg);color:var(--gray)"><input type="hidden" id="m_cost" value="${s.cost}"></div>`}
       <div><label>Harga Jual</label><input id="m_price" type="number" value="${s.price}"></div>
     </div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveStock('${id||''}')">Simpan</button></div>`);
@@ -1024,11 +1257,14 @@ function renderStok(q=''){
       <td>${rp(s.price)}</td>
       <td>${showProfit?`<span class="green">${rp(s.price-s.cost)}</span>`:'<span style="color:var(--gray)">—</span>'}</td>
       <td>${showModal_cost?rp(s.qty*s.cost):'<span style="color:var(--gray)">—</span>'}</td>
-      <td><button class="btn btn-sm btn-gray" onclick="openStockModal('${s.id}')">Edit</button> ${showHapus?`<button class="btn btn-sm btn-red" onclick="delStock('${s.id}')">Hapus</button>`:''}</td></tr>`;
+      <td><div class="row-actions">
+        <button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openStockModal('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+        ${showHapus?`<button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delStock('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>`:''}
+      </div></td></tr>`;
   }).join('');
   const header = `<table><tr><th>Sparepart</th><th>Stok</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Total Modal</th><th></th></tr>`;
   document.getElementById('stokTable').innerHTML=header+rows+
-    (showModal_cost?`<tr style="background:#f5f5f7;font-weight:700"><td colspan="5">TOTAL NILAI MODAL STOK</td><td colspan="2">${rp(tot)}</td></tr>`:'')+`</table>`;
+    (showModal_cost?`<tr style="background:var(--stripe-bg);font-weight:700"><td colspan="5">TOTAL NILAI MODAL STOK</td><td colspan="2">${rp(tot)}</td></tr>`:'')+`</table>`;
 }
 
 /* ============ KASIR / SERVICE + MULTIPLE ITEMS ============ */
@@ -1043,18 +1279,17 @@ function getStockOpts(){
 function addPartRow(){
   const rowId = gid();
   partRows.push(rowId);
-  const opts = getStockOpts();
   const div = document.createElement('div');
   div.className='part-row';
   div.id='pr_'+rowId;
   div.innerHTML=`
-    <select id="prs_${rowId}" onchange="onPartChange('${rowId}')">
-      <option value="">-- Tanpa sparepart --</option>${opts}
-    </select>
+    ${ssHTML('prs_'+rowId, 'Cari sparepart...')}
     <input type="number" id="prp_${rowId}" placeholder="Harga jual" value="0" style="margin-bottom:0">
     <input type="number" id="prq_${rowId}" placeholder="Qty" value="1" min="1" style="margin-bottom:0">
     <button class="btn-del-part" onclick="removePartRow('${rowId}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   document.getElementById('partRowsContainer').appendChild(div);
+  const opts=[{value:'',label:'-- Tanpa sparepart --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty} · ${rp(s.price)}`}))];
+  ssInit('prs_'+rowId, opts, ()=>onPartChange(rowId));
 }
 function removePartRow(rowId){
   partRows = partRows.filter(r=>r!==rowId);
@@ -1172,11 +1407,11 @@ function renderTransaksi(q=''){
     <td>${rp(t.revenue)}</td>
     <td>${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">—</span>'}</td>
     <td><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
-    <td>
-      <button class="btn btn-sm btn-purple" onclick="printNota('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>Nota</button>
-      ${showEditDate?`<button class="btn btn-sm btn-gray" onclick="openEditDateModal('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tanggal</button>`:''}
-      ${showHapus?`<button class="btn btn-sm btn-red" onclick="delService('${t.id}')">Hapus</button>`:''}
-    </td>
+    <td><div class="row-actions">
+      <button class="btn btn-sm btn-icon btn-purple" title="Cetak Nota" onclick="printNota('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg></button>
+      ${showEditDate?`<button class="btn btn-sm btn-icon btn-gray" title="Ubah Tanggal" onclick="openEditDateModal('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>`:''}
+      ${showHapus?`<button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delService('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>`:''}
+    </div></td>
   </tr>`).join('');
   document.getElementById('transaksiTable').innerHTML=`<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Total</th><th>Profit</th><th>Status</th><th></th></tr>${rows}</table>`;
 }
@@ -1258,9 +1493,8 @@ function renderAuditHistory(){
 
 /* ============ PEMBELIAN ============ */
 function openPurchaseModal(){
-  const opts=bStock().map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty})</option>`).join('');
   showModal(`<h3>Catat Pembelian Stok</h3>
-    <label>Sparepart</label><select id="p_item"><option value="">-- Pilih existing --</option>${opts}<option value="NEW">+ Item baru</option></select>
+    <label>Sparepart</label>${ssHTML('p_item','Cari sparepart atau ketik nama item baru...')}
     <div id="p_newfields" style="display:none"><label>Nama Item Baru</label><input id="p_name"><label>SKU</label><input id="p_sku"><label>Harga Jual</label><input id="p_price" type="number" value="0"></div>
     <div class="form-grid"><div><label>Qty Beli</label><input id="p_qty" type="number" value="1"></div><div><label>Modal/unit</label><input id="p_cost" type="number" value="0"></div></div>
     <label>Supplier</label><input id="p_supplier">
@@ -1270,7 +1504,11 @@ function openPurchaseModal(){
     </div>
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Menambah aset stok, tidak mengurangi profit.</div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="savePurchase()">Simpan</button></div>`);
-  document.getElementById('p_item').onchange=function(){ document.getElementById('p_newfields').style.display=this.value==='NEW'?'block':'none'; const s=stock.find(x=>x.id===this.value); if(s)document.getElementById('p_cost').value=s.cost; };
+  const opts=[{value:'',label:'-- Pilih existing --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty}`})),{value:'NEW',label:'+ Item Baru'}];
+  ssInit('p_item', opts, function(value){
+    document.getElementById('p_newfields').style.display = value==='NEW' ? 'block':'none';
+    const s=stock.find(x=>x.id===value); if(s) document.getElementById('p_cost').value=s.cost;
+  });
 }
 async function savePurchase(){
   const sel=val('p_item'),qty=+val('p_qty'),cost=+val('p_cost');
