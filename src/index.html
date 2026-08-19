@@ -596,8 +596,17 @@ const APP_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABc
 
 function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
+function fmtNum(n){ return (n||0).toLocaleString('id-ID'); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function val(id){ return document.getElementById(id).value; }
+function valRp(id){ return parseRupiah(document.getElementById(id).value); }
+function formatRupiahLive(el){
+  const cursorFromEnd=el.value.length-el.selectionEnd;
+  const digits=el.value.replace(/[^\d]/g,'').replace(/^0+(?=\d)/,'');
+  el.value=digits?fmtNum(parseInt(digits,10)):'';
+  const pos=Math.max(el.value.length-cursorFromEnd,0);
+  el.setSelectionRange(pos,pos);
+}
 
 /* ============ SEARCHABLE SELECT (combobox pencarian barang) ============ */
 let ssData = {};
@@ -1206,13 +1215,13 @@ function openStockModal(id){
     <div class="form-grid">
       <div><label>Jumlah Stok</label><input id="m_qty" type="number" value="${s.qty}"></div>
       <div><label>Stok Minimum</label><input id="m_min" type="number" value="${s.min}"></div>
-      ${isOwner || canAccess('lihat_modal') ? `<div><label>Harga Modal</label><input id="m_cost" type="number" value="${s.cost}"></div>` : `<div><label>Harga Modal</label><input type="text" value="(tersembunyi)" disabled style="background:var(--hover-bg);color:var(--gray)"><input type="hidden" id="m_cost" value="${s.cost}"></div>`}
-      <div><label>Harga Jual</label><input id="m_price" type="number" value="${s.price}"></div>
+      ${isOwner || canAccess('lihat_modal') ? `<div><label>Harga Modal</label><input id="m_cost" type="text" inputmode="numeric" value="${fmtNum(s.cost)}" oninput="formatRupiahLive(this)"></div>` : `<div><label>Harga Modal</label><input type="text" value="(tersembunyi)" disabled style="background:var(--hover-bg);color:var(--gray)"><input type="hidden" id="m_cost" value="${s.cost}"></div>`}
+      <div><label>Harga Jual</label><input id="m_price" type="text" inputmode="numeric" value="${fmtNum(s.price)}" oninput="formatRupiahLive(this)"></div>
     </div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveStock('${id||''}')">Simpan</button></div>`);
 }
 async function saveStock(id){
-  const d={name:val('m_name'),sku:val('m_sku'),category:val('m_category'),qty:+val('m_qty'),min:+val('m_min'),cost:+val('m_cost'),price:+val('m_price')};
+  const d={name:val('m_name'),sku:val('m_sku'),category:val('m_category'),qty:+val('m_qty'),min:+val('m_min'),cost:valRp('m_cost'),price:valRp('m_price')};
   if(!d.name){alert('Nama wajib');return;}
   if(id){
     const item=stock.find(x=>x.id===id); Object.assign(item,d);
@@ -1284,7 +1293,7 @@ function addPartRow(){
   div.id='pr_'+rowId;
   div.innerHTML=`
     ${ssHTML('prs_'+rowId, 'Cari sparepart...')}
-    <input type="number" id="prp_${rowId}" placeholder="Harga jual" value="0" style="margin-bottom:0">
+    <input type="text" inputmode="numeric" id="prp_${rowId}" placeholder="Harga jual" value="0" style="margin-bottom:0" oninput="formatRupiahLive(this)">
     <input type="number" id="prq_${rowId}" placeholder="Qty" value="1" min="1" style="margin-bottom:0">
     <button class="btn-del-part" onclick="removePartRow('${rowId}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   document.getElementById('partRowsContainer').appendChild(div);
@@ -1299,8 +1308,8 @@ function removePartRow(rowId){
 function onPartChange(rowId){
   const sel=document.getElementById('prs_'+rowId).value;
   const s=stock.find(x=>x.id===sel);
-  if(s) document.getElementById('prp_'+rowId).value=s.price;
-  else document.getElementById('prp_'+rowId).value=0;
+  if(s) document.getElementById('prp_'+rowId).value=fmtNum(s.price);
+  else document.getElementById('prp_'+rowId).value='';
 }
 
 function openServiceModal(){
@@ -1313,12 +1322,12 @@ function openServiceModal(){
     <label>Device / iPhone</label><input id="s_device" placeholder="cth: iPhone 12 Pro">
     <label>Jenis Kerusakan / Servis</label><input id="s_issue" placeholder="cth: Ganti LCD">
     <div class="form-grid">
-      <div><label>Biaya Jasa</label><input id="s_jasa" type="number" value="0"></div>
+      <div><label>Biaya Jasa</label><input id="s_jasa" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
       <div><label>Status Awal</label><select id="s_status">${STATUSES.map(x=>`<option>${x}</option>`).join('')}</select></div>
     </div>
     <div class="form-grid">
       <div><label>Status Pembayaran</label><select id="s_paystatus" onchange="document.getElementById('s_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Lunas</option><option value="belum">Belum Lunas / Cicilan</option></select></div>
-      <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="number" value="0"></div>
+      <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
     </div>
     <label style="margin-bottom:10px">Sparepart Digunakan</label>
     <div id="partRowsContainer" style="margin-bottom:8px"></div>
@@ -1328,12 +1337,12 @@ function openServiceModal(){
 }
 
 async function saveService(){
-  const jasa=+val('s_jasa');
+  const jasa=valRp('s_jasa');
   let partItems=[]; let totalPartPrice=0; let totalPartCost=0; let partNames=[];
   let stockUpdates=[];
   for(const rowId of partRows){
     const partId=document.getElementById('prs_'+rowId).value;
-    const partPrice=+document.getElementById('prp_'+rowId).value;
+    const partPrice=parseRupiah(document.getElementById('prp_'+rowId).value);
     const qty=+document.getElementById('prq_'+rowId).value||1;
     if(!partId) continue;
     const s=stock.find(x=>x.id===partId);
@@ -1349,7 +1358,7 @@ async function saveService(){
   const inv='INV'+Date.now().toString().slice(-7);
   const revenue=jasa+totalPartPrice;
   const payStatus=val('s_paystatus');
-  const paidAmount = payStatus==='belum' ? Math.min(+val('s_payamount')||0, revenue) : revenue;
+  const paidAmount = payStatus==='belum' ? Math.min(valRp('s_payamount')||0, revenue) : revenue;
   const ns={
     id:gid(),branch:currentBranch,inv,date:todayStr(),
     cust:val('s_cust')||'Umum',phone:val('s_phone'),device:val('s_device'),issue:val('s_issue'),
@@ -1495,27 +1504,27 @@ function renderAuditHistory(){
 function openPurchaseModal(){
   showModal(`<h3>Catat Pembelian Stok</h3>
     <label>Sparepart</label>${ssHTML('p_item','Cari sparepart atau ketik nama item baru...')}
-    <div id="p_newfields" style="display:none"><label>Nama Item Baru</label><input id="p_name"><label>SKU</label><input id="p_sku"><label>Harga Jual</label><input id="p_price" type="number" value="0"></div>
-    <div class="form-grid"><div><label>Qty Beli</label><input id="p_qty" type="number" value="1"></div><div><label>Modal/unit</label><input id="p_cost" type="number" value="0"></div></div>
+    <div id="p_newfields" style="display:none"><label>Nama Item Baru</label><input id="p_name"><label>SKU</label><input id="p_sku"><label>Harga Jual</label><input id="p_price" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
+    <div class="form-grid"><div><label>Qty Beli</label><input id="p_qty" type="number" value="1"></div><div><label>Modal/unit</label><input id="p_cost" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div></div>
     <label>Supplier</label><input id="p_supplier">
     <div class="form-grid">
       <div><label>Status Pembayaran ke Supplier</label><select id="p_paystatus" onchange="document.getElementById('p_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Sudah Dibayar</option><option value="belum">Belum Dibayar (Utang)</option></select></div>
-      <div id="p_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="p_payamount" type="number" value="0"></div>
+      <div id="p_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="p_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
     </div>
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Menambah aset stok, tidak mengurangi profit.</div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="savePurchase()">Simpan</button></div>`);
   const opts=[{value:'',label:'-- Pilih existing --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty}`})),{value:'NEW',label:'+ Item Baru'}];
   ssInit('p_item', opts, function(value){
     document.getElementById('p_newfields').style.display = value==='NEW' ? 'block':'none';
-    const s=stock.find(x=>x.id===value); if(s) document.getElementById('p_cost').value=s.cost;
+    const s=stock.find(x=>x.id===value); if(s) document.getElementById('p_cost').value=fmtNum(s.cost);
   });
 }
 async function savePurchase(){
-  const sel=val('p_item'),qty=+val('p_qty'),cost=+val('p_cost');
+  const sel=val('p_item'),qty=+val('p_qty'),cost=valRp('p_cost');
   if(qty<=0){alert('Qty > 0');return;}
   let itemName='',itemId='',stockToSync=null,isNewStock=false;
   if(sel==='NEW'){
-    const ns={id:gid(),branch:currentBranch,name:val('p_name'),sku:val('p_sku'),qty,min:3,cost,price:+val('p_price')};
+    const ns={id:gid(),branch:currentBranch,name:val('p_name'),sku:val('p_sku'),qty,min:3,cost,price:valRp('p_price')};
     if(!ns.name){alert('Nama wajib');return;}
     stock.push(ns); itemName=ns.name; itemId=ns.id; stockToSync=ns; isNewStock=true;
   } else if(sel){
@@ -1523,7 +1532,7 @@ async function savePurchase(){
   } else {alert('Pilih item');return;}
   const total=qty*cost;
   const payStatus=val('p_paystatus');
-  const paidAmount = payStatus==='belum' ? Math.min(+val('p_payamount')||0, total) : total;
+  const paidAmount = payStatus==='belum' ? Math.min(valRp('p_payamount')||0, total) : total;
   const np={id:gid(),branch:currentBranch,date:todayStr(),itemId,itemName,qty,cost,total,supplier:val('p_supplier'),paidAmount};
   purchases.unshift(np);
   closeModal(); renderAll();
@@ -1549,11 +1558,11 @@ function renderPembelian(){
 function openExpenseModal(){
   showModal(`<h3>Catat Pengeluaran</h3>
     <label>Kategori</label><select id="e_cat"><option>Sewa Tempat</option><option>Listrik & Air</option><option>Gaji Karyawan</option><option>Internet</option><option>Peralatan</option><option>Marketing</option><option>Transport</option><option>Lainnya</option></select>
-    <label>Keterangan</label><input id="e_desc"><label>Jumlah (Rp)</label><input id="e_amount" type="number" value="0">
+    <label>Keterangan</label><input id="e_desc"><label>Jumlah (Rp)</label><input id="e_amount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-red" onclick="saveExpense()">Simpan</button></div>`);
 }
 async function saveExpense(){
-  const a=+val('e_amount'); if(a<=0){alert('Jumlah > 0');return;}
+  const a=valRp('e_amount'); if(a<=0){alert('Jumlah > 0');return;}
   const ne={id:gid(),branch:currentBranch,date:todayStr(),cat:val('e_cat'),desc:val('e_desc'),amount:a};
   expenses.unshift(ne);
   closeModal(); renderAll();
@@ -1947,11 +1956,11 @@ function openPayServiceModal(id){
   const sisa=t.revenue-(t.paidAmount||0);
   showModal(`<h3>Catat Pembayaran — ${t.inv}</h3>
     <p style="color:var(--gray);margin-bottom:12px">${t.cust} • Sisa piutang: <b class="red">${rp(sisa)}</b></p>
-    <label>Jumlah Dibayar</label><input id="pay_amount" type="number" value="${sisa}">
+    <label>Jumlah Dibayar</label><input id="pay_amount" type="text" inputmode="numeric" value="${fmtNum(sisa)}" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="savePayService('${id}')">Simpan</button></div>`);
 }
 async function savePayService(id){
-  const amount=+val('pay_amount');
+  const amount=valRp('pay_amount');
   if(amount<=0){alert('Jumlah harus > 0');return;}
   const t=services.find(x=>x.id===id);
   t.paidAmount=Math.min((t.paidAmount||0)+amount, t.revenue);
@@ -1963,11 +1972,11 @@ function openPayPurchaseModal(id){
   const sisa=p.total-(p.paidAmount||0);
   showModal(`<h3>Catat Pembayaran ke Supplier</h3>
     <p style="color:var(--gray);margin-bottom:12px">${p.itemName} • Sisa utang: <b class="red">${rp(sisa)}</b></p>
-    <label>Jumlah Dibayar</label><input id="pay_amount2" type="number" value="${sisa}">
+    <label>Jumlah Dibayar</label><input id="pay_amount2" type="text" inputmode="numeric" value="${fmtNum(sisa)}" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="savePayPurchase('${id}')">Simpan</button></div>`);
 }
 async function savePayPurchase(id){
-  const amount=+val('pay_amount2');
+  const amount=valRp('pay_amount2');
   if(amount<=0){alert('Jumlah harus > 0');return;}
   const p=purchases.find(x=>x.id===id);
   p.paidAmount=Math.min((p.paidAmount||0)+amount, p.total);

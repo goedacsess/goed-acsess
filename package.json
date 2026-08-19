@@ -1,6 +1,6 @@
 {
   "name": "iservis-pro",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Software Kasir Servis iPhone",
   "main": "main.js",
   "author": "iServis Pro",
@@ -32,7 +32,8 @@
     "publish": {
       "provider": "github",
       "owner": "goedacsess",
-      "repo": "goed-acsess"
+      "repo": "goed-acsess",
+      "releaseType": "release"
     },
     "mac": {
       "category": "public.app-category.business",
@@ -44,6 +45,8 @@
       "extendInfo": {
         "NSCameraUsageDescription": "Aplikasi ini membutuhkan akses kamera untuk fitur absensi wajah karyawan."
       },
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "notarize": false
     },
     "win": {
