@@ -8,7 +8,7 @@
     "start": "electron .",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win",
+    "dist:win": "electron-builder --win --x64 --config.directories.output=dist/win",
     "publish:mac": "electron-builder --mac --publish always"
   },
   "devDependencies": {
