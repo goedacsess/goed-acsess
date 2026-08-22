@@ -9,7 +9,8 @@
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win --x64 --config.directories.output=dist/win",
-    "publish:mac": "electron-builder --mac --publish always"
+    "publish:mac": "electron-builder --mac --publish always",
+    "publish:win": "electron-builder --win --x64 --config.directories.output=dist/win --publish always"
   },
   "devDependencies": {
     "electron": "^31.0.0",
