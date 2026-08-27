@@ -318,8 +318,25 @@
   </div>
 
   <div class="page active" id="dashboard">
+    <div class="flex-row" style="justify-content:flex-end;margin-bottom:16px;flex-wrap:wrap">
+      <select class="search-box" id="dashPeriod" onchange="renderDashboard()">
+        <option value="hari_ini">Hari Ini</option>
+        <option value="7hari">7 Hari Terakhir</option>
+        <option value="bulan_ini" selected>Bulan Ini</option>
+        <option value="bulan_lalu">Bulan Lalu</option>
+        <option value="3bulan">3 Bulan</option>
+        <option value="tahun_ini">Tahun Ini</option>
+        <option value="custom">Custom</option>
+        <option value="all">Semua</option>
+      </select>
+      <div class="flex-row" id="dashCustomRange" style="display:none">
+        <input type="date" id="dashCustomFrom" onchange="renderDashboard()">
+        <input type="date" id="dashCustomTo" onchange="renderDashboard()">
+      </div>
+    </div>
     <div class="cards" id="dashCards"></div>
     <div class="panel"><h2>Transaksi Servis Terakhir</h2><div id="dashRecent"></div></div>
+    <div class="panel"><h2>Metode Pembayaran</h2><div id="dashPaymentMethods"></div></div>
     <div class="panel"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Stok Menipis</h2><div id="dashLowStock"></div></div>
   </div>
 
@@ -410,6 +427,31 @@
       <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg>Utang ke Supplier</h2>
       <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Pembelian stok yang belum dibayar ke supplier.</p>
       <div id="utangTable"></div>
+    </div>
+  </div>
+
+  <div class="page" id="riwayat">
+    <div class="panel">
+      <h2>Riwayat Transaksi</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Gabungan riwayat transaksi servis, stok masuk/keluar, dan audit.</p>
+      <div class="flex-row" style="margin-bottom:16px;flex-wrap:wrap">
+        <input class="search-box" placeholder="Cari..." oninput="renderRiwayat(this.value)">
+        <select class="search-box" id="riwPeriod" onchange="renderRiwayat()">
+          <option value="hari_ini">Hari Ini</option><option value="7hari">7 Hari Terakhir</option>
+          <option value="bulan_ini" selected>Bulan Ini</option><option value="bulan_lalu">Bulan Lalu</option>
+          <option value="3bulan">3 Bulan</option><option value="tahun_ini">Tahun Ini</option>
+          <option value="custom">Custom</option><option value="all">Semua</option>
+        </select>
+        <div class="flex-row" id="riwCustomRange" style="display:none">
+          <input type="date" id="riwCustomFrom" onchange="renderRiwayat()">
+          <input type="date" id="riwCustomTo" onchange="renderRiwayat()">
+        </div>
+        <select class="search-box" id="riwType" onchange="renderRiwayat()">
+          <option value="">Semua Jenis</option><option value="servis">Servis</option>
+          <option value="masuk">Stok Masuk</option><option value="keluar">Stok Keluar</option><option value="audit">Audit</option>
+        </select>
+      </div>
+      <div id="riwayatTable"></div>
     </div>
   </div>
 
@@ -659,18 +701,18 @@ function fromDbUser(r){ return {id:r.id, name:r.name, user:r.username, pass:r.pa
 function fromDbBranch(r){ return {id:r.id, name:r.name, addr:r.addr, phone:r.phone}; }
 function toDbStock(s){ return {id:s.id, branch_id:s.branch, name:s.name, sku:s.sku, category:s.category||null, qty:s.qty, min_qty:s.min, cost:s.cost, price:s.price}; }
 function fromDbStock(r){ return {id:r.id, branch:r.branch_id, name:r.name, sku:r.sku, category:r.category, qty:r.qty, min:r.min_qty, cost:r.cost, price:r.price}; }
-function toDbService(s){ return {id:s.id, branch_id:s.branch, inv:s.inv, service_date:s.date, cust:s.cust, phone:s.phone, device:s.device, issue:s.issue, parts:s.parts, part_name:s.partName, part_cost:s.partCost, part_price:s.partPrice, jasa:s.jasa, revenue:s.revenue, cogs:s.cogs, status:s.status, paid_amount:s.paidAmount}; }
-function fromDbService(r){ return {id:r.id, branch:r.branch_id, inv:r.inv, date:r.service_date, cust:r.cust, phone:r.phone, device:r.device, issue:r.issue, parts:r.parts||[], partName:r.part_name, partCost:r.part_cost, partPrice:r.part_price, jasa:r.jasa, revenue:r.revenue, cogs:r.cogs, status:r.status, paidAmount:r.paid_amount}; }
-function toDbPurchase(p){ return {id:p.id, branch_id:p.branch, purchase_date:p.date, item_id:p.itemId, item_name:p.itemName, qty:p.qty, cost:p.cost, total:p.total, supplier:p.supplier, paid_amount:p.paidAmount}; }
-function fromDbPurchase(r){ return {id:r.id, branch:r.branch_id, date:r.purchase_date, itemId:r.item_id, itemName:r.item_name, qty:r.qty, cost:r.cost, total:r.total, supplier:r.supplier, paidAmount:r.paid_amount}; }
+function toDbService(s){ return {id:s.id, branch_id:s.branch, inv:s.inv, service_date:s.date, cust:s.cust, phone:s.phone, device:s.device, issue:s.issue, parts:s.parts, part_name:s.partName, part_cost:s.partCost, part_price:s.partPrice, jasa:s.jasa, revenue:s.revenue, cogs:s.cogs, status:s.status, paid_amount:s.paidAmount, payment_method:s.paymentMethod}; }
+function fromDbService(r){ return {id:r.id, branch:r.branch_id, inv:r.inv, date:r.service_date, cust:r.cust, phone:r.phone, device:r.device, issue:r.issue, parts:r.parts||[], partName:r.part_name, partCost:r.part_cost, partPrice:r.part_price, jasa:r.jasa, revenue:r.revenue, cogs:r.cogs, status:r.status, paidAmount:r.paid_amount, paymentMethod:r.payment_method}; }
+function toDbPurchase(p){ return {id:p.id, branch_id:p.branch, purchase_date:p.date, item_id:p.itemId, item_name:p.itemName, qty:p.qty, cost:p.cost, total:p.total, supplier:p.supplier, paid_amount:p.paidAmount, payment_method:p.paymentMethod}; }
+function fromDbPurchase(r){ return {id:r.id, branch:r.branch_id, date:r.purchase_date, itemId:r.item_id, itemName:r.item_name, qty:r.qty, cost:r.cost, total:r.total, supplier:r.supplier, paidAmount:r.paid_amount, paymentMethod:r.payment_method}; }
 function toDbActivity(a){ return {id:a.id, branch_id:a.branch, log_date:a.date, author:a.author, note:a.note}; }
 function fromDbActivity(r){ return {id:r.id, branch:r.branch_id, date:r.log_date, author:r.author, note:r.note}; }
 function toDbFaceEnroll(f){ return {id:f.id, user_id:f.userId, descriptor:f.descriptor}; }
 function fromDbFaceEnroll(r){ return {id:r.id, userId:r.user_id, descriptor:r.descriptor}; }
 function toDbAttendance(a){ return {id:a.id, user_id:a.userId, user_name:a.userName, branch_id:a.branch, att_date:a.date, check_type:a.checkType, att_time:a.time}; }
 function fromDbAttendance(r){ return {id:r.id, userId:r.user_id, userName:r.user_name, branch:r.branch_id, date:r.att_date, checkType:r.check_type, time:r.att_time}; }
-function toDbExpense(e){ return {id:e.id, branch_id:e.branch, expense_date:e.date, category:e.cat, description:e.desc, amount:e.amount}; }
-function fromDbExpense(r){ return {id:r.id, branch:r.branch_id, date:r.expense_date, cat:r.category, desc:r.description, amount:r.amount}; }
+function toDbExpense(e){ return {id:e.id, branch_id:e.branch, expense_date:e.date, category:e.cat, description:e.desc, amount:e.amount, payment_method:e.paymentMethod}; }
+function fromDbExpense(r){ return {id:r.id, branch:r.branch_id, date:r.expense_date, cat:r.category, desc:r.description, amount:r.amount, paymentMethod:r.payment_method}; }
 function toDbAudit(a){ return {id:a.id, branch_id:a.branch, audit_date:a.date, audited_by:a.by, items:a.items}; }
 function fromDbAudit(r){ return {id:r.id, branch:r.branch_id, date:r.audit_date, by:r.audited_by, items:r.items||[]}; }
 
@@ -722,6 +764,7 @@ const NAV_DEF = [
   {id:'pengeluaran',icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="9" x2="6" y2="9.01"/><line x1="18" y1="15" x2="18" y2="15.01"/></svg>`, label:'Pengeluaran', ownerOnly:false, permKey:'pengeluaran'},
   {id:'ai',        icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>`, label:'AI Review', ownerOnly:false, permKey:'ai'},
   {id:'utangpiutang', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>`, label:'Utang Piutang', ownerOnly:false, permKey:'utang_piutang'},
+  {id:'riwayat', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>`, label:'Riwayat Transaksi', ownerOnly:false},
   {id:'aktivitas', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`, label:'Aktivitas Harian', ownerOnly:false},
   {id:'absensi',   icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>`, label:'Absensi', ownerOnly:false},
   {id:'__divider', icon:'', label:'', ownerOnly:true},
@@ -757,6 +800,34 @@ const bActivity  = ()=> activityLog.filter(x=>x.branch===currentBranch);
 const bPiutang   = ()=> bServices().filter(s=>s.paidAmount!=null && s.paidAmount < s.revenue);
 const bUtang     = ()=> bPurchases().filter(p=>p.paidAmount!=null && p.paidAmount < p.total);
 const branchName = id => (branches.find(b=>b.id===id)||{}).name||'-';
+function paymentMethodOptions(){
+  const used=new Set(['Cash','Transfer','QRIS']);
+  bServices().forEach(s=>{ if(s.paymentMethod) used.add(s.paymentMethod); });
+  bPurchases().forEach(p=>{ if(p.paymentMethod) used.add(p.paymentMethod); });
+  bExpenses().forEach(e=>{ if(e.paymentMethod) used.add(e.paymentMethod); });
+  return [...used];
+}
+function openEditPaymentMethodModal(type,id){
+  const src = type==='service'?services : type==='purchase'?purchases : expenses;
+  const rec = src.find(x=>x.id===id);
+  if(!rec) return;
+  const label = type==='service'?`${rec.inv} — ${rec.cust}` : type==='purchase'?rec.itemName : (rec.desc||rec.cat);
+  showModal(`<h3>Ubah Metode Pembayaran</h3>
+    <p style="color:var(--gray);font-size:14px;margin-bottom:12px">${label}</p>
+    <label>Metode Pembayaran</label><input id="edit_paymethod" list="edit_paymethodList" value="${rec.paymentMethod||'Cash'}">
+    <datalist id="edit_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
+    <div class="flex-row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="saveEditPaymentMethod('${type}','${id}')">Simpan</button></div>`);
+}
+async function saveEditPaymentMethod(type,id){
+  const m=val('edit_paymethod')||'Cash';
+  const table = type==='service'?'services' : type==='purchase'?'purchases' : 'expenses';
+  const src = type==='service'?services : type==='purchase'?purchases : expenses;
+  const rec = src.find(x=>x.id===id);
+  if(!rec) return;
+  rec.paymentMethod=m;
+  closeModal(); renderAll();
+  await dbCall(sb.from(table).update({payment_method:m}).eq('id',id), 'ubah metode pembayaran');
+}
 
 /* ============ BOOTSTRAP DATA DARI SUPABASE ============ */
 async function bootstrapData(){
@@ -833,10 +904,10 @@ function doLogin(){
   const found = users.find(x=>x.user===u && x.pass===p);
   if(!found){ alert('Username / password salah'); return; }
   currentUser = found;
-  sessionStorage.setItem('goedacsess_session', JSON.stringify(found));
+  localStorage.setItem('goedacsess_session', JSON.stringify(found));
   initApp();
 }
-function doLogout(){ sessionStorage.removeItem('goedacsess_session'); location.reload(); }
+function doLogout(){ localStorage.removeItem('goedacsess_session'); location.reload(); }
 
 function canAccess(permKey){
   if(currentUser.role==='owner') return true;
@@ -870,7 +941,7 @@ function initApp(){
     applyAppSettings();
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
-    const s=sessionStorage.getItem('goedacsess_session');
+    const s=localStorage.getItem('goedacsess_session');
     if(s){
       const saved=JSON.parse(s);
       const fresh=users.find(u=>u.id===saved.id);
@@ -1143,7 +1214,7 @@ async function saveOwnerCredential(){
   const owner=users.find(x=>x.role==='owner');
   if(!owner){alert('Data owner tidak ditemukan');return;}
   owner.user=u; owner.pass=p;
-  if(currentUser.role==='owner'){ currentUser.user=u; currentUser.pass=p; sessionStorage.setItem('goedacsess_session',JSON.stringify(currentUser)); }
+  if(currentUser.role==='owner'){ currentUser.user=u; currentUser.pass=p; localStorage.setItem('goedacsess_session',JSON.stringify(currentUser)); }
   alert('Kredensial owner berhasil diubah!\nUsername: '+u);
   await dbCall(sb.from('app_users').update(toDbUser(owner)).eq('id',owner.id), 'ubah kredensial owner');
 }
@@ -1162,7 +1233,7 @@ function closeModal(){ document.getElementById('modalBg').classList.remove('acti
 document.getElementById('modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
 
 /* ============ NAV ============ */
-const titles={dashboard:'Dashboard',kasir:'Kasir / Servis',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'AI Review',utangpiutang:'Utang Piutang',aktivitas:'Aktivitas Harian',absensi:'Absensi',laporan:'Laporan Keuangan',cabang:'Kelola Cabang',users:'Kelola User',pengaturan:'Pengaturan'};
+const titles={dashboard:'Dashboard',kasir:'Kasir / Servis',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'AI Review',utangpiutang:'Utang Piutang',riwayat:'Riwayat Transaksi',aktivitas:'Aktivitas Harian',absensi:'Absensi',laporan:'Laporan Keuangan',cabang:'Kelola Cabang',users:'Kelola User',pengaturan:'Pengaturan'};
 function nav(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(page).classList.add('active');
@@ -1260,13 +1331,14 @@ function renderStok(q=''){
   let tot=0;
   let rows=list.map(s=>{ tot+=s.qty*s.cost;
     const b=s.qty<=s.min?'<span class="badge badge-low">Menipis</span>':(s.qty<=s.min*2?'<span class="badge badge-mid">Sedang</span>':'<span class="badge badge-ok">Aman</span>');
-    return `<tr><td><b>${s.name}</b><br><span style="color:var(--gray);font-size:12px">${s.sku||'-'}</span>${s.category?`<br><span class="badge badge-mid" style="margin-top:4px;display:inline-block">${s.category}</span>`:''}</td>
+    return `<tr><td style="cursor:pointer" onclick="openStockHistoryModal('${s.id}')"><b>${s.name}</b><br><span style="color:var(--gray);font-size:12px">${s.sku||'-'}</span>${s.category?`<br><span class="badge badge-mid" style="margin-top:4px;display:inline-block">${s.category}</span>`:''}</td>
       <td>${s.qty} ${b}</td>
       <td>${showModal_cost?rp(s.cost):'<span style="color:var(--gray)">—</span>'}</td>
       <td>${rp(s.price)}</td>
       <td>${showProfit?`<span class="green">${rp(s.price-s.cost)}</span>`:'<span style="color:var(--gray)">—</span>'}</td>
       <td>${showModal_cost?rp(s.qty*s.cost):'<span style="color:var(--gray)">—</span>'}</td>
       <td><div class="row-actions">
+        <button class="btn btn-sm btn-icon btn-gray" title="Riwayat" onclick="openStockHistoryModal('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg></button>
         <button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openStockModal('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button>
         ${showHapus?`<button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delStock('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>`:''}
       </div></td></tr>`;
@@ -1274,6 +1346,32 @@ function renderStok(q=''){
   const header = `<table><tr><th>Sparepart</th><th>Stok</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Total Modal</th><th></th></tr>`;
   document.getElementById('stokTable').innerHTML=header+rows+
     (showModal_cost?`<tr style="background:var(--stripe-bg);font-weight:700"><td colspan="5">TOTAL NILAI MODAL STOK</td><td colspan="2">${rp(tot)}</td></tr>`:'')+`</table>`;
+}
+function openStockHistoryModal(stockId){
+  const s=stock.find(x=>x.id===stockId);
+  if(!s){ alert('Item tidak ditemukan'); return; }
+  let events=[];
+  bPurchases().filter(p=>p.itemId===stockId).forEach(p=>{
+    events.push({date:p.date, type:'masuk', qty:p.qty, ket:`Pembelian dari ${p.supplier||'-'}`});
+  });
+  bServices().forEach(t=>{
+    (t.parts||[]).filter(part=>part.partId===stockId).forEach(part=>{
+      events.push({date:t.date, type:'keluar', qty:-(part.qty||1), ket:`Servis ${t.inv} — ${t.cust}`});
+    });
+  });
+  bAudits().forEach(a=>{
+    (a.items||[]).filter(i=>i.id===stockId && i.diff!==0).forEach(i=>{
+      events.push({date:a.date, type:'audit', qty:i.diff, ket:`Audit oleh ${a.by} (${i.system}→${i.physical})`});
+    });
+  });
+  events.sort((a,b)=>b.date.localeCompare(a.date));
+  const typeLabel={masuk:'Masuk',keluar:'Keluar',audit:'Audit'};
+  const typeBadge={masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
+  const rows=events.length? events.map(e=>`<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${typeLabel[e.type]}</span></td><td>${e.ket}</td><td class="${e.qty>0?'green':'red'}">${e.qty>0?'+':''}${e.qty}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--gray)">Belum ada riwayat</td></tr>`;
+  showModal(`<h3>Riwayat Stok — ${s.name}</h3>
+    <p style="color:var(--gray);font-size:14px;margin-bottom:12px">Stok saat ini: <b>${s.qty}</b></p>
+    <div style="max-height:400px;overflow-y:auto"><table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Qty</th></tr>${rows}</table></div>
+    <div class="flex-row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
 }
 
 /* ============ KASIR / SERVICE + MULTIPLE ITEMS ============ */
@@ -1329,6 +1427,8 @@ function openServiceModal(){
       <div><label>Status Pembayaran</label><select id="s_paystatus" onchange="document.getElementById('s_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Lunas</option><option value="belum">Belum Lunas / Cicilan</option></select></div>
       <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
     </div>
+    <label>Metode Pembayaran</label><input id="s_paymethod" list="s_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
+    <datalist id="s_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
     <label style="margin-bottom:10px">Sparepart Digunakan</label>
     <div id="partRowsContainer" style="margin-bottom:8px"></div>
     <button type="button" class="btn btn-gray btn-sm" onclick="addPartRow()" style="margin-bottom:16px">+ Tambah Sparepart</button>
@@ -1367,7 +1467,8 @@ async function saveService(){
     partCost:totalPartCost,partPrice:totalPartPrice,
     jasa,revenue,cogs:totalPartCost,
     status:val('s_status'),
-    paidAmount
+    paidAmount,
+    paymentMethod:val('s_paymethod')||'Cash'
   };
   services.unshift(ns);
   closeModal(); renderAll();
@@ -1415,6 +1516,7 @@ function renderTransaksi(q=''){
     <td>${t.issue}<br><span style="color:var(--gray);font-size:12px">${t.partName||'tanpa part'}</span></td>
     <td>${rp(t.revenue)}</td>
     <td>${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">—</span>'}</td>
+    <td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('service','${t.id}')">${t.paymentMethod||'Cash'}</span></td>
     <td><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
     <td><div class="row-actions">
       <button class="btn btn-sm btn-icon btn-purple" title="Cetak Nota" onclick="printNota('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg></button>
@@ -1422,7 +1524,7 @@ function renderTransaksi(q=''){
       ${showHapus?`<button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delService('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>`:''}
     </div></td>
   </tr>`).join('');
-  document.getElementById('transaksiTable').innerHTML=`<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Total</th><th>Profit</th><th>Status</th><th></th></tr>${rows}</table>`;
+  document.getElementById('transaksiTable').innerHTML=`<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Total</th><th>Profit</th><th>Metode</th><th>Status</th><th></th></tr>${rows}</table>`;
 }
 
 /* ============ NOTA / STRUK ============ */
@@ -1511,6 +1613,8 @@ function openPurchaseModal(){
       <div><label>Status Pembayaran ke Supplier</label><select id="p_paystatus" onchange="document.getElementById('p_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Sudah Dibayar</option><option value="belum">Belum Dibayar (Utang)</option></select></div>
       <div id="p_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="p_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
     </div>
+    <label>Metode Pembayaran</label><input id="p_paymethod" list="p_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
+    <datalist id="p_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Menambah aset stok, tidak mengurangi profit.</div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="savePurchase()">Simpan</button></div>`);
   const opts=[{value:'',label:'-- Pilih existing --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty}`})),{value:'NEW',label:'+ Item Baru'}];
@@ -1533,7 +1637,7 @@ async function savePurchase(){
   const total=qty*cost;
   const payStatus=val('p_paystatus');
   const paidAmount = payStatus==='belum' ? Math.min(valRp('p_payamount')||0, total) : total;
-  const np={id:gid(),branch:currentBranch,date:todayStr(),itemId,itemName,qty,cost,total,supplier:val('p_supplier'),paidAmount};
+  const np={id:gid(),branch:currentBranch,date:todayStr(),itemId,itemName,qty,cost,total,supplier:val('p_supplier'),paidAmount,paymentMethod:val('p_paymethod')||'Cash'};
   purchases.unshift(np);
   closeModal(); renderAll();
   if(isNewStock) await dbCall(sb.from('stock').insert(toDbStock(stockToSync)), 'tambah stok baru dari pembelian');
@@ -1550,8 +1654,8 @@ async function delPurchase(id){
 function renderPembelian(){
   const list=bPurchases();
   if(!list.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian</div>'; return; }
-  let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td>${p.date}</td><td><b>${p.itemName}</b></td><td>${p.qty}</td><td>${rp(p.cost)}</td><td>${rp(p.total)}</td><td>${p.supplier||'-'}</td><td><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
-  document.getElementById('pembelianTable').innerHTML=`<table><tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="4">TOTAL PEMBELIAN</td><td colspan="3">${rp(tot)}</td></tr></table>`;
+  let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td>${p.date}</td><td><b>${p.itemName}</b></td><td>${p.qty}</td><td>${rp(p.cost)}</td><td>${rp(p.total)}</td><td>${p.supplier||'-'}</td><td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('purchase','${p.id}')">${p.paymentMethod||'Cash'}</span></td><td><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pembelianTable').innerHTML=`<table><tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th>Metode</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="4">TOTAL PEMBELIAN</td><td colspan="4">${rp(tot)}</td></tr></table>`;
 }
 
 /* ============ PENGELUARAN ============ */
@@ -1559,11 +1663,13 @@ function openExpenseModal(){
   showModal(`<h3>Catat Pengeluaran</h3>
     <label>Kategori</label><select id="e_cat"><option>Sewa Tempat</option><option>Listrik & Air</option><option>Gaji Karyawan</option><option>Internet</option><option>Peralatan</option><option>Marketing</option><option>Transport</option><option>Lainnya</option></select>
     <label>Keterangan</label><input id="e_desc"><label>Jumlah (Rp)</label><input id="e_amount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)">
+    <label>Metode Pembayaran</label><input id="e_paymethod" list="e_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
+    <datalist id="e_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-red" onclick="saveExpense()">Simpan</button></div>`);
 }
 async function saveExpense(){
   const a=valRp('e_amount'); if(a<=0){alert('Jumlah > 0');return;}
-  const ne={id:gid(),branch:currentBranch,date:todayStr(),cat:val('e_cat'),desc:val('e_desc'),amount:a};
+  const ne={id:gid(),branch:currentBranch,date:todayStr(),cat:val('e_cat'),desc:val('e_desc'),amount:a,paymentMethod:val('e_paymethod')||'Cash'};
   expenses.unshift(ne);
   closeModal(); renderAll();
   await dbCall(sb.from('expenses').insert(toDbExpense(ne)), 'simpan pengeluaran');
@@ -1578,8 +1684,8 @@ async function delExpense(id){
 function renderPengeluaran(){
   const list=bExpenses();
   if(!list.length){ document.getElementById('pengeluaranTable').innerHTML='<div class="empty">Belum ada pengeluaran</div>'; return; }
-  let tot=0; let rows=list.map(e=>{tot+=e.amount; return `<tr><td>${e.date}</td><td><span class="badge badge-mid">${e.cat}</span></td><td>${e.desc||'-'}</td><td class="red">${rp(e.amount)}</td><td><button class="btn btn-sm btn-red" onclick="delExpense('${e.id}')">Hapus</button></td></tr>`;}).join('');
-  document.getElementById('pengeluaranTable').innerHTML=`<table><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="2" class="red">${rp(tot)}</td></tr></table>`;
+  let tot=0; let rows=list.map(e=>{tot+=e.amount; return `<tr><td>${e.date}</td><td><span class="badge badge-mid">${e.cat}</span></td><td>${e.desc||'-'}</td><td class="red">${rp(e.amount)}</td><td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('expense','${e.id}')">${e.paymentMethod||'Cash'}</span></td><td><button class="btn btn-sm btn-red" onclick="delExpense('${e.id}')">Hapus</button></td></tr>`;}).join('');
+  document.getElementById('pengeluaranTable').innerHTML=`<table><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th>Metode</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="3" class="red">${rp(tot)}</td></tr></table>`;
 }
 
 /* ============ EXPORT EXCEL (CSV) ============ */
@@ -1815,15 +1921,39 @@ async function runKelolaImport(){
 }
 
 /* ============ DASHBOARD ============ */
-function calcStats(){
-  const sv=bServices(),ex=bExpenses(),pu=bPurchases(),sk=bStock();
+function calcStats(start,end){
+  const sv=start?bServices().filter(s=>s.date>=start && s.date<=end):bServices();
+  const ex=start?bExpenses().filter(e=>e.date>=start && e.date<=end):bExpenses();
+  const pu=bPurchases(),sk=bStock();
   const revenue=sv.reduce((a,s)=>a+s.revenue,0),cogs=sv.reduce((a,s)=>a+s.cogs,0);
   const grossProfit=revenue-cogs,totalExpense=ex.reduce((a,e)=>a+e.amount,0),netProfit=grossProfit-totalExpense;
   const stockValue=sk.reduce((a,s)=>a+s.qty*s.cost,0),totalPurchase=pu.reduce((a,p)=>a+p.total,0);
   return {revenue,cogs,grossProfit,totalExpense,netProfit,stockValue,totalPurchase,serviceCount:sv.length};
 }
+function calcPaymentBreakdown(start,end){
+  const sv=bServices().filter(s=>s.date>=start && s.date<=end);
+  const byMethod={};
+  sv.forEach(s=>{ const m=s.paymentMethod||'Cash'; byMethod[m]=(byMethod[m]||0)+s.revenue; });
+  return byMethod;
+}
 function renderDashboard(){
-  const st=calcStats();
+  const periodEl=document.getElementById('dashPeriod');
+  const period=periodEl?periodEl.value:'bulan_ini';
+  const customEl=document.getElementById('dashCustomRange');
+  let start,end;
+  if(period==='custom'){
+    if(customEl) customEl.style.display='flex';
+    const fromEl=document.getElementById('dashCustomFrom'), toEl=document.getElementById('dashCustomTo');
+    const def=getDateRange('bulan_ini');
+    if(fromEl && !fromEl.value) fromEl.value=def.start;
+    if(toEl && !toEl.value) toEl.value=def.end;
+    start=fromEl?fromEl.value:def.start;
+    end=toEl?toEl.value:def.end;
+  } else {
+    if(customEl) customEl.style.display='none';
+    ({start,end}=getDateRange(period));
+  }
+  const st=calcStats(start,end);
   const isOwner=currentUser.role==='owner';
   const showProfit=isOwner||canAccess('lihat_profit');
   const showModal_cost=isOwner||canAccess('lihat_modal');
@@ -1837,11 +1967,14 @@ function renderDashboard(){
   if(showModal_cost) cards+=`<div class="stat-card"><div class="label">Modal Stok</div><div class="value orange">${rp(st.stockValue)}</div><div class="sub">aset sparepart</div></div>`;
   cards+=`<div class="stat-card"><div class="label">Servis Dikerjakan</div><div class="value purple">${inProgress}</div><div class="sub">antri + proses</div></div>`;
   document.getElementById('dashCards').innerHTML=cards;
-  const sv=bServices();
+  const sv=bServices().filter(s=>s.date>=start && s.date<=end);
   document.getElementById('dashRecent').innerHTML = sv.length? `<table><tr><th>Invoice</th><th>Customer</th><th>Servis</th><th>Status</th>${showProfit?'<th>Profit</th>':''}</tr>`+
-    sv.slice(0,5).map(t=>`<tr><td>${t.inv}</td><td>${t.cust}</td><td>${t.issue}</td><td><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td>${showProfit?`<td class="green">${rp(t.revenue-t.cogs)}</td>`:''}</tr>`).join('')+`</table>` : '<div class="empty">Belum ada transaksi</div>';
+    sv.slice(0,5).map(t=>`<tr><td>${t.inv}</td><td>${t.cust}</td><td>${t.issue}</td><td><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td>${showProfit?`<td class="green">${rp(t.revenue-t.cogs)}</td>`:''}</tr>`).join('')+`</table>` : '<div class="empty">Belum ada transaksi di periode ini</div>';
   const low=bStock().filter(s=>s.qty<=s.min);
   document.getElementById('dashLowStock').innerHTML = low.length? '<table><tr><th>Sparepart</th><th>Stok</th><th>Min</th></tr>'+low.map(s=>`<tr><td>${s.name}</td><td class="red">${s.qty}</td><td>${s.min}</td></tr>`).join('')+'</table>' : '<div class="empty"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Semua stok aman</div>';
+  const byMethod=calcPaymentBreakdown(start,end);
+  const pmEntries=Object.entries(byMethod);
+  document.getElementById('dashPaymentMethods').innerHTML = pmEntries.length? '<table><tr><th>Metode</th><th>Total</th></tr>'+pmEntries.map(([m,v])=>`<tr><td><span class="badge badge-mid">${m}</span></td><td>${rp(v)}</td></tr>`).join('')+'</table>' : '<div class="empty">Belum ada transaksi di periode ini</div>';
 }
 
 /* ============ AI REVIEW ============ */
@@ -2032,7 +2165,9 @@ function getDateRange(period){
   const now=new Date();
   let start,end;
   end=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  if(period==='bulan_ini'){ start=new Date(now.getFullYear(),now.getMonth(),1); }
+  if(period==='hari_ini'){ start=end; }
+  else if(period==='7hari'){ start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-6); }
+  else if(period==='bulan_ini'){ start=new Date(now.getFullYear(),now.getMonth(),1); }
   else if(period==='bulan_lalu'){ start=new Date(now.getFullYear(),now.getMonth()-1,1); end=new Date(now.getFullYear(),now.getMonth(),0); }
   else if(period==='3bulan'){ start=new Date(now.getFullYear(),now.getMonth()-2,1); }
   else if(period==='tahun_ini'){ start=new Date(now.getFullYear(),0,1); }
@@ -2302,6 +2437,60 @@ function renderAttendanceTable(){
 }
 function renderAbsensi(){ renderAttendanceTable(); }
 
+/* ============ RIWAYAT TRANSAKSI (gabungan) ============ */
+function renderRiwayat(q=''){
+  const el=document.getElementById('riwayatTable');
+  if(!el) return;
+  const periodSel=document.getElementById('riwPeriod');
+  const period=periodSel?periodSel.value:'bulan_ini';
+  const typeSel=document.getElementById('riwType');
+  const typeFilter=typeSel?typeSel.value:'';
+  const customEl=document.getElementById('riwCustomRange');
+  let start,end;
+  if(period==='custom'){
+    if(customEl) customEl.style.display='flex';
+    const fromEl=document.getElementById('riwCustomFrom'), toEl=document.getElementById('riwCustomTo');
+    const def=getDateRange('bulan_ini');
+    if(fromEl && !fromEl.value) fromEl.value=def.start;
+    if(toEl && !toEl.value) toEl.value=def.end;
+    start=fromEl?fromEl.value:def.start;
+    end=toEl?toEl.value:def.end;
+  } else {
+    if(customEl) customEl.style.display='none';
+    ({start,end}=getDateRange(period));
+  }
+
+  let events=[];
+  bServices().forEach(t=>{
+    events.push({date:t.date, type:'servis', label:'Servis', desc:`${t.inv} — ${t.cust} (${t.issue})`, amount:t.revenue});
+    (t.parts||[]).forEach(part=>{
+      events.push({date:t.date, type:'keluar', label:'Stok Keluar', desc:`${part.partName} x${part.qty||1} (servis ${t.inv})`, amount:-(part.partCost*(part.qty||1))});
+    });
+  });
+  if(canAccess('pembelian')||currentUser.role==='owner'){
+    bPurchases().forEach(p=>{
+      events.push({date:p.date, type:'masuk', label:'Stok Masuk', desc:`${p.itemName} x${p.qty} — ${p.supplier||'-'}`, amount:p.total});
+    });
+  }
+  if(canAccess('audit')||currentUser.role==='owner'){
+    bAudits().forEach(a=>{
+      (a.items||[]).filter(i=>i.diff!==0).forEach(i=>{
+        events.push({date:a.date, type:'audit', label:'Audit', desc:`${i.name}: ${i.system}→${i.physical} oleh ${a.by}`, amount:i.diff});
+      });
+    });
+  }
+
+  events=events.filter(e=>e.date>=start && e.date<=end);
+  if(typeFilter) events=events.filter(e=>e.type===typeFilter);
+  if(q) events=events.filter(e=>e.desc.toLowerCase().includes(q.toLowerCase()));
+  events.sort((a,b)=>b.date.localeCompare(a.date));
+
+  if(!events.length){ el.innerHTML='<div class="empty">Belum ada riwayat</div>'; return; }
+  const typeBadge={servis:'badge-ok',masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
+  const rows=events.map(e=>`<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${e.label}</span></td><td>${e.desc}</td><td class="${e.amount>=0?'green':'red'}">${e.amount>=0?'+':''}${e.type==='audit'?e.amount:rp(e.amount)}</td></tr>`).join('');
+  el.innerHTML=`<table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th></tr>${rows}</table>`;
+}
+
 /* ============ RENDER ALL ============ */
 function renderAll(){
   renderDashboard();
@@ -2311,6 +2500,7 @@ function renderAll(){
   if(canAccess('pembelian')||currentUser.role==='owner') renderPembelian();
   if(canAccess('pengeluaran')||currentUser.role==='owner') renderPengeluaran();
   if(canAccess('utang_piutang')||currentUser.role==='owner') renderUtangPiutang();
+  renderRiwayat();
   renderActivity();
   if(currentUser.role==='owner'){ renderBranchTable(); renderUserTable(); }
 }
