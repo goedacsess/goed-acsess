@@ -639,7 +639,8 @@ const APP_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABc
 function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
 function fmtNum(n){ return (n||0).toLocaleString('id-ID'); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function localDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return localDateStr(new Date()); }
 function val(id){ return document.getElementById(id).value; }
 function valRp(id){ return parseRupiah(document.getElementById(id).value); }
 function formatRupiahLive(el){
@@ -2172,7 +2173,7 @@ function getDateRange(period){
   else if(period==='3bulan'){ start=new Date(now.getFullYear(),now.getMonth()-2,1); }
   else if(period==='tahun_ini'){ start=new Date(now.getFullYear(),0,1); }
   else { start=new Date(2000,0,1); }
-  return {start:start.toISOString().slice(0,10), end:end.toISOString().slice(0,10)};
+  return {start:localDateStr(start), end:localDateStr(end)};
 }
 
 function calcLabaRugi(start,end){
@@ -2217,7 +2218,7 @@ function getMonthlyTrend(){
   const months=[];
   for(let i=5;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({label:d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}), monthStr:d.toISOString().slice(0,7)});
+    months.push({label:d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}), monthStr:localDateStr(d).slice(0,7)});
   }
   const revenueData=months.map(m=>bServices().filter(s=>s.date.startsWith(m.monthStr)).reduce((a,s)=>a+s.revenue,0));
   const expenseData=months.map(m=>bExpenses().filter(e=>e.date.startsWith(m.monthStr)).reduce((a,e)=>a+e.amount,0));
@@ -2460,11 +2461,12 @@ function renderRiwayat(q=''){
     ({start,end}=getDateRange(period));
   }
 
+  const showModalCost = currentUser.role==='owner' || canAccess('lihat_modal');
   let events=[];
   bServices().forEach(t=>{
     events.push({date:t.date, type:'servis', label:'Servis', desc:`${t.inv} — ${t.cust} (${t.issue})`, amount:t.revenue});
     (t.parts||[]).forEach(part=>{
-      events.push({date:t.date, type:'keluar', label:'Stok Keluar', desc:`${part.partName} x${part.qty||1} (servis ${t.inv})`, amount:-(part.partCost*(part.qty||1))});
+      events.push({date:t.date, type:'keluar', label:'Stok Keluar', desc:`${part.partName} x${part.qty||1} (servis ${t.inv})`, amount:showModalCost?-(part.partCost*(part.qty||1)):null});
     });
   });
   if(canAccess('pembelian')||currentUser.role==='owner'){
@@ -2487,7 +2489,10 @@ function renderRiwayat(q=''){
 
   if(!events.length){ el.innerHTML='<div class="empty">Belum ada riwayat</div>'; return; }
   const typeBadge={servis:'badge-ok',masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
-  const rows=events.map(e=>`<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${e.label}</span></td><td>${e.desc}</td><td class="${e.amount>=0?'green':'red'}">${e.amount>=0?'+':''}${e.type==='audit'?e.amount:rp(e.amount)}</td></tr>`).join('');
+  const rows=events.map(e=>{
+    const amountCell = e.amount==null ? '<span style="color:var(--gray)">—</span>' : `${e.amount>=0?'+':''}${e.type==='audit'?e.amount:rp(e.amount)}`;
+    return `<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${e.label}</span></td><td>${e.desc}</td><td class="${e.amount==null?'':(e.amount>=0?'green':'red')}">${amountCell}</td></tr>`;
+  }).join('');
   el.innerHTML=`<table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th></tr>${rows}</table>`;
 }
 
