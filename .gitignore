@@ -7,3 +7,6 @@ dist/
 *.p12
 *.cer
 *.certSigningRequest
+*.jks
+*.keystore
+key.properties
