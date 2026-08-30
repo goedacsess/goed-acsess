@@ -6,7 +6,13 @@ dist/
 *.p8
 *.p12
 *.cer
+*.pem
 *.certSigningRequest
 *.jks
 *.keystore
 key.properties
+
+# Artefak build - digenerate ulang tiap build, bukan source code
+build/ios/
+latest-mac.yml
+latest.yml

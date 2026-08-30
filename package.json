@@ -69,5 +69,8 @@
     "@capacitor/core": "^5.7.8",
     "@capacitor/ios": "^5.7.8",
     "electron-updater": "^6.3.9"
+  },
+  "allowScripts": {
+    "electron@31.7.7": true
   }
 }
