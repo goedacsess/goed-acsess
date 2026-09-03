@@ -1,6 +1,6 @@
 {
   "name": "iservis-pro",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "Software Kasir Servis iPhone",
   "main": "main.js",
   "author": "iServis Pro",
@@ -59,7 +59,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+      "createDesktopShortcut": true,
+      "include": "build/installer.nsh"
     },
     "afterSign": "scripts/notarize.js"
   },
