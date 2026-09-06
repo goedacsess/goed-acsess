@@ -1732,7 +1732,17 @@ async function saveService(){
   };
   services.unshift(ns);
   closeModal(); renderAll();
-  await dbCall(sb.from('services').insert(toDbService(ns)), 'simpan transaksi servis');
+  const tersimpan = await dbCall(sb.from('services').insert(toDbService(ns)), 'simpan transaksi servis', true);
+  if(!tersimpan){
+    /* Simpan gagal: jangan biarkan layar memperlihatkan transaksi yang sebenarnya tidak
+       ada di server, dan jangan biarkan stok terpotong tanpa transaksi. Kembalikan
+       keduanya, lalu bilang terus terang ke kasir. */
+    services = services.filter(x=>x.id!==ns.id);
+    rowsToApply.forEach(({s,qty})=>{ s.qty += qty; });
+    renderAll();
+    alert('TRANSAKSI TIDAK TERSIMPAN.\n\nKoneksi ke server bermasalah, jadi nota '+inv+' dibatalkan dan stok dikembalikan.\n\nPeriksa koneksi internet, lalu input ulang transaksinya.');
+    return;
+  }
   await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update(toDbStock(s)).eq('id',s.id), 'update stok setelah servis')));
 }
 
@@ -1901,13 +1911,17 @@ function openPurchaseModal(){
 async function savePurchase(){
   const sel=val('p_item'),qty=+val('p_qty'),cost=valRp('p_cost');
   if(qty<=0){alert('Qty > 0');return;}
-  let itemName='',itemId='',stockToSync=null,isNewStock=false;
+  let itemName='',itemId='',stockToSync=null,isNewStock=false,pulihkanStok=null;
   if(sel==='NEW'){
     const ns={id:gid(),branch:currentBranch,name:val('p_name'),sku:val('p_sku'),qty,min:3,cost,price:valRp('p_price')};
     if(!ns.name){alert('Nama wajib');return;}
     stock.push(ns); itemName=ns.name; itemId=ns.id; stockToSync=ns; isNewStock=true;
+    pulihkanStok=()=>{ stock=stock.filter(x=>x.id!==ns.id); };
   } else if(sel){
-    const s=stock.find(x=>x.id===sel); s.qty+=qty; s.cost=cost; itemName=s.name; itemId=s.id; stockToSync=s;
+    const s=stock.find(x=>x.id===sel);
+    const qtyLama=s.qty, costLama=s.cost;
+    s.qty+=qty; s.cost=cost; itemName=s.name; itemId=s.id; stockToSync=s;
+    pulihkanStok=()=>{ s.qty=qtyLama; s.cost=costLama; };
   } else {alert('Pilih item');return;}
   const total=qty*cost;
   const payStatus=val('p_paystatus');
@@ -1915,9 +1929,18 @@ async function savePurchase(){
   const np={id:gid(),branch:currentBranch,date:todayStr(),itemId,itemName,qty,cost,total,supplier:val('p_supplier'),paidAmount,paymentMethod:val('p_paymethod')||'Cash'};
   purchases.unshift(np);
   closeModal(); renderAll();
-  if(isNewStock) await dbCall(sb.from('stock').insert(toDbStock(stockToSync)), 'tambah stok baru dari pembelian');
-  else await dbCall(sb.from('stock').update(toDbStock(stockToSync)).eq('id',stockToSync.id), 'update stok dari pembelian');
-  await dbCall(sb.from('purchases').insert(toDbPurchase(np)), 'simpan pembelian');
+  const stokOk = isNewStock
+    ? await dbCall(sb.from('stock').insert(toDbStock(stockToSync)), 'tambah stok baru dari pembelian', true)
+    : await dbCall(sb.from('stock').update(toDbStock(stockToSync)).eq('id',stockToSync.id), 'update stok dari pembelian', true);
+  const beliOk = stokOk && await dbCall(sb.from('purchases').insert(toDbPurchase(np)), 'simpan pembelian', true);
+  if(!beliOk){
+    /* Sama seperti transaksi servis: jangan tampilkan stok bertambah kalau pembeliannya
+       tidak benar-benar masuk ke server. */
+    purchases = purchases.filter(x=>x.id!==np.id);
+    pulihkanStok();
+    renderAll();
+    alert('PEMBELIAN TIDAK TERSIMPAN.\n\nKoneksi ke server bermasalah, jadi catatan pembelian dibatalkan dan stok dikembalikan seperti semula.\n\nPeriksa koneksi internet, lalu input ulang.');
+  }
 }
 async function delPurchase(id){
   if(confirm('Hapus catatan?')){

@@ -16,3 +16,6 @@ key.properties
 build/ios/
 latest-mac.yml
 latest.yml
+
+# Duplikat lama src/index.html, jangan dibuat lagi di root
+/index.html
