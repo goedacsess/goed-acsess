@@ -13,9 +13,9 @@
     "publish:win": "electron-builder --win --x64 --config.directories.output=dist/win --publish always"
   },
   "devDependencies": {
-    "electron": "^31.0.0",
-    "electron-builder": "^24.13.3",
-    "@electron/notarize": "^2.3.2"
+    "@electron/notarize": "^2.3.2",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
   },
   "build": {
     "appId": "com.iservis.pro",

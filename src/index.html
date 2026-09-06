@@ -4,15 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Goed Acsess - Kasir Servis iPhone</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans','Segoe UI',Tahoma,sans-serif; -webkit-tap-highlight-color:transparent; }
+  /* Font dibundel lokal, bukan dari Google Fonts: tampilan tetap sama walau internet
+     toko putus. Inter dan Sora pakai variable font (satu file untuk semua ketebalan). */
+  @font-face{ font-family:'Inter'; font-style:normal; font-weight:400 800; font-display:swap; src:url('vendor/fonts/inter-var.woff2') format('woff2'); }
+  @font-face{ font-family:'Sora'; font-style:normal; font-weight:400 800; font-display:swap; src:url('vendor/fonts/sora-var.woff2') format('woff2'); }
+  @font-face{ font-family:'IBM Plex Mono'; font-style:normal; font-weight:400; font-display:swap; src:url('vendor/fonts/plexmono-400.woff2') format('woff2'); }
+  @font-face{ font-family:'IBM Plex Mono'; font-style:normal; font-weight:500; font-display:swap; src:url('vendor/fonts/plexmono-500.woff2') format('woff2'); }
+  @font-face{ font-family:'IBM Plex Mono'; font-style:normal; font-weight:600; font-display:swap; src:url('vendor/fonts/plexmono-600.woff2') format('woff2'); }
+  @font-face{ font-family:'IBM Plex Mono'; font-style:normal; font-weight:700; font-display:swap; src:url('vendor/fonts/plexmono-700.woff2') format('woff2'); }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',Tahoma,sans-serif; -webkit-tap-highlight-color:transparent; }
   :root{
     --primary:#0F6E56; --primary-dark:#0B5744; --primary-light:#E5F1EC;
-    --dark:#1E2A32; --gray:#7c8a86; --light:#F4F6F5;
+    --dark:#1E2A32; --gray:#65716e; --light:#F4F6F5;
     --green:#0F6E56; --red:#A83E3E; --orange:#B8863D; --purple:#5B6B8C; --card:#fff;
+    /* varian khusus teks. Di mode terang nilainya identik dengan di atas; di mode
+       gelap dicerahkan (hue sama) supaya angka tetap terbaca di atas kartu gelap. */
+    --primary-t:var(--primary); --green-t:var(--green); --red-t:var(--red);
+    /* oranye & ungu versi teks digelapkan sedikit (hue sama) supaya terbaca di atas
+       latar terang dan latar badge; versi latar tombol tetap memakai --orange/--purple */
+    --orange-t:#86622c; --purple-t:#586888;
     --bg:var(--light); --text:var(--dark); --card-bg:var(--card);
     --border:#ececea; --border-strong:#dde1df; --input-bg:#fff; --hover-bg:#F7F9F8; --stripe-bg:#FAFBFA;
     --shadow-xs:0 1px 2px rgba(20,30,26,.045);
@@ -26,6 +37,8 @@
     --bg:#12161a; --text:#e9edec; --card-bg:#1b2126; --gray:#8b9793;
     --border:#262e33; --border-strong:#333d43; --input-bg:#20272c; --hover-bg:#212930; --stripe-bg:#191f24; --light:#12161a;
     --primary-light:#173026; --dark:#e9edec;
+    --primary-t:#18b48c; --green-t:#18b48c; --red-t:#cf7d7d;
+    --orange-t:#bc893e; --purple-t:#8694b1;
     --shadow-xs:0 1px 2px rgba(0,0,0,.3);
     --shadow-sm:0 1px 3px rgba(0,0,0,.35);
     --shadow-md:0 4px 14px rgba(0,0,0,.4);
@@ -33,13 +46,17 @@
   }
   body.dark-mode .badge-low{background:#3a2422;} body.dark-mode .badge-ok{background:#173026;} body.dark-mode .badge-mid{background:#33290f;} body.dark-mode .badge-info{background:#242840;}
   body.dark-mode .st-antri{background:#262e33;color:#c5cdd0;}
+  /* pil status latarnya dipaku terang; tanpa versi gelap ini, teks aksen yang sudah
+     dicerahkan malah jadi tidak terbaca di mode gelap */
+  body.dark-mode .st-proses{background:#33290f;} body.dark-mode .st-selesai{background:#1c2b34;}
+  body.dark-mode .st-diambil{background:#173026;} body.dark-mode .st-batal{background:#3a2422;}
   body.dark-mode .panel,body.dark-mode .stat-card,body.dark-mode .modal{border:1px solid var(--border);}
   body.dark-mode ::-webkit-scrollbar-thumb{background:#3a444b;}
 
   html{ scroll-behavior:smooth; }
   body{ background:var(--bg); color:var(--text); transition:background .25s var(--ease),color .25s var(--ease); font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased; }
-  h1,h2,h3,h4,.font-heading,.logo,.login-card h2{ font-family:'Outfit','Plus Jakarta Sans','Segoe UI',Tahoma,sans-serif; letter-spacing:-.01em; }
-  .font-mono{ font-family:'JetBrains Mono',monospace; }
+  h1,h2,h3,h4,.font-heading,.logo,.login-card h2{ font-family:'Sora','Inter','Segoe UI',Tahoma,sans-serif; letter-spacing:-.01em; }
+  .font-mono{ font-family:'IBM Plex Mono',monospace; }
   ::selection{ background:var(--primary); color:#fff; }
   *:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; border-radius:4px; }
   ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -48,9 +65,11 @@
 
   /* LOGIN / LOADING */
   .login-bg{ position:fixed; inset:0; background:radial-gradient(circle at 20% 15%,#1a3b32,#0d1c18 55%),linear-gradient(150deg,#1E2A32,#0F6E56 130%); display:flex; align-items:center; justify-content:center; z-index:500; padding:20px; }
-  .login-card{ background:#fff; padding:42px 38px; border-radius:22px; width:380px; max-width:100%; box-shadow:0 30px 80px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.15); animation:cardIn .5s var(--ease); }
+  /* kartu ini latarnya selalu putih, jadi warna teksnya dipaku gelap. Kalau ikut
+     var(--text), di mode gelap teksnya jadi putih di atas putih alias hilang. */
+  .login-card{ background:#fff; color:#1E2A32; padding:42px 38px; border-radius:22px; width:380px; max-width:100%; box-shadow:0 30px 80px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.15); animation:cardIn .5s var(--ease); }
   .login-card h2{ text-align:center; margin-bottom:8px; font-size:24px; }
-  .login-card p{ text-align:center; color:var(--gray); font-size:13.5px; margin-bottom:26px; }
+  .login-card p{ text-align:center; color:#5a6862; font-size:13.5px; margin-bottom:26px; }
   .hint{ font-size:12px; color:var(--gray); text-align:center; margin-top:16px; line-height:1.7; }
   @keyframes cardIn{ from{opacity:0; transform:translateY(14px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
 
@@ -78,10 +97,10 @@
   .topbar .date{ color:var(--gray); font-size:13.5px; }
   .topbar-subtitle{ font-size:12.5px; color:var(--gray); margin-top:3px; font-weight:500; }
   .topbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .branch-badge{ display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:11px; background:var(--primary-light); color:var(--primary); border:1px solid rgba(15,110,86,.18); font-size:12px; font-weight:700; white-space:nowrap; }
+  .branch-badge{ display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:11px; background:var(--primary-light); color:var(--primary-t); border:1px solid rgba(15,110,86,.18); font-size:12px; font-weight:700; white-space:nowrap; }
   body.dark-mode .branch-badge{ color:#6fe0bb; border-color:rgba(62,207,168,.22); }
   .theme-toggle-btn{ width:36px; height:36px; border-radius:11px; border:1.5px solid var(--border-strong); background:var(--card-bg); color:var(--text); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s var(--ease); flex-shrink:0; }
-  .theme-toggle-btn:hover{ background:var(--hover-bg); border-color:var(--primary); }
+  .theme-toggle-btn:hover{ background:var(--hover-bg); border-color:var(--primary-t); }
   .theme-toggle-btn svg{ width:16px; height:16px; }
   .page{ display:none; } .page.active{ display:block; animation:pageIn .35s var(--ease); }
   @keyframes pageIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
@@ -92,54 +111,54 @@
   .stat-card .stat-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:10px; }
   .stat-card .stat-icon{ width:32px; height:32px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
   .stat-card .stat-icon svg{ width:16px; height:16px; }
-  .stat-card .label{ color:var(--gray); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
-  .stat-card .value{ font-size:19px; font-weight:700; letter-spacing:-.2px; font-family:'JetBrains Mono',monospace; line-height:1.3; word-break:break-word; overflow-wrap:anywhere; }
+  .stat-card .label{ color:var(--gray); font-size:12.5px; font-weight:600; }
+  .stat-card .value{ font-size:19px; font-weight:700; letter-spacing:-.2px; font-family:'IBM Plex Mono',monospace; line-height:1.3; word-break:break-word; overflow-wrap:anywhere; }
   .stat-card .sub{ font-size:12px; margin-top:7px; color:var(--gray); }
 
   /* ===== DASHBOARD ANALYTICS ===== */
   .dash-filter-bar{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px 18px; margin-bottom:20px; box-shadow:var(--shadow-xs); }
-  .dash-filter-bar .filter-label{ display:flex; align-items:center; gap:8px; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text); flex-wrap:wrap; }
+  .dash-filter-bar .filter-label{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--text); flex-wrap:wrap; }
   .dash-filter-bar select{ margin-bottom:0; width:auto; padding:8px 12px; font-size:12.5px; border-radius:10px; }
   .dash-filter-bar input[type=date]{ margin-bottom:0; width:auto; padding:7px 10px; font-size:12px; border-radius:9px; }
 
   .insight-ribbon{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-bottom:20px; }
   .insight-card{ display:flex; align-items:center; justify-content:space-between; gap:14px; border-radius:var(--radius-lg); padding:16px 18px; border:1px solid; min-width:0; }
-  .insight-card .ic-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-  .insight-card .ic-value{ font-size:23px; font-weight:800; margin-top:3px; font-family:'Outfit','Plus Jakarta Sans',sans-serif; word-break:break-word; }
+  .insight-card .ic-label{ font-size:12.5px; font-weight:600; }
+  .insight-card .ic-value{ font-size:23px; font-weight:800; margin-top:3px; font-family:'Sora','Inter',sans-serif; word-break:break-word; }
   .insight-card .ic-sub{ font-size:11px; margin-top:3px; }
   .insight-card .ic-icon{ width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .insight-card .ic-icon svg{ width:19px; height:19px; }
   .insight-card.i-green{ background:rgba(15,110,86,.07); border-color:rgba(15,110,86,.22); }
-  .insight-card.i-green .ic-label,.insight-card.i-green .ic-value{ color:var(--green); }
-  .insight-card.i-green .ic-sub{ color:var(--green); opacity:.8; }
-  .insight-card.i-green .ic-icon{ background:rgba(15,110,86,.13); color:var(--green); }
+  .insight-card.i-green .ic-label,.insight-card.i-green .ic-value{ color:var(--green-t); }
+  .insight-card.i-green .ic-sub{ color:var(--green-t); opacity:.8; }
+  .insight-card.i-green .ic-icon{ background:rgba(15,110,86,.13); color:var(--green-t); }
   .insight-card.i-indigo{ background:rgba(91,107,140,.07); border-color:rgba(91,107,140,.22); }
-  .insight-card.i-indigo .ic-label,.insight-card.i-indigo .ic-value{ color:var(--purple); }
-  .insight-card.i-indigo .ic-sub{ color:var(--purple); opacity:.8; }
-  .insight-card.i-indigo .ic-icon{ background:rgba(91,107,140,.13); color:var(--purple); }
+  .insight-card.i-indigo .ic-label,.insight-card.i-indigo .ic-value{ color:var(--purple-t); }
+  .insight-card.i-indigo .ic-sub{ color:var(--purple-t); opacity:.8; }
+  .insight-card.i-indigo .ic-icon{ background:rgba(91,107,140,.13); color:var(--purple-t); }
   .insight-card.i-amber{ background:rgba(184,134,61,.07); border-color:rgba(184,134,61,.22); }
-  .insight-card.i-amber .ic-label,.insight-card.i-amber .ic-value{ color:var(--orange); }
-  .insight-card.i-amber .ic-sub{ color:var(--orange); opacity:.8; }
-  .insight-card.i-amber .ic-icon{ background:rgba(184,134,61,.13); color:var(--orange); }
+  .insight-card.i-amber .ic-label,.insight-card.i-amber .ic-value{ color:var(--orange-t); }
+  .insight-card.i-amber .ic-sub{ color:var(--orange-t); opacity:.8; }
+  .insight-card.i-amber .ic-icon{ background:rgba(184,134,61,.13); color:var(--orange-t); }
 
   .chart-panel-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid var(--border); }
   .chart-tabs{ display:flex; gap:4px; padding:4px; background:var(--hover-bg); border:1px solid var(--border-strong); border-radius:12px; flex-wrap:wrap; }
   .chart-tab-btn{ display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:9px; border:none; background:transparent; color:var(--gray); font-size:11.5px; font-weight:700; cursor:pointer; transition:.15s var(--ease); white-space:nowrap; }
   .chart-tab-btn svg{ width:13px; height:13px; }
   .chart-tab-btn:hover{ color:var(--text); }
-  .chart-tab-btn.active{ background:var(--card-bg); color:var(--primary); box-shadow:var(--shadow-xs); }
+  .chart-tab-btn.active{ background:var(--card-bg); color:var(--primary-t); box-shadow:var(--shadow-xs); }
   .chart-legend-row{ display:flex; gap:16px; flex-wrap:wrap; font-size:12px; font-weight:600; margin-bottom:14px; }
   .chart-legend-row .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; }
 
   .asset-mini-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
   .asset-mini-card{ border-radius:14px; padding:14px 16px; border:1px solid; min-width:0; }
-  .asset-mini-card h5{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
-  .asset-mini-card .val{ font-size:18px; font-weight:700; font-family:'JetBrains Mono',monospace; word-break:break-word; }
+  .asset-mini-card h5{ font-size:12px; font-weight:600; margin-bottom:6px; }
+  .asset-mini-card .val{ font-size:18px; font-weight:700; font-family:'IBM Plex Mono',monospace; word-break:break-word; }
   .asset-mini-card .sub{ font-size:11px; color:var(--gray); margin-top:4px; }
 
   .breakdown-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
   .breakdown-box{ background:var(--hover-bg); border:1px solid var(--border-strong); border-radius:14px; padding:16px; }
-  .breakdown-box h4{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+  .breakdown-box h4{ font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
 
   .dash-bottom-grid{ display:grid; grid-template-columns:2fr 1fr; gap:20px; align-items:start; }
   @media(max-width:1100px){ .dash-bottom-grid{ grid-template-columns:1fr; } }
@@ -149,7 +168,7 @@
   .pipeline-row .pr-top{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; margin-bottom:5px; gap:8px; }
   .pipeline-row .pr-top .lbl{ display:flex; align-items:center; gap:7px; font-weight:600; }
   .pipeline-row .pr-top .lbl .dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .pipeline-row .pr-top .val{ font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--gray); white-space:nowrap; }
+  .pipeline-row .pr-top .val{ font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--gray); white-space:nowrap; }
   .pipeline-bar{ height:7px; border-radius:10px; background:var(--border); overflow:hidden; }
   .pipeline-bar > div{ height:100%; border-radius:10px; transition:width .4s var(--ease); }
 
@@ -158,14 +177,22 @@
 
   .dash-table td{ vertical-align:top; }
   .dash-table .sub-line{ font-size:11px; color:var(--gray); margin-top:2px; }
-  .green{color:var(--green);} .red{color:var(--red);} .orange{color:var(--orange);} .blue{color:var(--primary);} .purple{color:var(--purple);}
+  .green{color:var(--green-t);} .red{color:var(--red-t);} .orange{color:var(--orange-t);} .blue{color:var(--primary-t);} .purple{color:var(--purple-t);}
 
   .panel{ background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 26px; margin-bottom:22px; box-shadow:var(--shadow-sm); }
-  .panel h2{ font-size:17px; font-weight:600; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; letter-spacing:.1px; }
+  /* flex-start, bukan space-between: judul yang isinya cuma ikon + teks jadi terlempar
+     ke dua ujung panel. Elemen aksi didorong ke kanan lewat margin-left:auto. */
+  .panel h2{ font-size:17px; font-weight:600; margin-bottom:18px; display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:10px; letter-spacing:.1px; }
+  .panel h2 > button, .panel h2 > select, .panel h2 > .h2-meta, .panel h2 > .flex-row{ margin-left:auto; }
+  /* di layar lebar grup kontrol jangan dipersempit, biar tombolnya tidak turun baris;
+     di layar sempit biarkan mengecil dan membungkus seperti biasa */
+  @media(min-width:901px){ .panel h2 > .flex-row{ flex-shrink:0; flex-wrap:nowrap; } }
 
   table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   th,td{ text-align:left; padding:12px 10px; border-bottom:1px solid var(--border); }
-  th{ color:var(--gray); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; background:var(--stripe-bg); }
+  th{ color:var(--gray); font-weight:600; font-size:12px; background:var(--stripe-bg); }
+  /* angka stok dan badge statusnya satu kesatuan, jangan patah jadi dua baris */
+  .qty-cell{ white-space:nowrap; }
   th:first-child{ border-top-left-radius:8px; border-bottom-left-radius:8px; }
   th:last-child{ border-top-right-radius:8px; border-bottom-right-radius:8px; }
   tbody tr{ transition:background .15s var(--ease); }
@@ -183,7 +210,7 @@
 
   input,select,textarea{ width:100%; padding:10.5px 14px; border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); font-size:14px; margin-bottom:12px; background:var(--input-bg); color:var(--text); transition:border-color .15s var(--ease),box-shadow .15s var(--ease); font-family:inherit; }
   input::placeholder,textarea::placeholder{ color:var(--gray); opacity:.7; }
-  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3.5px var(--primary-light); }
+  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary-t); box-shadow:0 0 0 3.5px var(--primary-light); }
   label{ font-size:12.5px; color:var(--gray); display:block; margin-bottom:6px; font-weight:600; letter-spacing:.15px; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
 
@@ -194,31 +221,31 @@
   @keyframes modalIn{ from{opacity:0; transform:translateY(16px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
   .modal h3{ margin-bottom:20px; font-size:19px; font-weight:600; }
 
-  .badge{ padding:4px 11px; border-radius:20px; font-size:11.5px; font-weight:700; letter-spacing:.15px; display:inline-block; border:1px solid rgba(0,0,0,.06); }
-  .badge-low{background:#f5e6e4;color:var(--red);} .badge-ok{background:#e2ede9;color:var(--green);} .badge-mid{background:#f3e9d9;color:var(--orange);} .badge-info{background:#e7e9f5;color:var(--purple);}
+  .badge{ padding:4px 9px; border-radius:6px; font-size:12px; font-weight:600; display:inline-block; border:1px solid rgba(0,0,0,.06); }
+  .badge-low{background:#f5e6e4;color:var(--red-t);} .badge-ok{background:#e2ede9;color:var(--green-t);} .badge-mid{background:#f3e9d9;color:var(--orange-t);} .badge-info{background:#e7e9f5;color:var(--purple-t);}
   body.dark-mode .badge{ border-color:rgba(255,255,255,.08); }
 
   .empty{ text-align:center; padding:48px 20px; color:var(--gray); font-size:13.5px; }
 
   .ai-box{ background:linear-gradient(160deg,var(--primary-light),var(--card-bg) 65%); border:1px solid var(--border); border-radius:var(--radius-lg); padding:26px; line-height:1.75; box-shadow:var(--shadow-sm); }
-  .ai-box h3{ color:var(--primary); margin-bottom:12px; font-size:16px; font-weight:600; }
+  .ai-box h3{ color:var(--primary-t); margin-bottom:12px; font-size:16px; font-weight:600; }
   .ai-box ul{ margin:10px 0 10px 20px; } .ai-box li{ margin-bottom:8px; }
   .ai-section{ margin-bottom:18px; }
-  .ai-tag{ display:inline-block; background:var(--primary); color:#fff; font-size:10.5px; font-weight:700; letter-spacing:.4px; padding:4px 11px; border-radius:20px; margin-bottom:9px; }
+  .ai-tag{ display:inline-block; background:var(--primary); color:#fff; font-size:12px; font-weight:600; padding:4px 9px; border-radius:6px; margin-bottom:9px; }
 
   .flex-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .search-box{ max-width:260px; margin-bottom:0; }
 
-  .audit-diff-pos{ color:var(--green); font-weight:700; } .audit-diff-neg{ color:var(--red); font-weight:700; }
+  .audit-diff-pos{ color:var(--green-t); font-weight:700; } .audit-diff-neg{ color:var(--red-t); font-weight:700; }
 
   .progress{ height:7px; background:var(--border); border-radius:10px; overflow:hidden; margin-top:7px; }
   .progress-bar{ height:100%; border-radius:10px; transition:width .3s var(--ease); }
 
-  .st-pill{ padding:4.5px 12px 4.5px 10px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid rgba(0,0,0,.06); letter-spacing:.1px; display:inline-flex; align-items:center; gap:6px; transition:filter .15s; }
+  .st-pill{ padding:4.5px 10px 4.5px 9px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(0,0,0,.06); display:inline-flex; align-items:center; gap:6px; transition:filter .15s; }
   .st-pill:hover{ filter:brightness(.96); }
   body.dark-mode .st-pill{ border-color:rgba(255,255,255,.08); }
   .st-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.75; flex-shrink:0; }
-  .st-antri{background:#e4e6e5;color:#5c6663;} .st-proses{background:#f3e9d9;color:var(--orange);} .st-selesai{background:#e2e8ed;color:var(--primary);} .st-diambil{background:#e2ede9;color:var(--green);} .st-batal{background:#f5e6e4;color:var(--red);}
+  .st-antri{background:#e4e6e5;color:#5c6663;} .st-proses{background:#f3e9d9;color:var(--orange-t);} .st-selesai{background:#e2e8ed;color:var(--primary-t);} .st-diambil{background:#e2ede9;color:var(--green-t);} .st-batal{background:#f5e6e4;color:var(--red-t);}
 
   .hidden{ display:none!important; }
 
@@ -231,15 +258,15 @@
   /* PERMISSION GRID */
   .perm-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
   .perm-item{ display:flex; align-items:center; gap:10px; background:var(--hover-bg); border:1px solid var(--border); padding:11px 14px; border-radius:var(--radius-sm); transition:border-color .15s; }
-  .perm-item:has(input:checked){ border-color:var(--primary); background:var(--primary-light); }
+  .perm-item:has(input:checked){ border-color:var(--primary-t); background:var(--primary-light); }
   .perm-item label{ margin:0; font-size:13.5px; color:var(--text); font-weight:500; cursor:pointer; }
-  .perm-item input[type=checkbox]{ width:18px; height:18px; margin:0; cursor:pointer; accent-color:var(--primary); }
+  .perm-item input[type=checkbox]{ width:18px; height:18px; margin:0; cursor:pointer; accent-color:var(--primary-t); }
 
   /* ICON EDITOR */
   .icon-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:12px; }
   .icon-opt{ font-size:22px; text-align:center; padding:9px; border-radius:10px; cursor:pointer; border:2px solid transparent; transition:.15s; }
   .icon-opt:hover{ background:var(--hover-bg); }
-  .icon-opt.selected{ border-color:var(--primary); background:var(--primary-light); }
+  .icon-opt.selected{ border-color:var(--primary-t); background:var(--primary-light); }
 
   .hamburger-btn{ display:none; background:none; border:none; cursor:pointer; padding:8px; color:var(--dark); }
   .sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(1px); z-index:400; }
@@ -286,7 +313,7 @@
   .login-content .hint b{ color:#fff; }
 
   /* ===== LOADING SPINNER (replaces emoji) ===== */
-  .spinner{ width:40px; height:40px; border:3.5px solid rgba(15,110,86,.15); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+  .spinner{ width:40px; height:40px; border:3.5px solid rgba(15,110,86,.15); border-top-color:var(--primary-t); border-radius:50%; animation:spin .8s linear infinite; }
   @keyframes spin{ to{ transform:rotate(360deg); } }
 
   /* ===== SIDEBAR COLLAPSE TOGGLE ===== */
@@ -312,7 +339,7 @@
 
   /* ===== TOOLBAR ACTION BUTTONS (tidy secondary actions) ===== */
   .btn.btn-tool{ background:var(--card-bg); color:var(--text); border:1.5px solid var(--border-strong); box-shadow:none; font-weight:600; }
-  .btn.btn-tool:hover{ background:var(--hover-bg); border-color:var(--primary); color:var(--primary); transform:translateY(-1px); box-shadow:var(--shadow-xs); }
+  .btn.btn-tool:hover{ background:var(--hover-bg); border-color:var(--primary-t); color:var(--primary-t); transform:translateY(-1px); box-shadow:var(--shadow-xs); }
   .btn.btn-tool:active{ transform:translateY(0); }
   .toolbar-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
@@ -341,7 +368,7 @@
 <div class="update-banner hidden" id="updateBanner">
   <span id="updateBannerText"></span>
   <div class="flex-row">
-    <button class="btn btn-sm" id="updateActionBtn" style="background:#fff;color:var(--green);display:none" onclick="installUpdateNow()">🔄 Restart & Install</button>
+    <button class="btn btn-sm" id="updateActionBtn" style="background:#fff;color:var(--green-t);display:none" onclick="installUpdateNow()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>Restart & Install</button>
     <button class="btn btn-sm" style="background:rgba(255,255,255,.25)" onclick="dismissUpdateBanner()">Nanti saja</button>
   </div>
 </div>
@@ -405,7 +432,7 @@
   <div class="page active" id="dashboard">
     <div class="dash-filter-bar">
       <div class="filter-label">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Periode Data:
         <select id="dashPeriod" onchange="renderDashboard()">
           <option value="hari_ini">Hari Ini</option>
@@ -432,14 +459,14 @@
     <div class="panel">
       <div class="chart-panel-head">
         <div>
-          <h2 style="margin-bottom:2px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:6px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Grafik Analitik Finansial &amp; Operasional</h2>
-          <p style="font-size:12px;color:var(--gray);font-weight:400">Visualisasi komprehensif pemasukan, pengeluaran, profitabilitas, serta valuasi aset sparepart.</p>
+          <h2 style="margin-bottom:2px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--primary-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:6px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Grafik Keuangan Toko</h2>
+          <p style="font-size:12px;color:var(--gray);font-weight:400">Pemasukan, pengeluaran, laba bersih, dan nilai stok sparepart.</p>
         </div>
         <div class="chart-tabs">
-          <button class="chart-tab-btn active" id="dashTabBtn_trend" onclick="setDashChartTab('trend')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Tren Finansial</button>
-          <button class="chart-tab-btn" id="dashTabBtn_bar" onclick="setDashChartTab('bar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Komparasi Laba</button>
+          <button class="chart-tab-btn active" id="dashTabBtn_trend" onclick="setDashChartTab('trend')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Tren Keuangan</button>
+          <button class="chart-tab-btn" id="dashTabBtn_bar" onclick="setDashChartTab('bar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Perbandingan Laba</button>
           <button class="chart-tab-btn" id="dashTabBtn_asset" onclick="setDashChartTab('asset')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/></svg>Aset Stok Part</button>
-          <button class="chart-tab-btn" id="dashTabBtn_breakdown" onclick="setDashChartTab('breakdown')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>Distribusi &amp; Unit</button>
+          <button class="chart-tab-btn" id="dashTabBtn_breakdown" onclick="setDashChartTab('breakdown')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>Sebaran &amp; Unit</button>
         </div>
       </div>
 
@@ -457,11 +484,11 @@
       <div id="dashTab_breakdown" style="display:none">
         <div class="breakdown-grid">
           <div class="breakdown-box">
-            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Kontribusi Omset per Seri Perangkat</h4>
+            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Kontribusi Omset per Seri Perangkat</h4>
             <canvas id="dashDeviceChart" height="150"></canvas>
           </div>
           <div class="breakdown-box">
-            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Komposisi Metode Pembayaran Masuk</h4>
+            <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Komposisi Metode Pembayaran Masuk</h4>
             <canvas id="dashPaymentChart" height="150"></canvas>
           </div>
         </div>
@@ -470,7 +497,7 @@
 
     <div class="dash-bottom-grid">
       <div class="panel" style="margin-bottom:0">
-        <h2>Transaksi Servis Terkini <span id="dashRecentCount" style="font-weight:400;font-size:11.5px;color:var(--gray)"></span></h2>
+        <h2>Transaksi Servis Terkini <span id="dashRecentCount" class="h2-meta" style="font-weight:400;font-size:11.5px;color:var(--gray)"></span></h2>
         <div id="dashRecent"></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:20px">
@@ -479,7 +506,7 @@
           <div id="dashPipeline"></div>
         </div>
         <div class="panel" style="margin-bottom:0">
-          <h2 style="color:var(--orange)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Stok Menipis <span style="font-weight:400;font-size:11px"><a href="javascript:void(0)" onclick="navTo('stok')" style="color:var(--primary);text-decoration:none">Kelola Stok →</a></span></h2>
+          <h2 style="color:var(--orange-t)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Stok Menipis <span class="h2-meta" style="font-weight:400;font-size:11px"><a href="javascript:void(0)" onclick="navTo('stok')" style="color:var(--primary-t);text-decoration:none">Kelola Stok →</a></span></h2>
           <div id="dashLowStock"></div>
         </div>
       </div>
@@ -546,7 +573,7 @@
           <button class="btn" onclick="openPurchaseModal()">+ Catat Pembelian</button>
         </span>
       </h2>
-      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">ℹ️ Pembelian stok = aset/modal, TIDAK dikurangkan dari profit.</p>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg>Pembelian stok = aset/modal, TIDAK dikurangkan dari profit.</p>
       <div id="pembelianTable"></div>
     </div>
   </div>
@@ -616,9 +643,9 @@
 
   <div class="page" id="ai">
     <div class="panel">
-      <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>AI Business Review</h2>
-      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Analisis cerdas berdasarkan data cabang aktif.</p>
-      <button class="btn" onclick="generateAIReview()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>Generate Review Bisnis</button>
+      <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>Review Bisnis</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:16px">Dihitung otomatis dari angka cabang yang sedang aktif: margin, stok, pengeluaran, dan pelanggan.</p>
+      <button class="btn" onclick="generateAIReview()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>Buat Review Bisnis</button>
       <div id="aiResult" style="margin-top:20px"></div>
     </div>
   </div>
@@ -646,7 +673,7 @@
         <canvas id="trendChart" height="220"></canvas>
       </div>
       <div class="panel">
-        <h2>Breakdown Pengeluaran</h2>
+        <h2>Rincian Pengeluaran</h2>
         <canvas id="expenseChart" height="220"></canvas>
       </div>
     </div>
@@ -658,13 +685,13 @@
 
     <div class="panel">
       <h2>Laporan Arus Kas (Sederhana)</h2>
-      <p style="color:var(--gray);font-size:12px;margin-bottom:10px">ℹ️ Estimasi berdasarkan tanggal transaksi, bukan tanggal pembayaran aktual.</p>
+      <p style="color:var(--gray);font-size:12px;margin-bottom:10px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg>Estimasi berdasarkan tanggal transaksi, bukan tanggal pembayaran aktual.</p>
       <div id="arusKasTable"></div>
     </div>
 
     <div class="panel">
-      <h2>Neraca (Snapshot Saat Ini)</h2>
-      <p style="color:var(--gray);font-size:12px;margin-bottom:10px">ℹ️ Kas dihitung dari akumulasi seluruh riwayat, bukan hanya periode terpilih.</p>
+      <h2>Neraca (Posisi Saat Ini)</h2>
+      <p style="color:var(--gray);font-size:12px;margin-bottom:10px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg>Kas dihitung dari akumulasi seluruh riwayat, bukan hanya periode terpilih.</p>
       <div id="neracaTable"></div>
     </div>
   </div>
@@ -710,7 +737,7 @@
   <div class="page" id="pengaturan">
     <div class="panel">
       <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 00-1.7-1L15 3h-4l-.4 2.9a7.6 7.6 0 00-1.7 1l-2.3-.9-2 3.4L6.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 001.7 1L11 21h4l.4-2.9a7.6 7.6 0 001.7-1l2.3.9 2-3.4-2-1.6z"/></svg>Pengaturan</h2>
-      <p style="color:var(--gray);font-size:14px;margin-bottom:20px">Kustomisasi tampilan dan akses aplikasi.</p>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:20px">Atur tampilan dan hak akses aplikasi.</p>
 
       <!-- Dark Mode - semua user -->
       <div style="margin-bottom:28px">
@@ -770,20 +797,27 @@
 
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalContent"></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Library dibundel lokal, bukan dari CDN: aplikasi kasir harus tetap bisa dibuka
+     walau internet toko lagi putus atau jsdelivr lambat/diblokir. -->
+<script src="vendor/supabase.js"></script>
+<script src="vendor/chart.umd.js"></script>
+<script src="vendor/face-api.min.js"></script>
+<script src="vendor/papaparse.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
 <script>
 /* ============ SUPABASE CLIENT ============ */
 const SUPABASE_URL = 'https://bmlvkotnhdogeckfqgmr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtbHZrb3RuaGRvZ2Vja2ZxZ21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNjA0NzgsImV4cCI6MjEwMDYzNjQ3OH0.ySDCuEkV_0BIsuB8N_TCaLP4K6gdS7D_cyKqBUAivp0';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* Library dimuat dari CDN. Kalau CDN tidak bisa diakses (wifi toko putus, app dibuka
+   sebelum internet nyambung), window.supabase undefined. Tanpa penjagaan ini seluruh
+   script mati di baris ini, boot() tidak pernah jalan, dan loading berputar selamanya. */
+const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 const APP_LOGO = 'data:image/png;base64,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';
 
 function gid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
+/* spasi tak-terpisah: "Rp" dan angkanya satu kesatuan, jangan pernah patah antar baris
+   waktu kolom tabel sempit. */
+function rp(n){ return 'Rp '+(n||0).toLocaleString('id-ID'); }
 function rpShort(n){
   n=n||0;
   const abs=Math.abs(n);
@@ -918,7 +952,7 @@ const NAV_DEF = [
   {id:'audit',     icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M9 3h6v3H9z"/><path d="M9 13l2 2 4-4"/></svg>`, label:'Stock Audit', ownerOnly:false, permKey:'audit'},
   {id:'pembelian', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/><path d="M2 3h3l2.4 12.4a2 2 0 002 1.6h8.6a2 2 0 002-1.6L21 7H6"/></svg>`, label:'Pembelian Stok', ownerOnly:false, permKey:'pembelian'},
   {id:'pengeluaran',icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><line x1="6" y1="9" x2="6" y2="9.01"/><line x1="18" y1="15" x2="18" y2="15.01"/></svg>`, label:'Pengeluaran', ownerOnly:false, permKey:'pengeluaran'},
-  {id:'ai',        icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>`, label:'AI Review', ownerOnly:false, permKey:'ai'},
+  {id:'ai',        icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>`, label:'Review Bisnis', ownerOnly:false, permKey:'ai'},
   {id:'utangpiutang', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>`, label:'Utang Piutang', ownerOnly:false, permKey:'utang_piutang'},
   {id:'riwayat', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>`, label:'Riwayat Transaksi', ownerOnly:false},
   {id:'aktivitas', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v3h3"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`, label:'Aktivitas Harian', ownerOnly:false},
@@ -941,7 +975,7 @@ const PERM_LABELS = {
   audit:           {label:'Stock Audit', icon:''},
   pembelian:       {label:'Pembelian Stok', icon:''},
   pengeluaran:     {label:'Pengeluaran', icon:''},
-  ai:              {label:'AI Business Review', icon:''},
+  ai:              {label:'Review Bisnis', icon:''},
   export:          {label:'Export Excel', icon:''},
   utang_piutang:   {label:'Utang Piutang', icon:''},
   edit_tanggal:    {label:'Ubah Tanggal Transaksi', icon:''},
@@ -967,7 +1001,7 @@ function openEditPaymentMethodModal(type,id){
   const src = type==='service'?services : type==='purchase'?purchases : expenses;
   const rec = src.find(x=>x.id===id);
   if(!rec) return;
-  const label = type==='service'?`${rec.inv} — ${rec.cust}` : type==='purchase'?rec.itemName : (rec.desc||rec.cat);
+  const label = type==='service'?`${rec.inv} • ${rec.cust}` : type==='purchase'?rec.itemName : (rec.desc||rec.cat);
   showModal(`<h3>Ubah Metode Pembayaran</h3>
     <p style="color:var(--gray);font-size:14px;margin-bottom:12px">${label}</p>
     <label>Metode Pembayaran</label><input id="edit_paymethod" list="edit_paymethodList" value="${rec.paymentMethod||'Cash'}">
@@ -986,8 +1020,16 @@ async function saveEditPaymentMethod(type,id){
 }
 
 /* ============ BOOTSTRAP DATA DARI SUPABASE ============ */
+/* fetch tidak punya timeout bawaan: tanpa batas waktu, koneksi yang menggantung
+   bikin loading screen berputar selamanya tanpa pesan error apa pun. */
+const BOOT_TIMEOUT_MS=20000;
+function withTimeout(promise, ms, msg){
+  let timer;
+  const limit=new Promise((_,reject)=>{ timer=setTimeout(()=>reject(new Error(msg)), ms); });
+  return Promise.race([promise, limit]).finally(()=>clearTimeout(timer));
+}
 async function bootstrapData(){
-  const [bRes, uRes, sRes, svRes, pRes, eRes, aRes, asRes, kpRes, alRes, feRes, atRes] = await Promise.all([
+  const [bRes, uRes, sRes, svRes, pRes, eRes, aRes, asRes, kpRes, alRes, feRes, atRes] = await withTimeout(Promise.all([
     sb.from('branches').select('*').order('name'),
     sb.from('app_users').select('*'),
     sb.from('stock').select('*'),
@@ -1000,8 +1042,10 @@ async function bootstrapData(){
     sb.from('activity_log').select('*').order('created_at',{ascending:false}),
     sb.from('face_enrollments').select('*'),
     sb.from('attendance_log').select('*').order('created_at',{ascending:false})
-  ]);
-  if(bRes.error) throw bRes.error;
+  ]), BOOT_TIMEOUT_MS, 'Server tidak merespons dalam 20 detik.');
+  const failed=[['cabang',bRes],['user',uRes],['stok',sRes],['servis',svRes],['pembelian',pRes],['pengeluaran',eRes],['audit',aRes],['pengaturan',asRes],['hak akses',kpRes],['aktivitas',alRes],['data wajah',feRes],['absensi',atRes]]
+    .filter(([,r])=>r&&r.error).map(([label])=>label);
+  if(failed.length) throw new Error('Data gagal dimuat: '+failed.join(', ')+'.');
   branches  = (bRes.data||[]).map(fromDbBranch);
   users     = (uRes.data||[]).map(fromDbUser);
   stock     = (sRes.data||[]).map(fromDbStock);
@@ -1074,7 +1118,7 @@ function canAccess(permKey){
 function initApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('userBox').innerHTML = `<b>${currentUser.name}</b><br><span style="font-size:11px;text-transform:uppercase">${currentUser.role}</span>`;
+  document.getElementById('userBox').innerHTML = `<b>${currentUser.name}</b><br><span style="font-size:11.5px;text-transform:capitalize">${currentUser.role}</span>`;
   if(currentUser.role==='kasir' && currentUser.branch && branches.some(b=>b.id===currentUser.branch)){
     currentBranch = currentUser.branch;
   } else if(currentUser.role==='manajer' && currentUser.branch){
@@ -1092,6 +1136,7 @@ function initApp(){
 /* ============ BOOT SEQUENCE ============ */
 (async function boot(){
   try{
+    if(!sb) throw new Error('Komponen aplikasi gagal dimuat dari internet. Sambungkan internet, lalu buka ulang aplikasi.');
     await bootstrapData();
     setupRealtimeSync();
     applyAppSettings();
@@ -1107,7 +1152,8 @@ function initApp(){
     console.error('Boot error:', err);
     document.getElementById('loadingScreen').innerHTML = `<div class="login-card" style="text-align:center">
       <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Gagal Terhubung</h2>
-      <p style="margin-bottom:16px">Tidak bisa terhubung ke server. Pastikan koneksi internet aktif, lalu coba lagi.</p>
+      <p style="margin-bottom:6px">Tidak bisa terhubung ke server. Pastikan koneksi internet aktif, lalu coba lagi.</p>
+      <p style="margin-bottom:16px;font-size:12px;color:#5a6862">${(err&&err.message)?String(err.message).slice(0,160).replace(/</g,'&lt;'):'Penyebab tidak diketahui.'}</p>
       <button class="btn" onclick="location.reload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>Coba Lagi</button>
     </div>`;
   }
@@ -1158,7 +1204,7 @@ function syncThemeToggleIcon(){
   const isDark=document.body.classList.contains('dark-mode');
   btn.innerHTML=isDark
     ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
   const dmToggle=document.getElementById('darkModeToggle');
   if(dmToggle) dmToggle.checked=isDark;
 }
@@ -1233,7 +1279,10 @@ function switchBranch(id){
     const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
     if(!myBranches.includes(id)) return;
   }
-  currentBranch=id; renderAll();
+  currentBranch=id;
+  const badgeName=document.getElementById('topbarBranchName');
+  if(badgeName) badgeName.textContent=branchName(currentBranch);
+  renderAll();
 }
 function openBranchModal(id){
   const b=id? branches.find(x=>x.id===id):{name:'',addr:'',phone:''};
@@ -1404,23 +1453,23 @@ function closeModal(){ document.getElementById('modalBg').classList.remove('acti
 document.getElementById('modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
 
 /* ============ NAV ============ */
-const titles={dashboard:'Dashboard',kasir:'Kasir / Servis',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'AI Review',utangpiutang:'Utang Piutang',riwayat:'Riwayat Transaksi',aktivitas:'Aktivitas Harian',absensi:'Absensi',laporan:'Laporan Keuangan',cabang:'Kelola Cabang',users:'Kelola User',pengaturan:'Pengaturan'};
+const titles={dashboard:'Dashboard',kasir:'Kasir / Servis',stok:'Data Stok',audit:'Stock Audit',pembelian:'Pembelian Stok',pengeluaran:'Pengeluaran',ai:'Review Bisnis',utangpiutang:'Utang Piutang',riwayat:'Riwayat Transaksi',aktivitas:'Aktivitas Harian',absensi:'Absensi',laporan:'Laporan Keuangan',cabang:'Kelola Cabang',users:'Kelola User',pengaturan:'Pengaturan'};
 const subtitles={
-  dashboard:'Ringkasan performa finansial, servis berjalan & kontrol inventori',
-  kasir:'Pencatatan nota perbaikan, pemakaian sparepart & status unit',
-  stok:'Manajemen ketersediaan suku cadang, batas minimum & modal HPP',
-  audit:'Verifikasi jumlah fisik aktual vs catatan sistem',
-  pembelian:'Pencatatan restock barang masuk & pelacakan utang modal supplier',
-  pengeluaran:'Beban biaya sewa, listrik, wifi, gaji, dan logistik toko',
-  ai:'Analisis kesehatan bisnis & rekomendasi aksi berbasis data toko',
-  utangpiutang:'Daftar tagihan customer yang belum lunas & utang ke supplier',
-  riwayat:'Log kronologis transaksi servis, mutasi stok, dan audit',
-  aktivitas:'Pencatatan real-time setiap aksi kasir & manajer toko',
-  absensi:'Pencatatan jam kehadiran (clock-in) & jam pulang teknisi',
-  laporan:'Laporan resmi akuntansi toko: Omset, HPP, beban operasional & laba bersih',
-  cabang:'Pengaturan multi cabang toko & alokasi wilayah operasional',
-  users:'Manajemen akun Owner, Manajer Toko & Kasir Teknisi',
-  pengaturan:'Kustomisasi hak akses kasir, backup database & privasi laba'
+  dashboard:'Omset, servis yang berjalan, dan kondisi stok',
+  kasir:'Nota perbaikan, pemakaian sparepart, dan status unit',
+  stok:'Stok sparepart, batas minimum, dan modal HPP',
+  audit:'Bandingkan jumlah fisik dengan catatan sistem',
+  pembelian:'Barang masuk dan utang modal ke supplier',
+  pengeluaran:'Biaya sewa, listrik, wifi, gaji, dan logistik toko',
+  ai:'Ringkasan kondisi toko dan saran tindakan dari data yang ada',
+  utangpiutang:'Tagihan customer yang belum lunas dan utang ke supplier',
+  riwayat:'Urutan transaksi servis, mutasi stok, dan audit',
+  aktivitas:'Catatan aksi kasir dan manajer toko',
+  absensi:'Jam masuk dan jam pulang teknisi',
+  laporan:'Omset, HPP, beban operasional, dan laba bersih',
+  cabang:'Daftar cabang toko dan wilayahnya',
+  users:'Akun owner, manajer, dan kasir',
+  pengaturan:'Atur hak akses kasir, backup database, dan privasi laba'
 };
 const QUICK_SERVICE_PAGES=['dashboard','kasir'];
 function updateTopbarMeta(page){
@@ -1527,16 +1576,20 @@ function renderStok(q=''){
     const cur=catSelect.value;
     catSelect.innerHTML=`<option value="">Semua Kategori</option>`+usedCats.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
   }
-  if(!list.length){ document.getElementById('stokTable').innerHTML='<div class="empty">Belum ada data stok di cabang ini</div>'; return; }
+  if(!list.length){
+    const disaring=q||catFilter;
+    document.getElementById('stokTable').innerHTML=`<div class="empty">${disaring?'Tidak ada sparepart yang cocok dengan pencarian atau kategori ini. Kosongkan filter untuk melihat semua.':'Belum ada sparepart di cabang ini. Tambahkan lewat tombol Tambah Item di atas.'}</div>`;
+    return;
+  }
   let tot=0;
   let rows=list.map(s=>{ tot+=s.qty*s.cost;
     const b=s.qty<=s.min?'<span class="badge badge-low">Menipis</span>':(s.qty<=s.min*2?'<span class="badge badge-mid">Sedang</span>':'<span class="badge badge-ok">Aman</span>');
     return `<tr><td style="cursor:pointer" onclick="openStockHistoryModal('${s.id}')"><b>${s.name}</b><br><span style="color:var(--gray);font-size:12px">${s.sku||'-'}</span>${s.category?`<br><span class="badge badge-mid" style="margin-top:4px;display:inline-block">${s.category}</span>`:''}</td>
-      <td>${s.qty} ${b}</td>
-      <td>${showModal_cost?rp(s.cost):'<span style="color:var(--gray)">—</span>'}</td>
+      <td class="qty-cell">${s.qty} ${b}</td>
+      <td>${showModal_cost?rp(s.cost):'<span style="color:var(--gray)">-</span>'}</td>
       <td>${rp(s.price)}</td>
-      <td>${showProfit?`<span class="green">${rp(s.price-s.cost)}</span>`:'<span style="color:var(--gray)">—</span>'}</td>
-      <td>${showModal_cost?rp(s.qty*s.cost):'<span style="color:var(--gray)">—</span>'}</td>
+      <td>${showProfit?`<span class="green">${rp(s.price-s.cost)}</span>`:'<span style="color:var(--gray)">-</span>'}</td>
+      <td>${showModal_cost?rp(s.qty*s.cost):'<span style="color:var(--gray)">-</span>'}</td>
       <td><div class="row-actions">
         <button class="btn btn-sm btn-icon btn-gray" title="Riwayat" onclick="openStockHistoryModal('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg></button>
         <button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openStockModal('${s.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button>
@@ -1556,7 +1609,7 @@ function openStockHistoryModal(stockId){
   });
   bServices().forEach(t=>{
     (t.parts||[]).filter(part=>part.partId===stockId).forEach(part=>{
-      events.push({date:t.date, type:'keluar', qty:-(part.qty||1), ket:`Servis ${t.inv} — ${t.cust}`});
+      events.push({date:t.date, type:'keluar', qty:-(part.qty||1), ket:`Servis ${t.inv} • ${t.cust}`});
     });
   });
   bAudits().forEach(a=>{
@@ -1568,7 +1621,7 @@ function openStockHistoryModal(stockId){
   const typeLabel={masuk:'Masuk',keluar:'Keluar',audit:'Audit'};
   const typeBadge={masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
   const rows=events.length? events.map(e=>`<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${typeLabel[e.type]}</span></td><td>${e.ket}</td><td class="${e.qty>0?'green':'red'}">${e.qty>0?'+':''}${e.qty}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--gray)">Belum ada riwayat</td></tr>`;
-  showModal(`<h3>Riwayat Stok — ${s.name}</h3>
+  showModal(`<h3>Riwayat Stok: ${s.name}</h3>
     <p style="color:var(--gray);font-size:14px;margin-bottom:12px">Stok saat ini: <b>${s.qty}</b></p>
     <div style="max-height:400px;overflow-y:auto"><table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Qty</th></tr>${rows}</table></div>
     <div class="flex-row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
@@ -1640,6 +1693,8 @@ async function saveService(){
   const jasa=valRp('s_jasa');
   let partItems=[]; let totalPartPrice=0; let totalPartCost=0; let partNames=[];
   let stockUpdates=[];
+  let rowsToApply=[];
+  let pendingQty=new Map();
   for(const rowId of partRows){
     const partId=document.getElementById('prs_'+rowId).value;
     const partPrice=parseRupiah(document.getElementById('prp_'+rowId).value);
@@ -1647,7 +1702,12 @@ async function saveService(){
     if(!partId) continue;
     const s=stock.find(x=>x.id===partId);
     if(!s){alert('Sparepart tidak ditemukan');return;}
-    if(s.qty<qty){alert('Stok '+s.name+' tidak cukup! Tersisa '+s.qty);return;}
+    const alreadyRequested=pendingQty.get(partId)||0;
+    if(s.qty<alreadyRequested+qty){alert('Stok '+s.name+' tidak cukup! Tersisa '+s.qty);return;}
+    pendingQty.set(partId,alreadyRequested+qty);
+    rowsToApply.push({s,partId,partPrice,qty});
+  }
+  for(const {s,partId,partPrice,qty} of rowsToApply){
     s.qty-=qty;
     stockUpdates.push(s);
     totalPartPrice+=partPrice*qty;
@@ -1693,7 +1753,7 @@ async function delService(id){
 function changeStatus(id){
   const t=services.find(x=>x.id===id);
   const opts=STATUSES.map(x=>`<button class="btn btn-sm ${stClass[x]}" style="margin:4px" onclick="setStatus('${id}','${x}')">${x}</button>`).join('');
-  showModal(`<h3>Ubah Status — ${t.inv}</h3><p style="color:var(--gray);margin-bottom:16px">${t.cust} • ${t.device}</p>${opts}<div style="margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
+  showModal(`<h3>Ubah Status: ${t.inv}</h3><p style="color:var(--gray);margin-bottom:16px">${t.cust} • ${t.device}</p>${opts}<div style="margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
 }
 async function setStatus(id,st){
   const t=services.find(x=>x.id===id);
@@ -1702,6 +1762,17 @@ async function setStatus(id,st){
   await dbCall(sb.from('services').update({status:st}).eq('id',id), 'ubah status servis');
 }
 
+/* Servis dengan banyak sparepart bikin satu baris tabel jadi berkali lipat tinggi baris
+   lain. Tampilkan part pertama saja, sisanya dihitung; daftar lengkapnya tetap ada di
+   tooltip dan di nota. */
+function ringkasPart(t){
+  const nama = (t.parts&&t.parts.length)
+    ? t.parts.map(p=>p.partName+((p.qty||1)>1?' x'+p.qty:''))
+    : (t.partName? t.partName.split(', ').filter(Boolean) : []);
+  if(!nama.length) return 'tanpa part';
+  if(nama.length===1) return nama[0];
+  return nama[0]+' +'+(nama.length-1)+' part lain';
+}
 function renderTransaksi(q=''){
   const showProfit = currentUser.role==='owner' || canAccess('lihat_profit');
   const showHapus = currentUser.role==='owner' || canAccess('hapus_transaksi');
@@ -1709,13 +1780,17 @@ function renderTransaksi(q=''){
   const fs=document.getElementById('filterStatus')?document.getElementById('filterStatus').value:'';
   let list=bServices().filter(s=>(s.cust+s.device+s.issue+s.inv).toLowerCase().includes((q||'').toLowerCase()));
   if(fs) list=list.filter(s=>s.status===fs);
-  if(!list.length){ document.getElementById('transaksiTable').innerHTML='<div class="empty">Belum ada transaksi</div>'; return; }
+  if(!list.length){
+    const disaring=q||fs;
+    document.getElementById('transaksiTable').innerHTML=`<div class="empty">${disaring?'Tidak ada transaksi yang cocok dengan pencarian atau status ini. Kosongkan filter untuk melihat semua.':'Belum ada transaksi servis di cabang ini. Buat lewat tombol Transaksi Baru di atas.'}</div>`;
+    return;
+  }
   let rows=list.map(t=>`<tr>
     <td><b>${t.inv}</b><br><span style="color:var(--gray);font-size:12px">${t.date}</span></td>
     <td><b>${t.cust}</b><br><span style="color:var(--gray);font-size:12px">${t.device}</span></td>
-    <td>${t.issue}<br><span style="color:var(--gray);font-size:12px">${t.partName||'tanpa part'}</span></td>
+    <td>${t.issue}<br><span style="color:var(--gray);font-size:12px" title="${(t.partName||'').replace(/"/g,'&quot;')}">${ringkasPart(t)}</span></td>
     <td>${rp(t.revenue)}</td>
-    <td>${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">—</span>'}</td>
+    <td>${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">-</span>'}</td>
     <td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('service','${t.id}')">${t.paymentMethod||'Cash'}</span></td>
     <td><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
     <td><div class="row-actions">
@@ -1775,7 +1850,7 @@ function printNota(id){
 /* ============ AUDIT ============ */
 function renderAudit(){
   const list=bStock();
-  if(!list.length){ document.getElementById('auditTable').innerHTML='<div class="empty">Tidak ada stok</div>'; renderAuditHistory(); return; }
+  if(!list.length){ document.getElementById('auditTable').innerHTML='<div class="empty">Belum ada sparepart untuk diaudit. Tambahkan stok dulu di menu Data Stok.</div>'; renderAuditHistory(); return; }
   let rows=list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.qty}</td>
     <td><input type="number" id="audit_${s.id}" value="${s.qty}" style="width:100px;margin:0" oninput="calcAuditRow('${s.id}',${s.qty})"></td>
     <td id="diff_${s.id}">0</td></tr>`).join('');
@@ -1795,9 +1870,9 @@ async function saveAudit(){
 }
 function renderAuditHistory(){
   const list=bAudits();
-  if(!list.length){ document.getElementById('auditHistory').innerHTML='<div class="empty">Belum ada riwayat</div>'; return; }
+  if(!list.length){ document.getElementById('auditHistory').innerHTML='<div class="empty">Belum ada audit tersimpan. Hasil audit muncul di sini setelah kamu menyimpannya.</div>'; return; }
   document.getElementById('auditHistory').innerHTML=list.slice(0,5).map(a=>{ const d=a.items.filter(i=>i.diff!==0);
-    return `<div style="border-bottom:1px solid #eee;padding:12px 0"><b>${a.date}</b> oleh ${a.by||'-'} — ${d.length} selisih
+    return `<div style="border-bottom:1px solid #eee;padding:12px 0"><b>${a.date}</b> oleh ${a.by||'-'}, ${d.length} selisih
     ${d.map(i=>`<div style="font-size:13px;color:var(--gray)">${i.name}: ${i.system}→${i.physical} (<span class="${i.diff>0?'audit-diff-pos':'audit-diff-neg'}">${i.diff>0?'+':''}${i.diff}</span>)</div>`).join('')}</div>`;
   }).join('');
 }
@@ -1815,7 +1890,7 @@ function openPurchaseModal(){
     </div>
     <label>Metode Pembayaran</label><input id="p_paymethod" list="p_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
     <datalist id="p_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
-    <div style="font-size:12px;color:var(--gray);margin-bottom:12px">ℹ️ Menambah aset stok, tidak mengurangi profit.</div>
+    <div style="font-size:12px;color:var(--gray);margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg>Menambah aset stok, tidak mengurangi profit.</div>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="savePurchase()">Simpan</button></div>`);
   const opts=[{value:'',label:'-- Pilih existing --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty}`})),{value:'NEW',label:'+ Item Baru'}];
   ssInit('p_item', opts, function(value){
@@ -1853,9 +1928,9 @@ async function delPurchase(id){
 }
 function renderPembelian(){
   const list=bPurchases();
-  if(!list.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian</div>'; return; }
+  if(!list.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian stok di cabang ini. Catat lewat tombol Catat Pembelian di atas.</div>'; return; }
   let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td>${p.date}</td><td><b>${p.itemName}</b></td><td>${p.qty}</td><td>${rp(p.cost)}</td><td>${rp(p.total)}</td><td>${p.supplier||'-'}</td><td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('purchase','${p.id}')">${p.paymentMethod||'Cash'}</span></td><td><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
-  document.getElementById('pembelianTable').innerHTML=`<table><tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th>Metode</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="4">TOTAL PEMBELIAN</td><td colspan="4">${rp(tot)}</td></tr></table>`;
+  document.getElementById('pembelianTable').innerHTML=`<table><tr><th>Tanggal</th><th>Item</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th>Metode</th><th></th></tr>${rows}<tr style="background:var(--stripe-bg);font-weight:700"><td colspan="4">TOTAL PEMBELIAN</td><td colspan="4">${rp(tot)}</td></tr></table>`;
 }
 
 /* ============ PENGELUARAN ============ */
@@ -1883,9 +1958,9 @@ async function delExpense(id){
 }
 function renderPengeluaran(){
   const list=bExpenses();
-  if(!list.length){ document.getElementById('pengeluaranTable').innerHTML='<div class="empty">Belum ada pengeluaran</div>'; return; }
+  if(!list.length){ document.getElementById('pengeluaranTable').innerHTML='<div class="empty">Belum ada pengeluaran tercatat di cabang ini. Catat lewat tombol Catat Pengeluaran di atas.</div>'; return; }
   let tot=0; let rows=list.map(e=>{tot+=e.amount; return `<tr><td>${e.date}</td><td><span class="badge badge-mid">${e.cat}</span></td><td>${e.desc||'-'}</td><td class="red">${rp(e.amount)}</td><td><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('expense','${e.id}')">${e.paymentMethod||'Cash'}</span></td><td><button class="btn btn-sm btn-red" onclick="delExpense('${e.id}')">Hapus</button></td></tr>`;}).join('');
-  document.getElementById('pengeluaranTable').innerHTML=`<table><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th>Metode</th><th></th></tr>${rows}<tr style="background:#f5f5f7;font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="3" class="red">${rp(tot)}</td></tr></table>`;
+  document.getElementById('pengeluaranTable').innerHTML=`<table><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th>Metode</th><th></th></tr>${rows}<tr style="background:var(--stripe-bg);font-weight:700"><td colspan="3">TOTAL PENGELUARAN</td><td colspan="3" class="red">${rp(tot)}</td></tr></table>`;
 }
 
 /* ============ EXPORT EXCEL (CSV) ============ */
@@ -2040,7 +2115,7 @@ function openKelolaImportModal(rows){
     <select id="kl_source">${sourceBranches.map(b=>`<option value="${b}">${b}</option>`).join('')}</select>
     <label>Masukkan ke cabang Goed Acsess</label>
     <select id="kl_target">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>
-    <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Data "Stok Audit" akan dilewati (belum didukung). Import ini murni menambah riwayat — jumlah stok saat ini TIDAK diubah.</p>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Data "Stok Audit" akan dilewati (belum didukung). Import ini murni menambah riwayat, jumlah stok saat ini tidak diubah.</p>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="runKelolaImport()">Mulai Import</button></div>`);
 }
 
@@ -2237,9 +2312,9 @@ function renderDashCharts(){
     const miniEl=document.getElementById('dashAssetMini');
     const marginPct = d.totalStockValue>0 ? Math.round((d.totalStockSellingValue-d.totalStockValue)/d.totalStockValue*100) : 0;
     if(miniEl) miniEl.innerHTML=`
-      <div class="asset-mini-card" style="background:rgba(184,134,61,.08);border-color:rgba(184,134,61,.25)"><h5 style="color:var(--orange)">Total Nilai Modal Aset (Cost)</h5><div class="val" style="color:var(--orange)">${rp(d.totalStockValue)}</div><div class="sub">Uang teralokasi pada stok fisik</div></div>
-      <div class="asset-mini-card" style="background:rgba(15,110,86,.08);border-color:rgba(15,110,86,.25)"><h5 style="color:var(--green)">Potensi Nilai Jual (Retail)</h5><div class="val" style="color:var(--green)">${rp(d.totalStockSellingValue)}</div><div class="sub">Nilai pasar jika seluruh part terjual</div></div>
-      <div class="asset-mini-card" style="background:rgba(91,107,140,.08);border-color:rgba(91,107,140,.25)"><h5 style="color:var(--purple)">Potensi Laba Margin Part</h5><div class="val" style="color:var(--purple)">${rp(d.totalStockSellingValue-d.totalStockValue)}</div><div class="sub">Margin keuntungan part: +${marginPct}%</div></div>`;
+      <div class="asset-mini-card" style="background:rgba(184,134,61,.08);border-color:rgba(184,134,61,.25)"><h5 style="color:var(--orange-t)">Total Nilai Modal Aset (Cost)</h5><div class="val" style="color:var(--orange-t)">${rp(d.totalStockValue)}</div><div class="sub">Uang teralokasi pada stok fisik</div></div>
+      <div class="asset-mini-card" style="background:rgba(15,110,86,.08);border-color:rgba(15,110,86,.25)"><h5 style="color:var(--green-t)">Potensi Nilai Jual (Retail)</h5><div class="val" style="color:var(--green-t)">${rp(d.totalStockSellingValue)}</div><div class="sub">Nilai pasar jika seluruh part terjual</div></div>
+      <div class="asset-mini-card" style="background:rgba(91,107,140,.08);border-color:rgba(91,107,140,.25)"><h5 style="color:var(--purple-t)">Potensi Laba Margin Part</h5><div class="val" style="color:var(--purple-t)">${rp(d.totalStockSellingValue-d.totalStockValue)}</div><div class="sub">Margin keuntungan part: +${marginPct}%</div></div>`;
     const c=document.getElementById('dashAssetChart');
     if(c) dashAssetChartInstance=new Chart(c.getContext('2d'),{type:'bar', data:{labels:d.stockCategoryData.map(x=>x.category), datasets:[
       {label:'Nilai Aset Modal', data:d.stockCategoryData.map(x=>x.assetValue), backgroundColor:'#B8863D', borderRadius:4},
@@ -2290,14 +2365,14 @@ function renderDashboard(){
   const icCheck='<circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/>';
   const icBox='<path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="21"/>';
   const icClock='<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/>';
-  let cards=`<div class="stat-card"><div class="stat-head"><div class="label">Total Omset</div>${statIcon('rgba(15,110,86,.12)','var(--primary)',icWallet)}</div><div class="value blue">${rp(st.revenue)}</div><div class="sub">${sv.length} transaksi servis</div></div>`;
+  let cards=`<div class="stat-card"><div class="stat-head"><div class="label">Total Omset</div>${statIcon('rgba(15,110,86,.12)','var(--primary-t)',icWallet)}</div><div class="value blue">${rp(st.revenue)}</div><div class="sub">${sv.length} transaksi servis</div></div>`;
   if(showProfit){
-    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Profit Kotor</div>${statIcon('rgba(15,110,86,.12)','var(--green)',icTrendUp)}</div><div class="value green">${rp(st.grossProfit)}</div><div class="sub">Setelah dikurangi HPP</div></div>`;
-    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Pengeluaran</div>${statIcon('rgba(168,62,62,.12)','var(--red)',icTrendDown)}</div><div class="value red">${rp(st.totalExpense)}</div><div class="sub">${ex.length} pos operasional</div></div>`;
-    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Profit Bersih</div>${statIcon(st.netProfit>=0?'rgba(15,110,86,.12)':'rgba(168,62,62,.12)', st.netProfit>=0?'var(--green)':'var(--red)', icCheck)}</div><div class="value ${st.netProfit>=0?'green':'red'}">${rp(st.netProfit)}</div><div class="sub">Laba kotor - Beban toko</div></div>`;
+    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Profit Kotor</div>${statIcon('rgba(15,110,86,.12)','var(--green-t)',icTrendUp)}</div><div class="value green">${rp(st.grossProfit)}</div><div class="sub">Setelah dikurangi HPP</div></div>`;
+    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Pengeluaran</div>${statIcon('rgba(168,62,62,.12)','var(--red-t)',icTrendDown)}</div><div class="value red">${rp(st.totalExpense)}</div><div class="sub">${ex.length} pos operasional</div></div>`;
+    cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Profit Bersih</div>${statIcon(st.netProfit>=0?'rgba(15,110,86,.12)':'rgba(168,62,62,.12)', st.netProfit>=0?'var(--green-t)':'var(--red-t)', icCheck)}</div><div class="value ${st.netProfit>=0?'green':'red'}">${rp(st.netProfit)}</div><div class="sub">Laba kotor - Beban toko</div></div>`;
   }
-  if(showModal_cost) cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Aset Stok Part</div>${statIcon('rgba(184,134,61,.12)','var(--orange)',icBox)}</div><div class="value orange">${rp(st.stockValue)}</div><div class="sub">${sk.length} varian sparepart</div></div>`;
-  cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Dalam Proses</div>${statIcon('rgba(91,107,140,.12)','var(--purple)',icClock)}</div><div class="value purple">${inProgress} unit</div><div class="sub">Antri &amp; sedang servis</div></div>`;
+  if(showModal_cost) cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Aset Stok Part</div>${statIcon('rgba(184,134,61,.12)','var(--orange-t)',icBox)}</div><div class="value orange">${rp(st.stockValue)}</div><div class="sub">${sk.length} varian sparepart</div></div>`;
+  cards+=`<div class="stat-card"><div class="stat-head"><div class="label">Dalam Proses</div>${statIcon('rgba(91,107,140,.12)','var(--purple-t)',icClock)}</div><div class="value purple">${inProgress} unit</div><div class="sub">Antri &amp; sedang servis</div></div>`;
   document.getElementById('dashCards').innerHTML=cards;
 
   /* INSIGHT RIBBON */
@@ -2306,9 +2381,9 @@ function renderDashboard(){
   const icActivity='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>';
   const insightIcon=path=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
   document.getElementById('dashInsightRibbon').innerHTML = !showProfit ? '' : `
-    <div class="insight-card i-green"><div><div class="ic-label">Net Profit Margin</div><div class="ic-value">${profitMarginPct}%</div><div class="ic-sub">Efisiensi laba bersih dari total omset</div></div><div class="ic-icon">${insightIcon(icPercent)}</div></div>
-    <div class="insight-card i-indigo"><div><div class="ic-label">Rata-rata Nota (AOV)</div><div class="ic-value">${rp(avgTicketSize)}</div><div class="ic-sub">Nilai rata-rata per transaksi servis</div></div><div class="ic-icon">${insightIcon(icCard)}</div></div>
-    <div class="insight-card i-amber"><div><div class="ic-label">Beban Operasional</div><div class="ic-value">${expenseRatio}%</div><div class="ic-sub">Rasio pengeluaran toko terhadap omset</div></div><div class="ic-icon">${insightIcon(icActivity)}</div></div>`;
+    <div class="insight-card i-green"><div><div class="ic-label">Margin Laba Bersih</div><div class="ic-value">${profitMarginPct}%</div><div class="ic-sub">Laba bersih dibanding total omset</div></div><div class="ic-icon">${insightIcon(icPercent)}</div></div>
+    <div class="insight-card i-indigo"><div><div class="ic-label">Rata-rata Nota</div><div class="ic-value">${rp(avgTicketSize)}</div><div class="ic-sub">Nilai rata-rata per nota servis</div></div><div class="ic-icon">${insightIcon(icCard)}</div></div>
+    <div class="insight-card i-amber"><div><div class="ic-label">Beban Operasional</div><div class="ic-value">${expenseRatio}%</div><div class="ic-sub">Pengeluaran dibanding total omset</div></div><div class="ic-icon">${insightIcon(icActivity)}</div></div>`;
 
   /* RECENT TRANSACTIONS */
   document.getElementById('dashRecentCount').textContent = sv.length? `Menampilkan ${Math.min(6,sv.length)} dari ${sv.length} data` : '';
@@ -2316,14 +2391,14 @@ function renderDashboard(){
     sv.slice(0,6).map(t=>`<tr>
       <td><b>${t.inv}</b><div class="sub-line">${fmtDateShort(t.date)}</div></td>
       <td><b>${t.cust}</b>${t.phone?`<div class="sub-line">${t.phone}</div>`:''}</td>
-      <td><span style="color:var(--primary);font-weight:600">${t.device||'-'}</span><div class="sub-line">${t.issue||''}</div></td>
+      <td><span style="color:var(--primary-t);font-weight:600">${t.device||'-'}</span><div class="sub-line">${t.issue||''}</div></td>
       <td style="text-align:right" class="font-mono"><b>${rp(t.revenue)}</b></td>
       <td style="text-align:center"><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td>
     </tr>`).join('')+`</table></div>` : '<div class="empty">Belum ada transaksi servis pada periode yang dipilih.</div>';
 
   /* PIPELINE STATUS */
   const statusList=['Antri','Proses','Selesai','Diambil','Batal'];
-  const statusDotColor={Antri:'#8b9793',Proses:'var(--orange)',Selesai:'var(--primary)',Diambil:'var(--green)',Batal:'var(--red)'};
+  const statusDotColor={Antri:'#8b9793',Proses:'var(--orange-t)',Selesai:'var(--primary-t)',Diambil:'var(--green-t)',Batal:'var(--red-t)'};
   const statusCounts={}; statusList.forEach(s=>statusCounts[s]=0);
   sv.forEach(s=>{ if(statusCounts[s.status]!==undefined) statusCounts[s.status]++; });
   const completedCount=sv.filter(s=>s.status==='Selesai'||s.status==='Diambil').length;
@@ -2335,7 +2410,7 @@ function renderDashboard(){
 
   /* LOW STOCK */
   const low=sk.filter(s=>s.qty<=s.min).slice(0,4);
-  document.getElementById('dashLowStock').innerHTML = low.length? low.map(s=>`<div class="lowstock-row"><div><b style="font-size:12.5px">${s.name}</b><div class="sub-line">Min: ${s.min} unit</div></div><span class="badge badge-low">Sisa ${s.qty}</span></div>`).join('') : `<div class="empty" style="padding:18px 10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Semua stok sparepart aman.</div>`;
+  document.getElementById('dashLowStock').innerHTML = low.length? low.map(s=>`<div class="lowstock-row"><div><b style="font-size:12.5px">${s.name}</b><div class="sub-line">Min: ${s.min} unit</div></div><span class="badge badge-low">Sisa ${s.qty}</span></div>`).join('') : `<div class="empty" style="padding:18px 10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Semua stok sparepart aman.</div>`;
 
   /* CHARTS DATA */
   dashChartData={
@@ -2360,7 +2435,7 @@ function generateAIReview(){
   const pending=sv.filter(s=>s.status==='Selesai').length;
   if(st.serviceCount===0){ document.getElementById('aiResult').innerHTML='<div class="ai-box"><h3>Belum ada data cukup</h3><p>Mulai catat transaksi servis di cabang ini untuk review.</p></div>'; return; }
   let insights=[],actions=[],warnings=[];
-  if(margin>50)insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> — sangat sehat. Pertahankan!`);
+  if(margin>50)insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> sangat sehat, pertahankan.`);
   else if(margin>30)insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> cukup baik, masih bisa ditingkatkan.`);
   else insights.push(`Margin kotor <b>${margin.toFixed(1)}%</b> rendah. Naikkan jasa atau tekan modal part.`);
   if(st.netProfit<0)warnings.push(`Profit bersih <b>MINUS ${rp(Math.abs(st.netProfit))}</b>. Pengeluaran melebihi profit kotor!`);
@@ -2373,7 +2448,7 @@ function generateAIReview(){
   if(dead.length)warnings.push(`<b>${dead.length} item overstock</b>: ${dead.map(s=>s.name).join(', ')}.`);
   actions.push('Naikkan harga jasa servis kompleks yang bernilai tambah tinggi.');
   if(low.length)actions.push(`Segera restock: ${low.map(s=>s.name).join(', ')}.`);
-  if(netMargin<15)actions.push('Target net margin minimal 20-25% — tinjau pengeluaran terbesar.');
+  if(netMargin<15)actions.push('Target net margin minimal 20-25%, tinjau pengeluaran terbesar.');
   actions.push('Tawarkan layanan tambahan: tempered glass, anti-air, garansi berbayar.');
   if(dead.length)actions.push(`Buat promo bundling item overstock: ${dead.map(s=>s.name).join(', ')}.`);
 
@@ -2398,40 +2473,40 @@ function generateAIReview(){
   const bateraiCount=sv.filter(s=>/baterai|battery/i.test(s.issue||'')).length;
   if(bateraiCount>0) sales.push(`Ada <b>${bateraiCount} servis baterai</b>. Tawarkan garansi tambahan berbayar untuk baterai baru.`);
   if(repeatCust.length>0) sales.push(`Ada <b>${repeatCust.length} customer repeat</b> (servis &gt;1x). Pertimbangkan kartu member/diskon loyalitas untuk mereka.`);
-  if(pending>0) sales.push(`Follow-up <b>${pending} customer</b> yang unitnya sudah "Selesai" tapi belum diambil — sekalian tawarkan servis tambahan.`);
+  if(pending>0) sales.push(`Follow-up <b>${pending} customer</b> yang unitnya sudah "Selesai" tapi belum diambil, sekalian tawarkan servis tambahan.`);
   if(!sales.length) sales.push('Kumpulkan lebih banyak data transaksi untuk dapatkan saran sales yang lebih spesifik.');
 
   /* IDE KONTEN MARKETING */
   let content=[];
-  if(topDevice) content.push(`Buat konten "before-after" hasil servis <b>${topDevice[0]}</b> untuk Instagram/TikTok — device ini paling sering ditangani di toko ini.`);
-  if(lcdCount>1) content.push('Buat video edukasi singkat "Tanda-tanda LCD iPhone perlu diganti" — relevan karena servis LCD cukup sering.');
+  if(topDevice) content.push(`Buat konten "before-after" hasil servis <b>${topDevice[0]}</b> untuk Instagram/TikTok, device ini paling sering ditangani di toko ini.`);
+  if(lcdCount>1) content.push('Buat video edukasi singkat "Tanda-tanda LCD iPhone perlu diganti", relevan karena servis LCD cukup sering.');
   if(low.length) content.push(`Buat promo flash sale untuk item stok menipis (${low.slice(0,2).map(s=>s.name).join(', ')}) supaya cepat restock & tetap ada penjualan.`);
   content.push('Posting testimoni customer 2-3x/minggu untuk membangun kepercayaan calon customer baru.');
-  content.push('Buat konten "tips merawat HP" mingguan — strategi soft-selling yang efektif untuk toko servis.');
-  if(topCustomers.length) content.push(`Ucapkan terima kasih khusus (DM/WA) ke ${topCustomers.length} customer dengan transaksi terbesar bulan ini — bangun hubungan jangka panjang.`);
+  content.push('Buat konten "tips merawat HP" mingguan, cara halus menawarkan servis tanpa terkesan memaksa.');
+  if(topCustomers.length) content.push(`Ucapkan terima kasih khusus (DM/WA) ke ${topCustomers.length} customer dengan transaksi terbesar bulan ini, untuk menjaga hubungan jangka panjang.`);
 
   const score=Math.max(0,Math.min(100,Math.round(netMargin*1.5+margin*0.5+(low.length?0:15)-(st.netProfit<0?40:0))));
   const grade=score>=75?'A (Sangat Baik)':score>=60?'B (Baik)':score>=40?'C (Cukup)':'D (Perlu Perbaikan)';
-  const gColor=score>=60?'var(--green)':score>=40?'var(--orange)':'var(--red)';
+  const gColor=score>=60?'var(--green-t)':score>=40?'var(--orange-t)':'var(--red-t)';
   document.getElementById('aiResult').innerHTML=`<div class="ai-box">
-    <div class="ai-section"><span class="ai-tag">SKOR KESEHATAN — ${branchName(currentBranch)}</span>
-      <h3 style="color:${gColor};font-size:32px">${score}/100 — ${grade}</h3>
+    <div class="ai-section"><span class="ai-tag">Skor Kesehatan Toko</span>
+      <h3 style="color:${gColor};font-size:32px">${score}/100 (${grade})</h3>
       <div class="progress"><div class="progress-bar" style="width:${score}%;background:${gColor}"></div></div></div>
-    <div class="ai-section"><span class="ai-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="14 6 21 6 21 13"/></svg>RINGKASAN KEUANGAN</span><ul>
+    <div class="ai-section"><span class="ai-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="14 6 21 6 21 13"/></svg>Ringkasan Keuangan</span><ul>
       <li>Pendapatan: <b>${rp(st.revenue)}</b> (${st.serviceCount} servis)</li>
       <li>Profit kotor: <b class="green">${rp(st.grossProfit)}</b> (margin ${margin.toFixed(1)}%)</li>
       <li>Pengeluaran: <b class="red">${rp(st.totalExpense)}</b></li>
-      <li>Profit bersih: <b style="color:${st.netProfit>=0?'var(--green)':'var(--red)'}">${rp(st.netProfit)}</b></li>
+      <li>Profit bersih: <b style="color:${st.netProfit>=0?'var(--green-t)':'var(--red-t)'}">${rp(st.netProfit)}</b></li>
       <li>Modal stok: <b>${rp(st.stockValue)}</b></li></ul></div>
-    <div class="ai-section"><span class="ai-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>INSIGHT</span><ul>${insights.map(i=>`<li>${i}</li>`).join('')}</ul></div>
-    ${warnings.length?`<div class="ai-section"><span class="ai-tag" style="background:var(--red)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>PERINGATAN</span><ul>${warnings.map(w=>`<li>${w}</li>`).join('')}</ul></div>`:''}
-    <div class="ai-section"><span class="ai-tag" style="background:var(--green)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>REKOMENDASI AKSI</span><ul>${actions.map(a=>`<li>${a}</li>`).join('')}</ul></div>
-    <div class="ai-section"><span class="ai-tag" style="background:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.3"/><path d="M15.5 14.2c2.3.4 4.5 2.2 4.5 5.8"/></svg>ANALISIS PELANGGAN</span><ul>
+    <div class="ai-section"><span class="ai-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>Temuan</span><ul>${insights.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+    ${warnings.length?`<div class="ai-section"><span class="ai-tag" style="background:var(--red)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Peringatan</span><ul>${warnings.map(w=>`<li>${w}</li>`).join('')}</ul></div>`:''}
+    <div class="ai-section"><span class="ai-tag" style="background:var(--green)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Langkah yang Bisa Diambil</span><ul>${actions.map(a=>`<li>${a}</li>`).join('')}</ul></div>
+    <div class="ai-section"><span class="ai-tag" style="background:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.3"/><path d="M15.5 14.2c2.3.4 4.5 2.2 4.5 5.8"/></svg>Pelanggan</span><ul>
       <li>Total pelanggan unik: <b>${custList.length}</b>, dengan <b>${repeatCust.length}</b> pelanggan repeat (${custList.length?((repeatCust.length/custList.length)*100).toFixed(0):0}%).</li>
       ${topCustomers.length?`<li>Top pelanggan: ${topCustomers.map(c=>`${c.name} (${rp(c.total)})`).join(', ')}.</li>`:''}
     </ul></div>
-    <div class="ai-section"><span class="ai-tag" style="background:var(--orange)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>SARAN SALES &amp; UPSELLING</span><ul>${sales.map(s=>`<li>${s}</li>`).join('')}</ul></div>
-    <div class="ai-section"><span class="ai-tag" style="background:#5B6B8C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>IDE KONTEN MARKETING</span><ul>${content.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+    <div class="ai-section"><span class="ai-tag" style="background:var(--orange)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Peluang Penjualan Tambahan</span><ul>${sales.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    <div class="ai-section"><span class="ai-tag" style="background:#5B6B8C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Ide Konten Promosi</span><ul>${content.map(c=>`<li>${c}</li>`).join('')}</ul></div>
     <div style="font-size:12px;color:var(--gray);margin-top:10px;border-top:1px solid #eee;padding-top:12px">Review otomatis per ${todayStr()} untuk cabang ${branchName(currentBranch)}. Saran dihasilkan dari pola data transaksi, bukan analisis pasar eksternal.</div>
   </div>`;
 }
@@ -2441,7 +2516,7 @@ function openEditDateModal(id){
   if(!canAccess('edit_tanggal') && currentUser.role!=='owner'){alert('Anda tidak punya akses mengubah tanggal transaksi');return;}
   const t=services.find(x=>x.id===id);
   showModal(`<h3>Ubah Tanggal Transaksi</h3>
-    <p style="color:var(--gray);margin-bottom:12px">${t.inv} — ${t.cust}</p>
+    <p style="color:var(--gray);margin-bottom:12px">${t.inv} • ${t.cust}</p>
     <label>Tanggal Baru</label><input type="date" id="ed_date" value="${t.date}">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveEditDate('${id}')">Simpan</button></div>`);
 }
@@ -2458,7 +2533,7 @@ async function saveEditDate(id){
 function openPayServiceModal(id){
   const t=services.find(x=>x.id===id);
   const sisa=t.revenue-(t.paidAmount||0);
-  showModal(`<h3>Catat Pembayaran — ${t.inv}</h3>
+  showModal(`<h3>Catat Pembayaran: ${t.inv}</h3>
     <p style="color:var(--gray);margin-bottom:12px">${t.cust} • Sisa piutang: <b class="red">${rp(sisa)}</b></p>
     <label>Jumlah Dibayar</label><input id="pay_amount" type="text" inputmode="numeric" value="${fmtNum(sisa)}" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="savePayService('${id}')">Simpan</button></div>`);
@@ -2518,7 +2593,7 @@ async function delActivity(id){
 }
 function renderActivity(){
   const list=bActivity();
-  if(!list.length){ document.getElementById('activityTable').innerHTML='<div class="empty">Belum ada catatan aktivitas</div>'; return; }
+  if(!list.length){ document.getElementById('activityTable').innerHTML='<div class="empty">Belum ada catatan. Tulis catatan hari ini di kolom atas, lalu simpan.</div>'; return; }
   document.getElementById('activityTable').innerHTML = list.map(a=>`<div style="border-bottom:1px solid #eee;padding:12px 0">
     <div class="flex-row" style="justify-content:space-between">
       <b>${a.date}</b> <span style="color:var(--gray);font-size:12px">oleh ${a.author}</span>
@@ -2617,14 +2692,14 @@ function renderLaporanKeuangan(){
     <tr style="border-top:1px solid #ddd;font-weight:700"><td>Laba Kotor</td><td style="text-align:right">${rp(lr.grossProfit)}</td></tr>
     ${Object.entries(lr.expenseByCategory).map(([k,v])=>`<tr><td style="padding-left:20px;color:var(--gray)">${k}</td><td style="text-align:right;color:var(--gray)">(${rp(v)})</td></tr>`).join('')}
     <tr><td>Total Beban Operasional</td><td style="text-align:right">(${rp(lr.totalExpense)})</td></tr>
-    <tr style="border-top:1px solid #ddd;font-weight:700"><td>Laba Bersih</td><td style="text-align:right;color:${lr.netProfit>=0?'var(--green)':'var(--red)'}">${rp(lr.netProfit)}</td></tr>
+    <tr style="border-top:1px solid #ddd;font-weight:700"><td>Laba Bersih</td><td style="text-align:right;color:${lr.netProfit>=0?'var(--green-t)':'var(--red-t)'}">${rp(lr.netProfit)}</td></tr>
   </table>`;
 
   document.getElementById('arusKasTable').innerHTML = `<table>
     <tr><td>Kas Masuk (dari servis)</td><td style="text-align:right">${rp(ak.kasMasuk)}</td></tr>
     <tr><td>Kas Keluar - Beban Operasional</td><td style="text-align:right">(${rp(ak.kasKeluarBeban)})</td></tr>
     <tr><td>Kas Keluar - Pembelian Stok</td><td style="text-align:right">(${rp(ak.kasKeluarPembelian)})</td></tr>
-    <tr style="border-top:1px solid #ddd;font-weight:700"><td>Arus Kas Bersih</td><td style="text-align:right;color:${ak.kasBersih>=0?'var(--green)':'var(--red)'}">${rp(ak.kasBersih)}</td></tr>
+    <tr style="border-top:1px solid #ddd;font-weight:700"><td>Arus Kas Bersih</td><td style="text-align:right;color:${ak.kasBersih>=0?'var(--green-t)':'var(--red-t)'}">${rp(ak.kasBersih)}</td></tr>
   </table>`;
 
   document.getElementById('neracaTable').innerHTML = `<table>
@@ -2694,7 +2769,7 @@ function printLaporanKeuangan(){
       <tr><td>Kas Keluar - Pembelian Stok</td><td class="r">(${rp(ak.kasKeluarPembelian)})</td></tr>
       <tr class="line bold"><td>ARUS KAS BERSIH</td><td class="r">${rp(ak.kasBersih)}</td></tr>
     </table>
-    <h2>Neraca (Snapshot Saat Ini)</h2>
+    <h2>Neraca (Posisi Saat Ini)</h2>
     <table>
       <tr class="bold"><td>ASET</td><td></td></tr>
       <tr><td style="padding-left:16px">Kas</td><td class="r">${rp(nc.kas)}</td></tr>
@@ -2716,7 +2791,7 @@ async function initFaceModels(){
   if(faceModelsLoaded) return;
   const statusEl=document.getElementById('faceModelStatus');
   try{
-    const MODEL_URL='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/';
+    const MODEL_URL='vendor/face-models/';
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -2799,7 +2874,7 @@ async function logAttendance(user){
   let checkType;
   if(!hasIn) checkType='masuk';
   else if(!hasOut) checkType='pulang';
-  else { document.getElementById('faceStatusText').innerHTML=`ℹ️ <b>${user.name}</b> sudah absen masuk &amp; pulang hari ini.`; return; }
+  else { document.getElementById('faceStatusText').innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg><b>${user.name}</b> sudah absen masuk &amp; pulang hari ini.`; return; }
   const time=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
   const na={id:gid(), userId:user.id, userName:user.name, branch:currentBranch, date:today, checkType, time};
   attendanceLog.unshift(na);
@@ -2809,7 +2884,7 @@ async function logAttendance(user){
 }
 function renderAttendanceTable(){
   const list=attendanceLog.filter(a=>a.branch===currentBranch).slice(0,50);
-  if(!list.length){ document.getElementById('attendanceTable').innerHTML='<div class="empty">Belum ada riwayat absensi</div>'; return; }
+  if(!list.length){ document.getElementById('attendanceTable').innerHTML='<div class="empty">Belum ada absensi tercatat. Absen masuk dan pulang akan muncul di sini.</div>'; return; }
   document.getElementById('attendanceTable').innerHTML=`<table><tr><th>Nama</th><th>Tanggal</th><th>Jenis</th><th>Jam</th></tr>`+
     list.map(a=>`<tr><td>${a.userName}</td><td>${a.date}</td><td><span class="badge ${a.checkType==='masuk'?'badge-ok':'badge-mid'}">${a.checkType==='masuk'?'Masuk':'Pulang'}</span></td><td>${a.time}</td></tr>`).join('')+`</table>`;
 }
@@ -2841,14 +2916,14 @@ function renderRiwayat(q=''){
   const showModalCost = currentUser.role==='owner' || canAccess('lihat_modal');
   let events=[];
   bServices().forEach(t=>{
-    events.push({date:t.date, type:'servis', label:'Servis', desc:`${t.inv} — ${t.cust} (${t.issue})`, amount:t.revenue});
+    events.push({date:t.date, type:'servis', label:'Servis', desc:`${t.inv} • ${t.cust} (${t.issue})`, amount:t.revenue});
     (t.parts||[]).forEach(part=>{
       events.push({date:t.date, type:'keluar', label:'Stok Keluar', desc:`${part.partName} x${part.qty||1} (servis ${t.inv})`, amount:showModalCost?-(part.partCost*(part.qty||1)):null});
     });
   });
   if(canAccess('pembelian')||currentUser.role==='owner'){
     bPurchases().forEach(p=>{
-      events.push({date:p.date, type:'masuk', label:'Stok Masuk', desc:`${p.itemName} x${p.qty} — ${p.supplier||'-'}`, amount:p.total});
+      events.push({date:p.date, type:'masuk', label:'Stok Masuk', desc:`${p.itemName} x${p.qty} • ${p.supplier||'-'}`, amount:p.total});
     });
   }
   if(canAccess('audit')||currentUser.role==='owner'){
@@ -2864,10 +2939,10 @@ function renderRiwayat(q=''){
   if(q) events=events.filter(e=>e.desc.toLowerCase().includes(q.toLowerCase()));
   events.sort((a,b)=>b.date.localeCompare(a.date));
 
-  if(!events.length){ el.innerHTML='<div class="empty">Belum ada riwayat</div>'; return; }
+  if(!events.length){ el.innerHTML='<div class="empty">Belum ada riwayat. Terisi otomatis dari transaksi servis, mutasi stok, dan audit.</div>'; return; }
   const typeBadge={servis:'badge-ok',masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
   const rows=events.map(e=>{
-    const amountCell = e.amount==null ? '<span style="color:var(--gray)">—</span>' : `${e.amount>=0?'+':''}${e.type==='audit'?e.amount:rp(e.amount)}`;
+    const amountCell = e.amount==null ? '<span style="color:var(--gray)">-</span>' : `${e.amount>=0?'+':''}${e.type==='audit'?e.amount:rp(e.amount)}`;
     return `<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${e.label}</span></td><td>${e.desc}</td><td class="${e.amount==null?'':(e.amount>=0?'green':'red')}">${amountCell}</td></tr>`;
   }).join('');
   el.innerHTML=`<table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Jumlah</th></tr>${rows}</table>`;
