@@ -112,11 +112,15 @@
     .lg-card,.lg-panel,.panel,.modal,.stat-card,.dash-filter-bar{ background-image:none; background-color:var(--card-bg); border:1px solid var(--border); }
   }
   /* Angka: tabular supaya kolom rupiah lurus dan digit tidak bergeser saat berubah. */
-  .num,.stat-card .val,td.rp,th.rp{
+  .num,.stat-card .val,.stat-card .value,.asset-mini-card .val,td.rp,th.rp{
     font-family:'Plus Jakarta Sans','Inter',sans-serif;
     font-feature-settings:'tnum' 1,'lnum' 1;
     font-variant-numeric:tabular-nums;
     letter-spacing:-.02em;
+    /* Angka tidak boleh patah di tengah digit ("Rp 620.00" lalu "0" di baris
+       berikutnya). Boleh turun baris di spasi, tidak boleh di dalam angka. */
+    word-break:keep-all;
+    overflow-wrap:normal;
   }
   h1,h2,h3,h4,.font-heading,.logo,.login-card h2{ font-family:'Sora','Inter','Segoe UI',Tahoma,sans-serif; letter-spacing:-.01em; }
   .font-mono{ font-family:'Plus Jakarta Sans','Inter',sans-serif; font-feature-settings:'tnum' 1,'lnum' 1; font-variant-numeric:tabular-nums; }
@@ -208,7 +212,7 @@
   .stat-card .stat-icon{ width:32px; height:32px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
   .stat-card .stat-icon svg{ width:16px; height:16px; }
   .stat-card .label{ color:var(--gray); font-size:12.5px; font-weight:600; }
-  .stat-card .value{ font-size:19px; font-weight:700; letter-spacing:-.2px; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-feature-settings:'tnum' 1,'lnum' 1; font-variant-numeric:tabular-nums; line-height:1.3; word-break:break-word; overflow-wrap:anywhere; }
+  .stat-card .value{ font-size:19px; font-weight:700; letter-spacing:-.2px; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-feature-settings:'tnum' 1,'lnum' 1; font-variant-numeric:tabular-nums; line-height:1.3; word-break:normal; overflow-wrap:normal; overflow-wrap:anywhere; }
   .stat-card .sub{ font-size:12px; margin-top:7px; color:var(--gray); }
 
   /* ===== DASHBOARD ANALYTICS ===== */
@@ -220,7 +224,7 @@
   .insight-ribbon{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-bottom:20px; }
   .insight-card{ display:flex; align-items:center; justify-content:space-between; gap:14px; border-radius:var(--radius-lg); padding:16px 18px; border:1px solid; min-width:0; }
   .insight-card .ic-label{ font-size:12.5px; font-weight:600; }
-  .insight-card .ic-value{ font-size:23px; font-weight:800; margin-top:3px; font-family:'Sora','Inter',sans-serif; word-break:break-word; }
+  .insight-card .ic-value{ font-size:23px; font-weight:800; margin-top:3px; font-family:'Sora','Inter',sans-serif; word-break:normal; overflow-wrap:normal; }
   .insight-card .ic-sub{ font-size:11px; margin-top:3px; }
   .insight-card .ic-icon{ width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .insight-card .ic-icon svg{ width:19px; height:19px; }
@@ -249,7 +253,7 @@
   .asset-mini-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
   .asset-mini-card{ border-radius:14px; padding:14px 16px; border:1px solid; min-width:0; }
   .asset-mini-card h5{ font-size:12px; font-weight:600; margin-bottom:6px; }
-  .asset-mini-card .val{ font-size:18px; font-weight:700; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-feature-settings:'tnum' 1,'lnum' 1; font-variant-numeric:tabular-nums; word-break:break-word; }
+  .asset-mini-card .val{ font-size:18px; font-weight:700; font-family:'Plus Jakarta Sans','Inter',sans-serif; font-feature-settings:'tnum' 1,'lnum' 1; font-variant-numeric:tabular-nums; word-break:normal; overflow-wrap:normal; }
   .asset-mini-card .sub{ font-size:11px; color:var(--gray); margin-top:4px; }
 
   .breakdown-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
@@ -374,7 +378,7 @@
     .sidebar.mobile-open{ transform:translateX(0); }
     .logo span,.nav-item span:not(.ico),.branch-sel,.userbox{ display:inline !important; }
     .main{ margin-left:0; padding:16px 14px 40px; }
-    .topbar{ position:sticky; top:0; background:var(--bg); z-index:50; padding:10px 0; margin-bottom:16px; }
+    .topbar{ position:sticky; top:0; background:transparent; backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%); z-index:50; padding:10px 0; margin-bottom:16px; }
     .topbar h1{ font-size:20px; }
     .topbar-subtitle,.branch-badge,#quickServiceBtn{ display:none!important; }
     .form-grid{ grid-template-columns:1fr; }
@@ -425,8 +429,14 @@
   .sidebar.collapsed .nav-item.active::before{ left:-10px; }
   .sidebar.collapsed ~ .main{ margin-left:68px; }
   @media(max-width:900px){
-    .sidebar-toggle-btn{ left:14px!important; top:50%; transform:translateY(-50%); }
-    .sidebar.mobile-open ~ .sidebar-toggle-btn{ left:246px!important; }
+    /* Tab yang menempel di tepi kiri, setinggi ibu jari. Hamburger di pojok
+       atas terlalu jauh dijangkau satu tangan, jadi tombol ini tetap ada.
+       Sebagian badannya sengaja di luar layar: bagian terlihat 30px supaya
+       tidak menimpa teks kartu, tapi area sentuhnya tetap 44px penuh. */
+    .sidebar-toggle-btn{ left:-20px!important; top:50%; transform:translateY(-50%);
+      width:44px; height:56px; border-radius:0 16px 16px 0; border:none;
+      justify-content:flex-end; padding-right:7px; box-shadow:2px 0 10px rgba(0,0,0,.18); }
+    .sidebar.mobile-open ~ .sidebar-toggle-btn{ left:232px!important; border-radius:16px; justify-content:center; padding-right:0; }
     .sidebar.mobile-open ~ .sidebar-toggle-btn svg{ transform:rotate(180deg); }
   }
 
@@ -481,6 +491,51 @@
   .ro-legend span{ display:flex; align-items:center; gap:6px; }
   .ro-legend i{ width:8px; height:8px; border-radius:50%; flex:none; }
 
+
+  /* Kepadatan mobile. Sengaja diletakkan paling akhir: aturan dasar seperti
+     .stat-card dideklarasikan jauh di bawah blok media yang lebih awal, dan
+     dengan kekhususan sama, yang belakangan menang. */
+  @media(max-width:640px){
+    body{ font-size:13.5px; }
+    .panel{ padding:15px 14px; margin-bottom:14px; border-radius:var(--radius-md); }
+    .panel h2{ font-size:15px; margin-bottom:12px; gap:7px; }
+    .panel h3{ font-size:13.5px; }
+    .stat-card{ padding:13px 15px; border-radius:var(--radius-md); }
+    .stat-card .value{ font-size:17px; }
+    .dash-filter-bar{ padding:11px 13px; gap:9px; border-radius:var(--radius-md); }
+    table{ font-size:12.5px; }
+    th{ font-size:10.5px; padding:7px 8px; }
+    td{ padding:8px; }
+    .btn{ padding:8px 13px; font-size:12.5px; }
+    .btn.btn-sm{ padding:6px 10px; font-size:11.5px; }
+    .badge{ font-size:10.5px; padding:3px 7px; }
+    input,select,textarea{ padding:9px 11px; font-size:13px; margin-bottom:9px; }
+    h1{ font-size:20px; }
+    .topbar-subtitle{ font-size:12px; }
+    /* Tabel ringkas dua kolom dikecualikan dari min-width:520px. Aturan itu
+       untuk tabel data lebar yang memang perlu digulir; di tabel ini ia
+       justru mendorong kolom nilai keluar layar sampai tak terlihat. */
+    #labaRugiTable table,#arusKasTable table,#neracaTable table{ min-width:0; }
+    #labaRugiTable td,#arusKasTable td,#neracaTable td{ padding:7px 4px; }
+    /* Grid dua kolom dipaksa lewat gaya inline, jadi butuh !important.
+       Di layar 414pt tiap grafik cuma dapat ~150px; setelah label sumbu
+       dan legenda, area gambarnya runtuh jadi nol. */
+    .cards{ grid-template-columns:1fr!important; }
+    .panel canvas{ min-height:200px; }
+  }
+
+  /* Tablet: tabel transaksi lebih lebar dari panelnya, sehingga kolom aksi
+     terpotong di tepi kanan dan tombol hapus terlihat teriris separuh.
+     Kepadatan dirapatkan supaya seluruh kolom muat tanpa terpotong. */
+  @media(min-width:641px) and (max-width:1200px){
+    table{ font-size:12.5px; }
+    th{ font-size:10.5px; padding:8px 6px; }
+    td{ padding:8px 6px; }
+    .badge{ font-size:10.5px; padding:3px 7px; }
+    .btn-icon{ width:28px; height:28px; }
+    .btn-icon svg{ width:14px; height:14px; }
+    .row-actions{ gap:4px; }
+  }
 </style>
 </head>
 <body>
@@ -1088,23 +1143,80 @@ let DEMO_MODE = false;
 let demoDipakai = 0;
 
 function seedDemoData(){
-  const hariIni = todayStr();
-  const cabangDemo = {id:'demo-cabang', name:'Cabang Demo', addr:'Alamat contoh', phone:'-'};
-  branches = [cabangDemo];
-  currentBranch = cabangDemo.id;
-  users = [{id:'demo-user', name:'Pemilik Demo', user:'demo', pass:'', role:'owner', branch:cabangDemo.id}];
-  stock = [
-    {id:gid(), branch:cabangDemo.id, name:'LCD iPhone 11 (contoh)', sku:'DEMO-LCD-11', category:'Sparepart', qty:6,  min:2, cost:450000, price:750000},
-    {id:gid(), branch:cabangDemo.id, name:'Baterai iPhone X (contoh)', sku:'DEMO-BAT-X', category:'Sparepart', qty:3,  min:2, cost:180000, price:320000},
-    {id:gid(), branch:cabangDemo.id, name:'Kabel Lightning (contoh)', sku:'DEMO-KBL-01', category:'Aksesoris', qty:12, min:4, cost:25000,  price:55000}
+  const CB='demo-cabang';
+  /* Tanggal dihitung mundur dari hari ini supaya grafik tren selalu punya
+     bentuk, dan seluruhnya deterministik supaya hasil potret bisa diulang. */
+  const mundur = n => { const d=new Date(); d.setDate(d.getDate()-n); return localDateStr(d); };
+  branches = [{id:CB, name:'Cabang Demo', addr:'Jl. Contoh No. 1', phone:'-'}];
+  currentBranch = CB;
+  users = [{id:'demo-user', name:'Pemilik Demo', user:'demo', pass:'', role:'owner', branch:CB}];
+
+  const sp = [
+    ['LCD iPhone 11 (contoh)','DEMO-LCD-11','Sparepart',6,2,450000,750000],
+    ['LCD iPhone 12 (contoh)','DEMO-LCD-12','Sparepart',4,2,620000,980000],
+    ['Baterai iPhone X (contoh)','DEMO-BAT-X','Sparepart',3,2,180000,320000],
+    ['Baterai iPhone 11 (contoh)','DEMO-BAT-11','Sparepart',1,3,210000,360000],
+    ['Konektor Charge (contoh)','DEMO-CON-01','Sparepart',9,3,45000,110000],
+    ['Speaker Buzzer (contoh)','DEMO-SPK-01','Sparepart',2,3,38000,95000],
+    ['Kabel Lightning (contoh)','DEMO-KBL-01','Aksesoris',12,4,25000,55000],
+    ['Tempered Glass (contoh)','DEMO-TG-01','Aksesoris',24,6,8000,35000],
+    ['Adaptor 20W (contoh)','DEMO-ADP-20','Aksesoris',7,4,52000,125000]
   ];
-  services = [
-    {id:gid(), branch:cabangDemo.id, inv:'DEMO-001', date:hariIni, cust:'Pelanggan Demo 1', phone:'-', device:'iPhone 11', issue:'Ganti LCD', parts:[], partName:'LCD iPhone 11 (contoh)', partCost:450000, partPrice:750000, jasa:100000, revenue:850000, cogs:450000, status:'Selesai', paidAmount:850000, paymentMethod:'Tunai'},
-    {id:gid(), branch:cabangDemo.id, inv:'DEMO-002', date:hariIni, cust:'Pelanggan Demo 2', phone:'-', device:'iPhone X',  issue:'Ganti baterai', parts:[], partName:'Baterai iPhone X (contoh)', partCost:180000, partPrice:320000, jasa:70000, revenue:390000, cogs:180000, status:'Proses', paidAmount:0, paymentMethod:'Transfer'}
+  stock = sp.map(x=>({id:gid(),branch:CB,name:x[0],sku:x[1],category:x[2],qty:x[3],min:x[4],cost:x[5],price:x[6]}));
+  const cari = n => stock.find(x=>x.name===n);
+
+  /* [hari mundur, perangkat, keluhan, nama sparepart, jasa, status, bayar penuh?] */
+  const sv = [
+    [34,'iPhone 11','Ganti LCD','LCD iPhone 11 (contoh)',100000,'Selesai',true],
+    [31,'iPhone X','Ganti baterai','Baterai iPhone X (contoh)',70000,'Selesai',true],
+    [28,'iPhone 12','Ganti LCD','LCD iPhone 12 (contoh)',120000,'Selesai',true],
+    [25,'iPhone 8','Port charge rusak','Konektor Charge (contoh)',60000,'Selesai',true],
+    [22,'iPhone XR','Speaker pecah','Speaker Buzzer (contoh)',55000,'Selesai',false],
+    [19,'iPhone 11','Pasang tempered','Tempered Glass (contoh)',15000,'Selesai',true],
+    [16,'iPhone 12','Ganti baterai','Baterai iPhone 11 (contoh)',75000,'Selesai',true],
+    [13,'iPhone X','Ganti LCD','LCD iPhone 11 (contoh)',100000,'Selesai',true],
+    [10,'iPhone SE','Port charge rusak','Konektor Charge (contoh)',60000,'Selesai',false],
+    [7,'iPhone 12','Ganti LCD','LCD iPhone 12 (contoh)',120000,'Selesai',true],
+    [5,'iPhone 11','Ganti baterai','Baterai iPhone 11 (contoh)',75000,'Selesai',true],
+    [3,'iPhone XR','Ganti LCD','LCD iPhone 11 (contoh)',100000,'Proses',false],
+    [1,'iPhone 8','Speaker pecah','Speaker Buzzer (contoh)',55000,'Proses',false],
+    [0,'iPhone 12','Ganti baterai','Baterai iPhone X (contoh)',70000,'Antri',false]
   ];
-  purchases = [{id:gid(), branch:cabangDemo.id, date:hariIni, itemId:stock[0].id, itemName:'LCD iPhone 11 (contoh)', qty:2, cost:450000, total:900000, supplier:'Supplier Demo', paidAmount:900000, paymentMethod:'Transfer'}];
-  expenses  = [{id:gid(), branch:cabangDemo.id, date:hariIni, cat:'Operasional', desc:'Listrik (contoh)', amount:150000, paymentMethod:'Tunai'}];
-  audits = []; activityLog = []; faceEnrollments = []; attendanceLog = [];
+  const bayar = ['Tunai','Transfer','QRIS'];
+  services = sv.map((x,i)=>{
+    const part = cari(x[3]) || stock[0];
+    const revenue = x[4] + part.price;
+    return {id:gid(), branch:CB, inv:'DEMO-'+String(i+1).padStart(3,'0'), date:mundur(x[0]),
+      cust:'Pelanggan Demo '+(i+1), phone:'-', device:x[1], issue:x[2], parts:[],
+      partName:part.name, partCost:part.cost, partPrice:part.price, jasa:x[4],
+      revenue, cogs:part.cost, status:x[5],
+      paidAmount: x[6] ? revenue : Math.round(revenue*0.4),
+      paymentMethod: bayar[i%3]};
+  });
+
+  const pb = [[30,'LCD iPhone 11 (contoh)',3],[24,'Baterai iPhone X (contoh)',5],
+              [17,'Tempered Glass (contoh)',20],[9,'LCD iPhone 12 (contoh)',2],[4,'Adaptor 20W (contoh)',6]];
+  purchases = pb.map((x,i)=>{
+    const it = cari(x[1]) || stock[0];
+    return {id:gid(), branch:CB, date:mundur(x[0]), itemId:it.id, itemName:it.name, qty:x[2],
+      cost:it.cost, total:it.cost*x[2], supplier:'Supplier Demo '+((i%2)+1),
+      paidAmount: i===3 ? Math.round(it.cost*x[2]*0.5) : it.cost*x[2],
+      paymentMethod: bayar[i%3]};
+  });
+
+  const px = [[30,'Sewa','Sewa kios (contoh)',1500000],[28,'Operasional','Listrik & air (contoh)',320000],
+              [21,'Gaji','Gaji teknisi (contoh)',2500000],[14,'Operasional','Internet (contoh)',280000],
+              [7,'Operasional','Alat & bahan (contoh)',185000],[2,'Operasional','Transport (contoh)',95000]];
+  expenses = px.map((x,i)=>({id:gid(), branch:CB, date:mundur(x[0]), cat:x[1], desc:x[2],
+    amount:x[3], paymentMethod: bayar[i%3]}));
+
+  const ak = [[0,'Servis iPhone XR masuk antrian, menunggu sparepart.'],
+              [1,'Stok baterai iPhone 11 menipis, perlu order ulang.'],
+              [3,'Dua unit selesai dan sudah diambil pelanggan.'],
+              [6,'Kios tutup lebih awal, listrik padam.']];
+  activityLog = ak.map(x=>({id:gid(), branch:CB, date:mundur(x[0]), author:'Pemilik Demo', note:x[1]}));
+
+  audits = []; faceEnrollments = []; attendanceLog = [];
   appSettings = { name:'Goed Acsess', icon:'' };
   kasirPerms = {...DEFAULT_PERMS};
 }
