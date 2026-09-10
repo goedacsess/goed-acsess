@@ -64,7 +64,9 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      // Dimatikan hanya di build terpaket, supaya debugging saat ngoding tetap jalan.
+      devTools: !app.isPackaged
     },
     show: false
   });
