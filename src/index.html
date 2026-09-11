@@ -1096,8 +1096,8 @@ async function dbCall(promise, label, silent){
 }
 
 /* ============ MAPPING JS (camelCase) <-> SUPABASE (snake_case) ============ */
-function toDbUser(u){ return {id:u.id, name:u.name, username:u.user, pass:u.pass, role:u.role, branch_id:u.branch||null}; }
-function fromDbUser(r){ return {id:r.id, name:r.name, user:r.username, pass:r.pass, role:r.role, branch:r.branch_id}; }
+function toDbUser(u){ return {id:u.id, name:u.name, username:u.user, role:u.role, branch_id:u.branch||null}; }
+function fromDbUser(r){ return {id:r.id, name:r.name, user:r.username, role:r.role, branch:r.branch_id, authId:r.auth_id}; }
 function fromDbBranch(r){ return {id:r.id, name:r.name, addr:r.addr, phone:r.phone}; }
 function toDbStock(s){ return {id:s.id, branch_id:s.branch, name:s.name, sku:s.sku, category:s.category||null, qty:s.qty, min_qty:s.min, cost:s.cost, price:s.price}; }
 function fromDbStock(r){ return {id:r.id, branch:r.branch_id, name:r.name, sku:r.sku, category:r.category, qty:r.qty, min:r.min_qty, cost:r.cost, price:r.price}; }
@@ -1237,28 +1237,14 @@ function masukDemo(){
 /* Tombol "Akun": tinggalkan demo, ambil data sungguhan, buka layar login.
    Tidak memakai location.reload() karena sesi masih kosong, jadi boot akan
    melempar balik ke demo dan tombolnya berputar di tempat. */
-/* Daftar user sungguhan disimpan terpisah. bootstrapData() penuh akan menimpa
-   stock/services/branches demo yang sedang tampil di belakang kartu. */
-let usersAsli = null;
-
-async function keluarDemo(){
+/* Kartu login hanya membuka tampilan. Pencocokan kredensial dilakukan server
+   lewat Supabase Auth, jadi aplikasi tidak perlu lagi mengunduh daftar user. */
+function keluarDemo(){
   const kartu = document.getElementById('loginScreen');
-  const catatan = document.getElementById('loginHint');
   kartu.classList.add('as-card');
   kartu.classList.remove('hidden');
-  document.getElementById('lg_user').focus();
-  if(usersAsli) return;
-  catatan.textContent = 'Memuat daftar akun...';
-  try{
-    if(!sb) throw new Error('Komponen aplikasi gagal dimuat dari internet.');
-    const {data,error} = await sb.from('app_users').select('*');
-    if(error) throw error;
-    usersAsli = (data||[]).map(fromDbUser);
-    catatan.innerHTML = 'Hubungi owner untuk <b>login</b>.';
-  } catch(err){
-    console.error('Gagal memuat akun:', err);
-    catatan.textContent = 'Tidak bisa terhubung ke server. Periksa internet, lalu tutup dan coba lagi.';
-  }
+  const isian = document.getElementById('lg_user');
+  if(isian) isian.focus();
 }
 
 function tutupKartuLogin(){
@@ -1486,39 +1472,68 @@ function setupRealtimeSync(){
 /* ============ AUTH ============ */
 async function doLogin(){
   const u=val('lg_user').trim(), p=val('lg_pass');
-  const daftar = DEMO_MODE ? (usersAsli||[]) : users;
-  const found = daftar.find(x=>x.user===u && x.pass===p);
-  if(!found){ alert('Username / password salah'); return; }
-  if(DEMO_MODE){
-    /* Data asli baru dimuat setelah login berhasil, supaya sesi demo yang batal
-       tidak meninggalkan data toko sungguhan di memori. */
-    const catatan = document.getElementById('loginHint');
-    catatan.textContent = 'Memuat data toko...';
-    try{
-      DEMO_MODE = false;
-      await bootstrapData();
-      setupRealtimeSync();
-    } catch(err){
-      console.error('Gagal memuat data:', err);
-      DEMO_MODE = true;
-      catatan.textContent = 'Gagal memuat data toko. Periksa internet, lalu coba lagi.';
-      return;
-    }
+  if(!u || !p){ alert('Isi username dan password'); return; }
+  const catatan = document.getElementById('loginHint');
+  const pesanAsli = catatan ? catatan.innerHTML : '';
+  const pesan = t => { if(catatan) catatan.textContent = t; };
+  const pulihkanPesan = () => { if(catatan) catatan.innerHTML = pesanAsli; };
+
+  if(!sb){ alert('Komponen aplikasi gagal dimuat. Sambungkan internet, lalu buka ulang.'); return; }
+  pesan('Memeriksa...');
+
+  /* Username bukan email, jadi dipetakan ke email sintetis yang sama dengan
+     yang dibuat migrasi auth. Pencocokan password terjadi di server; aplikasi
+     tidak pernah lagi mengunduh daftar password. */
+  let masuk;
+  try{
+    masuk = await sb.auth.signInWithPassword({ email:u.toLowerCase()+'@goedacsess.app', password:p });
+  }catch(err){
+    console.error('Login gagal:', err);
+    pesan('Tidak bisa terhubung ke server. Periksa internet, lalu coba lagi.');
+    return;
+  }
+  if(masuk.error){ pulihkanPesan(); alert('Username / password salah'); return; }
+
+  pesan('Memuat data toko...');
+  const sebelumnyaDemo = DEMO_MODE;
+  try{
+    DEMO_MODE = false;
+    await bootstrapData();
+    setupRealtimeSync();
+  }catch(err){
+    console.error('Gagal memuat data:', err);
+    DEMO_MODE = sebelumnyaDemo;
+    try{ await sb.auth.signOut(); }catch(e){}
+    pesan('Gagal memuat data toko. Periksa internet, lalu coba lagi.');
+    return;
+  }
+
+  const found = users.find(x=>x.authId===masuk.data.user.id);
+  if(!found){
+    /* Akun auth ada tapi tidak punya baris di app_users. Jangan biarkan masuk
+       setengah jalan; keluarkan lagi supaya tidak ada sesi menggantung. */
+    try{ await sb.auth.signOut(); }catch(e){}
+    DEMO_MODE = sebelumnyaDemo;
+    pesan('Akun ini belum terhubung ke data pengguna. Hubungi owner.');
+    return;
+  }
+
+  if(sebelumnyaDemo){
     document.getElementById('demoBar').classList.add('hidden');
     document.body.classList.remove('demo-on');
     tutupKartuLogin();
-    const segar = users.find(x=>x.id===found.id);
-    currentUser = segar || found;
-    localStorage.setItem('goedacsess_session', JSON.stringify(currentUser));
-    applyAppSettings();
-    initApp();
-    return;
   }
+  pulihkanPesan();
   currentUser = found;
-  localStorage.setItem('goedacsess_session', JSON.stringify(found));
+  applyAppSettings();
   initApp();
 }
-function doLogout(){ localStorage.removeItem('goedacsess_session'); location.reload(); }
+
+async function doLogout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){ console.error('Gagal keluar:',e); }
+  localStorage.removeItem('goedacsess_session');
+  location.reload();
+}
 
 function canAccess(permKey){
   if(currentUser.role==='owner') return true;
@@ -1550,14 +1565,23 @@ function initApp(){
   /* Sesi tersimpan dibaca lebih dulu supaya pengguna sungguhan langsung masuk ke
      akunnya seperti biasa. Tanpa sesi, aplikasi membuka mode demo tanpa jaringan,
      jadi server yang lambat atau mati tidak lagi berujung layar kosong. */
-  let sesi = null;
-  try{ sesi = localStorage.getItem('goedacsess_session'); }catch(e){ sesi = null; }
-
   /* Jalur demo tidak menunggu apa pun, jadi tanpa jeda ini initApp() berjalan
      saat skrip masih dibaca dan const di bawahnya (mis. subtitles) belum ada. */
   if(document.readyState === 'loading'){
     await new Promise(r => document.addEventListener('DOMContentLoaded', r, {once:true}));
   }
+
+  /* Sesi disimpan dan diperbarui oleh pustaka Supabase sendiri. Diberi batas
+     waktu pendek karena token yang kedaluwarsa memicu penyegaran lewat
+     jaringan, dan itu tidak boleh membuat aplikasi menggantung saat offline. */
+  let sesi = null;
+  try{
+    if(sb){
+      const r = await withTimeout(sb.auth.getSession(), 6000, 'Sesi tidak terbaca');
+      sesi = r && r.data ? r.data.session : null;
+    }
+  }catch(e){ console.error('Gagal membaca sesi:', e); sesi = null; }
+
   if(!sesi){ masukDemo(); return; }
 
   try{
@@ -1567,9 +1591,14 @@ function initApp(){
     applyAppSettings();
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
-    const saved=JSON.parse(sesi);
-    const fresh=users.find(u=>u.id===saved.id);
+    const fresh = users.find(u=>u.authId===sesi.user.id);
     if(fresh){ currentUser=fresh; initApp(); }
+    else {
+      /* Sesi auth sah tapi barisnya di app_users sudah tidak ada, misalnya
+         usernya dihapus owner. Akhiri sesi supaya tidak menggantung. */
+      try{ await sb.auth.signOut(); }catch(e){}
+      masukDemo();
+    }
   } catch(err){
     console.error('Boot error:', err);
     document.getElementById('loadingScreen').innerHTML = `<div class="login-card" style="text-align:center">
@@ -1767,7 +1796,7 @@ function openUserModal(id){
   showModal(`<h3>${id?'Edit':'Tambah'} User</h3>
     <label>Nama Lengkap</label><input id="u_name" value="${u.name}">
     <label>Username</label><input id="u_user" value="${u.user}">
-    <label>Password</label><input id="u_pass" value="${u.pass}">
+    <label>Password</label><input id="u_pass" type="password" value="" placeholder="${id?'Kosongkan bila tidak diganti':'Minimal 6 karakter'}">
     <label>Role</label><select id="u_role" onchange="toggleUserBranchField()">
       <option value="kasir" ${u.role==='kasir'?'selected':''}>Kasir (1 cabang, akses terbatas)</option>
       <option value="manajer" ${u.role==='manajer'?'selected':''}>Manajer (multi cabang, akses terbatas)</option>
@@ -1799,28 +1828,42 @@ async function saveUser(id){
     if(!picked.length){alert('Pilih minimal 1 cabang untuk manajer ini');return;}
     d.branch = picked.join(',');
   }
-  if(!d.name||!d.user||!d.pass){alert('Semua field wajib');return;}
+  if(!d.name||!d.user){alert('Nama dan username wajib');return;}
+  /* Saat mengubah user, password boleh dikosongkan yang berarti tidak diganti. */
+  if(!id && !d.pass){alert('Password wajib untuk user baru');return;}
+  if(d.pass && d.pass.length<6){alert('Password minimal 6 karakter');return;}
   if(users.some(x=>x.user===d.user && x.id!==id)){alert('Username sudah dipakai');return;}
-  if(id){
-    const u=users.find(x=>x.id===id); Object.assign(u,d);
-    closeModal(); renderUserTable();
-    await dbCall(sb.from('app_users').update(toDbUser(u)).eq('id',id), 'edit user');
-  } else {
-    if(demoTolakTambah()) return;
-    const nu={id:gid(),...d}; users.push(nu);
-    closeModal(); renderUserTable();
-    await dbCall(sb.from('app_users').insert(toDbUser(nu)), 'tambah user');
+
+  if(DEMO_MODE){
+    if(id){ const u=users.find(x=>x.id===id); Object.assign(u,d); }
+    else { if(demoTolakTambah()) return; users.push({id:gid(),...d}); }
+    closeModal(); renderUserTable(); return;
   }
+
+  /* Menambah atau mengubah user ikut menyentuh akun auth, dan itu hanya bisa
+     lewat fungsi di server. Hasilnya ditunggu dulu sebelum tampilan diubah:
+     kalau gagal di tengah, akun auth dan baris app_users bisa tidak sinkron. */
+  const arg = {p_id:id||gid(), p_name:d.name, p_username:d.user,
+               p_password:d.pass||'', p_role:d.role, p_branch_id:d.branch||null};
+  const {error} = await sb.rpc(id?'ubah_user':'buat_user', arg);
+  if(error){ alert('Gagal menyimpan user: '+error.message); return; }
+
+  if(id){ const u=users.find(x=>x.id===id); Object.assign(u,d); }
+  else { users.push({id:arg.p_id, ...d}); }
+  closeModal(); renderUserTable();
 }
+
 async function delUser(id){
   if(users.length<=1){alert('Minimal 1 user');return;}
   if(id===currentUser.id){alert('Tidak bisa hapus akun yang sedang login');return;}
-  if(confirm('Hapus user?')){
-    users=users.filter(x=>x.id!==id);
-    renderUserTable();
-    await dbCall(sb.from('app_users').delete().eq('id',id), 'hapus user');
-  }
+  if(!confirm('Hapus user?')) return;
+  if(DEMO_MODE){ users=users.filter(x=>x.id!==id); renderUserTable(); return; }
+  const {error} = await sb.rpc('hapus_user',{p_id:id});
+  if(error){ alert('Gagal menghapus user: '+error.message); return; }
+  users=users.filter(x=>x.id!==id);
+  renderUserTable();
 }
+
 function renderUserTable(){
   document.getElementById('userTable').innerHTML=`<table><tr><th>Nama</th><th>Username</th><th>Role</th><th>Cabang</th><th></th></tr>`+
     users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.user}</td><td><span class="badge ${u.role==='owner'?'badge-ok':u.role==='manajer'?'badge-info':'badge-mid'}">${u.role}</span></td>
@@ -1840,7 +1883,7 @@ function renderPengaturan(){
     ownerSection.classList.remove('hidden');
     document.getElementById('set_appname').value = appSettings.name||'Goed Acsess';
     const owner = users.find(u=>u.role==='owner');
-    if(owner){ document.getElementById('set_user').value=owner.user; document.getElementById('set_pass').value=owner.pass; }
+    if(owner){ document.getElementById('set_user').value=owner.user; document.getElementById('set_pass').value=''; }
     const pg = document.getElementById('permGrid');
     pg.innerHTML = Object.entries(PERM_LABELS).map(([k,v])=>`
       <div class="perm-item">
@@ -1860,13 +1903,24 @@ async function saveAppSettings(){
 async function saveOwnerCredential(){
   const u=val('set_user').trim(), p=val('set_pass').trim();
   if(!u||!p){alert('Username dan password tidak boleh kosong');return;}
+  if(p.length<6){alert('Password minimal 6 karakter');return;}
   if(users.some(x=>x.user===u && x.role!=='owner')){alert('Username sudah dipakai user lain');return;}
   const owner=users.find(x=>x.role==='owner');
   if(!owner){alert('Data owner tidak ditemukan');return;}
-  owner.user=u; owner.pass=p;
-  if(currentUser.role==='owner'){ currentUser.user=u; currentUser.pass=p; localStorage.setItem('goedacsess_session',JSON.stringify(currentUser)); }
+
+  if(DEMO_MODE){ alert('Mode demo: perubahan kredensial tidak disimpan.'); return; }
+
+  /* Username ikut jadi email akun auth, jadi perubahannya harus lewat server.
+     Sesi yang sedang berjalan tetap sah karena terikat ke id akun, bukan email. */
+  const {error} = await sb.rpc('ubah_user',{
+    p_id:owner.id, p_name:owner.name, p_username:u,
+    p_password:p, p_role:'owner', p_branch_id:owner.branch||null
+  });
+  if(error){ alert('Gagal mengubah kredensial: '+error.message); return; }
+
+  owner.user=u;
+  if(currentUser && currentUser.id===owner.id) currentUser.user=u;
   alert('Kredensial owner berhasil diubah!\nUsername: '+u);
-  await dbCall(sb.from('app_users').update(toDbUser(owner)).eq('id',owner.id), 'ubah kredensial owner');
 }
 async function savePermissions(){
   Object.keys(PERM_LABELS).forEach(k=>{
