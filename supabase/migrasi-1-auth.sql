@@ -75,7 +75,7 @@ $$;
 create or replace function public.buat_user(
   p_id text, p_name text, p_username text, p_password text,
   p_role text, p_branch_id text
-) returns void language plpgsql security definer set search_path = public, auth as $$
+) returns void language plpgsql security definer set search_path = public, auth, extensions as $$
 declare v_auth uuid;
 begin
   if not public.saya_owner() then
@@ -94,7 +94,7 @@ begin
     '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
     'authenticated', 'authenticated',
     lower(p_username) || '@goedacsess.app',
-    crypt(p_password, gen_salt('bf')),
+    extensions.crypt(p_password, extensions.gen_salt('bf')),
     now(), now(), now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     jsonb_build_object('app_user_id', p_id, 'username', p_username),
@@ -109,7 +109,7 @@ $$;
 create or replace function public.ubah_user(
   p_id text, p_name text, p_username text, p_password text,
   p_role text, p_branch_id text
-) returns void language plpgsql security definer set search_path = public, auth as $$
+) returns void language plpgsql security definer set search_path = public, auth, extensions as $$
 declare v_auth uuid;
 begin
   -- Owner boleh mengubah siapa saja; selain owner hanya boleh dirinya sendiri.
@@ -131,7 +131,7 @@ begin
           updated_at = now(),
           encrypted_password = case
             when coalesce(p_password,'') = '' then encrypted_password
-            else crypt(p_password, gen_salt('bf'))
+            else extensions.crypt(p_password, extensions.gen_salt('bf'))
           end
       where id = v_auth;
   end if;
@@ -139,7 +139,7 @@ end;
 $$;
 
 create or replace function public.hapus_user(p_id text)
-returns void language plpgsql security definer set search_path = public, auth as $$
+returns void language plpgsql security definer set search_path = public, auth, extensions as $$
 declare v_auth uuid;
 begin
   if not public.saya_owner() then
