@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
-  console.log('Goed Acsess desktop siap.');
+  console.log('Goed Access desktop siap.');
 });
 
 contextBridge.exposeInMainWorld('electronAPI', {

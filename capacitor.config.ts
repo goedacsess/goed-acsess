@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.goedacsess.app',
-  appName: 'Goed Acsess',
+  appName: 'Goed Access',
   webDir: 'src',
   // Menutup Web Inspector (iOS) dan remote debugging chrome://inspect (Android).
   // Setel true sementara kalau perlu membedah WebView di perangkat saat ngoding.

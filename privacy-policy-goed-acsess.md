@@ -1,8 +1,8 @@
-# Kebijakan Privasi — Goed Acsess
+# Kebijakan Privasi — Goed Access
 
 **Terakhir diperbarui:** 7 Agustus 2026
 
-Goed Acsess ("Aplikasi") adalah aplikasi manajemen toko reparasi (POS system) yang dikembangkan untuk digunakan oleh staf dan cabang toko reparasi iPhone. Kebijakan privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi data dalam Aplikasi.
+Goed Access ("Aplikasi") adalah aplikasi manajemen toko reparasi (POS system) yang dikembangkan untuk digunakan oleh staf dan cabang toko reparasi iPhone. Kebijakan privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi data dalam Aplikasi.
 
 ## 1. Data yang Kami Kumpulkan
 
@@ -75,4 +75,4 @@ Email: [isi email kontak Anda]
 
 ---
 
-*Kebijakan ini dibuat untuk memenuhi persyaratan Google Play Store terkait transparansi penggunaan data dalam aplikasi Goed Acsess.*
+*Kebijakan ini dibuat untuk memenuhi persyaratan Google Play Store terkait transparansi penggunaan data dalam aplikasi Goed Access.*

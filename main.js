@@ -58,7 +58,7 @@ function createWindow() {
     height: 820,
     minWidth: 1000,
     minHeight: 650,
-    title: 'Goed Acsess',
+    title: 'Goed Access',
     icon: path.join(__dirname, 'build', 'icon.png'),
     backgroundColor: '#1d1d1f',
     webPreferences: {

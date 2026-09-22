@@ -1,2 +1,2 @@
 # goed-acsess
-Goed Acsess - Aplikasi Kasir &amp; Manajemen Servis iPhone
+Goed Access - Aplikasi Kasir &amp; Manajemen Servis iPhone
