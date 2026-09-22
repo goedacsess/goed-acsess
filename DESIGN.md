@@ -1,6 +1,6 @@
 # DESIGN.md
 
-Acuan desain iServis Pro / Goed Access. Dokumen ini sumber arah; `antislop.md` cuma penyaring di atasnya.
+Acuan desain Goed Access. Dokumen ini sumber arah; `antislop.md` cuma penyaring di atasnya.
 
 ## Produk & pengguna
 

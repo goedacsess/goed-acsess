@@ -1,5 +1,11 @@
 const { app, BrowserWindow, Menu, dialog, shell, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
+
+// Data lokal (login, setelan, localStorage) dikunci ke folder yang dipakai sejak
+// versi iServis Pro: "iservis-pro", dari field "name" package.json. Kalau suatu
+// saat nama paket diganti, tanpa baris ini semua kasir kehilangan datanya setelah
+// pembaruan. Harus dipanggil sebelum app ready.
+app.setPath('userData', path.join(app.getPath('appData'), 'iservis-pro'));
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;

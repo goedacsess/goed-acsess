@@ -3,7 +3,7 @@
   "version": "2.6.0",
   "description": "Software Kasir Servis iPhone",
   "main": "main.js",
-  "author": "iServis Pro",
+  "author": "Goed Access",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder",
@@ -19,7 +19,7 @@
   },
   "build": {
     "appId": "com.iservis.pro",
-    "productName": "iServis Pro",
+    "productName": "Goed Access",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -28,7 +28,9 @@
       "main.js",
       "preload.js",
       "src/**/*",
-      "build/**/*"
+      "!src/**/*.backup",
+      "build/**/*",
+      "!build/ios/**"
     ],
     "publish": {
       "provider": "github",

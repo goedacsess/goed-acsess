@@ -618,6 +618,8 @@
        tidak terpotong dan tidak menimpa teks di kirinya. */
     .riw-val{ display:block; grid-column:2; grid-row:1 / span 2; text-align:right; white-space:nowrap; font-size:18px; font-weight:600; font-variant-numeric:tabular-nums; }
     .riw-val.neg{ color:var(--red-t); } .riw-val.pos{ color:var(--green-t); } .riw-val.mid{ color:var(--orange-t); }
+    /* Mode ubah audit di HP: barang yang sudah diaudit tampil dulu, daftar pilih di bawahnya. */
+    .audit-layout.editing .audit-work{ order:-1; }
 
     /* Detail Riwayat di modal HP: tanggal dan tombol aksi sebaris di atas,
        tabel barang jadi daftar (nama selebar modal, jumlah dan harga di bawahnya)
@@ -741,6 +743,30 @@
   .audit-foot b{ color:var(--text); font-variant-numeric:tabular-nums; }
   .audit-buttons{ display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
   .audit-buttons .audit-muted{ margin-right:auto; }
+  /* Halaman Stok Audit gaya Kelola. Diberi awalan #audit karena kelas audit-pick-*
+     juga dipakai halaman Pembelian Stok. */
+  .audit-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .audit-date{ display:flex; align-items:center; gap:8px; font-weight:600; font-size:15px; }
+  .audit-date svg{ flex-shrink:0; color:var(--gray); }
+  .audit-head-btns{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; }
+  #audit .audit-filters{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; }
+  #audit .audit-pick-list{ max-height:520px; }
+  #audit .audit-pick-item{ min-height:60px; }
+  #audit .audit-pick-item.on{ background:rgb(var(--canvas-tint-1) / .09); }
+  #audit .api-qty{ display:flex; flex-direction:column; align-items:flex-end; }
+  #audit .api-qty small{ font-size:13px; margin-top:2px; }
+  .audit-work h2{ display:flex; align-items:center; justify-content:space-between; }
+  .audit-work-list{ max-height:520px; overflow-y:auto; position:relative; }
+  .audit-row{ display:flex; align-items:center; gap:10px; padding:10px 8px; border-bottom:1px solid var(--border); }
+  .audit-row.last{ background:rgb(var(--canvas-tint-1) / .09); }
+  .ar-name{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .ar-name b{ font-weight:600; }
+  .ar-name .api-sub{ display:block; font-size:12px; font-weight:400; color:var(--gray); margin-top:2px; }
+  .audit-row .audit-phys{ width:76px; flex:0 0 auto; margin:0; text-align:center; }
+  .ar-del{ flex:0 0 auto; width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--red-t); cursor:pointer; border-radius:50%; }
+  .ar-del:hover{ background:rgb(168 62 62 / .10); }
+  .audit-note label{ display:block; margin-bottom:6px; }
+  .audit-note textarea{ margin-bottom:0; }
   .audit-hist-search{ max-width:320px; margin:0 0 0 auto; }
   .audit-hist-item{ padding:14px 0; border-bottom:1px solid var(--border); }
   .audit-hist-item:last-child{ border-bottom:0; }
@@ -1232,38 +1258,39 @@
   </div>
 
   <div class="page" id="audit">
+    <div class="audit-head">
+      <div class="audit-date" id="auditDate"></div>
+      <div class="audit-head-btns">
+        <span id="auditDraftInfo" class="audit-muted"></span>
+        <button class="btn btn-tool hidden" id="auditCancelBtn" onclick="auditCancelEdit()">Batal</button>
+        <button class="btn btn-tool" id="auditDraftBtn" onclick="auditSaveDraft(true)">Simpan Draft</button>
+        <button class="btn" id="auditSaveBtn" onclick="saveAudit()">Simpan</button>
+      </div>
+    </div>
     <div class="audit-layout">
       <section class="panel audit-pick" aria-labelledby="auditPickTitle">
         <h2 id="auditPickTitle">Pilih Barang</h2>
         <div class="audit-filters">
-          <input type="search" id="auditSearch" class="audit-search" placeholder="Cari nama atau SKU..." autocomplete="off" aria-label="Cari barang untuk diaudit" oninput="renderAuditPick()">
+          <input type="search" id="auditSearch" class="audit-search" placeholder="Cari dari nama atau SKU" autocomplete="off" aria-label="Cari barang untuk diaudit" oninput="renderAuditPick()">
           <select id="auditCategory" aria-label="Filter kategori" onchange="renderAuditPick()"><option value="">Semua Kategori</option></select>
-        </div>
-        <div class="audit-pick-actions">
-          <span id="auditPickCount" class="audit-muted"></span>
-          <button class="btn btn-tool btn-sm" id="auditAddAllBtn" onclick="auditAddVisible()">Tambah semua yang tampil</button>
+          <button type="button" class="btn btn-tool btn-icon" id="auditClearBtn" onclick="auditClearAll()" aria-label="Kosongkan daftar audit" title="Kosongkan daftar audit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V3h6v3"/></svg></button>
         </div>
         <div id="auditPickList" class="audit-pick-list"></div>
       </section>
       <section class="panel audit-work" aria-labelledby="auditWorkTitle">
-        <h2 id="auditWorkTitle">Stok Audit
-          <span class="toolbar-actions">
-            <button class="btn btn-tool btn-sm" id="auditClearBtn" onclick="auditClearAll()">Kosongkan</button>
-          </span>
+        <h2><span id="auditWorkTitle">Stok Audit</span>
+          <button type="button" class="btn btn-tool btn-icon hidden" id="auditResetBtn" onclick="auditResetEdit()" aria-label="Kembalikan ke isi audit semula" title="Kembalikan ke isi audit semula"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
         </h2>
-        <div id="auditWork"></div>
+        <div id="auditWork" class="audit-work-list"></div>
         <div class="audit-foot">
           <span>Jumlah Barang: <b id="auditCountItems">0</b></span>
-          <span>Ada Selisih: <b id="auditCountDiff">0</b></span>
-        </div>
-        <label for="auditNote">Catatan</label>
-        <textarea id="auditNote" placeholder="Tambahkan catatan, misalnya penyebab selisih" oninput="auditNoteChanged()"></textarea>
-        <div class="audit-buttons">
-          <span id="auditDraftInfo" class="audit-muted"></span>
-          <button class="btn btn-tool" id="auditDraftBtn" onclick="auditSaveDraft(true)">Simpan Draft</button>
-          <button class="btn" id="auditSaveBtn" onclick="saveAudit()">Simpan Audit</button>
+          <span>Jumlah Stok: <b id="auditCountDiff">0</b></span>
         </div>
       </section>
+    </div>
+    <div class="panel audit-note">
+      <label for="auditNote">Catatan</label>
+      <textarea id="auditNote" rows="2" placeholder="Tambahkan catatan, misalnya penyebab selisih" oninput="auditNoteChanged()"></textarea>
     </div>
     <div class="panel">
       <h2>Riwayat Audit
@@ -3166,6 +3193,7 @@ function auditLoadState(){
   }catch(e){}
 }
 function auditPersist(){
+  if(auditState.edit) return; /* mode ubah tidak boleh menimpa draf audit baru */
   const empty=!auditState.ids.length && !auditState.note;
   auditState.savedAt=empty?null:Date.now();
   if(DEMO_MODE) return;
@@ -3174,6 +3202,9 @@ function auditPersist(){
     else localStorage.setItem(auditDraftKey(),JSON.stringify({ids:auditState.ids,phys:auditState.phys,note:auditState.note,savedAt:auditState.savedAt}));
   }catch(e){}
 }
+/* Stok sistem pembanding: di mode ubah, barang yang sudah ada di audit memakai
+   angka sistem saat audit dulu; barang tambahan memakai stok sekarang. */
+function auditSysOf(s){ const o=auditState.edit&&auditState.edit.orig[s.id]; return o?o.system:s.qty; }
 function auditPhysOf(s){ const v=auditState.phys[s.id]; return v===undefined?s.qty:v; }
 function auditVisible(){
   const q=(document.getElementById('auditSearch').value||'').trim().toLowerCase();
@@ -3197,57 +3228,80 @@ function renderAudit(){
   sel.innerHTML='<option value="">Semua Kategori</option>'+cats.map(c=>`<option value="${escH(c)}">${escH(c)}</option>`).join('');
   sel.value=cats.includes(cur)?cur:'';
   const nt=document.getElementById('auditNote'); if(nt.value!==auditState.note) nt.value=auditState.note;
+  const ed=auditState.edit;
+  const cal='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  const lock='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="tanggal terkunci"><path d="M7 10V7a5 5 0 0110 0v3h1a1 1 0 011 1v10a1 1 0 01-1 1H6a1 1 0 01-1-1V11a1 1 0 011-1h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>';
+  document.getElementById('auditDate').innerHTML=ed
+    ?`${cal}<span>${escH(fmtDateShort(ed.date))}</span>${lock}<span class="audit-muted">oleh ${escH(ed.by||'-')}</span>`
+    :`${cal}<span>Sekarang</span>`;
+  document.querySelector('#audit .audit-layout').classList.toggle('editing',!!ed);
+  document.getElementById('auditWorkTitle').textContent=ed?'Ubah Stok Audit':'Stok Audit';
+  if(document.body.dataset.page==='audit') document.getElementById('pageTitle').textContent=ed?'Ubah Stok Audit':titles.audit;
+  const saveBtn=document.getElementById('auditSaveBtn'); saveBtn.textContent=ed?'Perbarui':'Simpan'; saveBtn.onclick=ed?saveAuditEdit:saveAudit;
+  document.getElementById('auditDraftBtn').classList.toggle('hidden',!!ed);
+  document.getElementById('auditCancelBtn').classList.toggle('hidden',!ed);
+  document.getElementById('auditResetBtn').classList.toggle('hidden',!ed);
   renderAuditPick(); renderAuditWork(); renderAuditHistory();
 }
-function renderAuditPick(){
-  const box=document.getElementById('auditPickList'), cnt=document.getElementById('auditPickCount'), addAll=document.getElementById('auditAddAllBtn');
-  if(!bStock().length){
-    box.innerHTML='<div class="empty">Belum ada sparepart untuk diaudit. Tambahkan stok dulu di menu Data Stok.</div>';
-    cnt.textContent=''; addAll.disabled=true; return;
-  }
-  const list=auditVisible(), picked=new Set(auditState.ids);
-  cnt.textContent=list.length+' barang';
-  addAll.disabled=!list.some(s=>!picked.has(s.id));
-  if(!list.length){ box.innerHTML='<div class="empty">Tidak ada barang yang cocok dengan pencarian.</div>'; return; }
-  box.innerHTML=list.map(s=>{ const on=picked.has(s.id);
-    return `<button type="button" class="audit-pick-item" ${on?'disabled aria-label="'+escH(s.name)+', sudah ditambahkan"':''} onclick="auditAdd('${s.id}')">
-      <span class="api-name">${escH(s.name)}<span class="api-sub">${escH([s.category,s.sku].filter(Boolean).join(' / ')||'Tanpa kategori')}</span></span>
-      <span class="api-qty">${s.qty}</span><span class="api-add" aria-hidden="true">${on?AUDIT_IC_CHECK:AUDIT_IC_PLUS}</span></button>`; }).join('');
+/* Seperti Kelola: tiap ketukan barang di daftar kiri menambah hitungan fisiknya +1
+   (barang yang baru masuk daftar mulai dari 1), jadi bisa dipakai menghitung satu
+   per satu. Angka juga bisa diketik langsung di daftar kanan. */
+function auditSub(s){
+  const showCost=currentUser.role==='owner'||canAccess('lihat_modal');
+  return [showCost?rp(s.cost||0):null, rp(s.price||0), s.category||'-', s.sku||'-'].filter(x=>x!==null).map(escH).join(' / ');
+}
+/* Perubahan stok yang akan terjadi saat disimpan: barang lama di mode ubah
+   dibanding fisik lamanya, selain itu dibanding stok sekarang. */
+function auditDeltaOf(s){
+  const p=auditPhysOf(s); if(p===''||isNaN(p)) return null;
+  const o=auditState.edit&&auditState.edit.orig[s.id];
+  return Number(p)-(o?o.physical:s.qty);
 }
 function auditDiffHTML(d){ return `<span class="${d>0?'audit-diff-pos':d<0?'audit-diff-neg':''}">${d>0?'+':''}${d}</span>`; }
+const auditSigned=d=>d?`<small class="${d>0?'audit-diff-pos':'audit-diff-neg'}">${d>0?'+':''}${d}</small>`:'';
+function renderAuditPick(){
+  const box=document.getElementById('auditPickList');
+  if(!bStock().length){ box.innerHTML='<div class="empty">Belum ada sparepart untuk diaudit. Tambahkan stok dulu di menu Data Stok.</div>'; return; }
+  const list=auditVisible(), picked=new Set(auditState.ids);
+  if(!list.length){ box.innerHTML='<div class="empty">Tidak ada barang yang cocok dengan pencarian.</div>'; return; }
+  box.innerHTML=list.map(s=>{ const on=picked.has(s.id);
+    return `<button type="button" class="audit-pick-item${on?' on':''}" onclick="auditTap('${s.id}')" aria-label="${escH(s.name)}, stok ${s.qty}, ketuk untuk hitung +1">
+      <span class="api-name">${escH(s.name)}<span class="api-sub">${auditSub(s)}</span></span>
+      <span class="api-qty">${s.qty}${on?auditSigned(auditDeltaOf(s)):''}</span></button>`; }).join('');
+}
 function renderAuditWork(){
   const el=document.getElementById('auditWork');
   const rows=auditState.ids.map(id=>bStock().find(s=>s.id===id)).filter(Boolean);
-  if(!rows.length) el.innerHTML='<div class="audit-work-empty">Pilih barang di panel kiri untuk mulai menghitung stok fisik.</div>';
-  else el.innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Barang</th><th class="num">Sistem</th><th class="num">Fisik</th><th class="num">Selisih</th><th><span class="sr-only">Hapus</span></th></tr></thead><tbody>${rows.map(s=>{
-    const p=auditPhysOf(s), d=p===''?0:p-s.qty;
-    return `<tr><td class="audit-row-name"><b>${escH(s.name)}</b></td><td class="num">${s.qty}</td>
-      <td class="num"><input type="number" inputmode="numeric" min="0" step="1" class="audit-phys" id="audit_${s.id}" value="${p}" aria-label="Stok fisik ${escH(s.name)}" oninput="auditPhysChanged('${s.id}')"></td>
-      <td class="num" id="diff_${s.id}">${p===''?'-':auditDiffHTML(d)}</td>
-      <td><button type="button" class="btn btn-tool btn-icon" onclick="auditRemove('${s.id}')" aria-label="Hapus ${escH(s.name)} dari audit">${AUDIT_IC_X}</button></td></tr>`; }).join('')}</tbody></table></div>`;
+  el.innerHTML=rows.length?rows.map(s=>`<div class="audit-row${auditState.last===s.id?' last':''}" id="arow_${s.id}">
+      <div class="ar-name"><b>${escH(s.name)}</b><span class="api-sub">${auditSub(s)}</span></div>
+      <input type="number" inputmode="numeric" min="0" step="1" class="audit-phys" id="audit_${s.id}" value="${auditPhysOf(s)}" aria-label="Stok fisik ${escH(s.name)}" oninput="auditPhysChanged('${s.id}')">
+      <button type="button" class="ar-del" onclick="auditRemove('${s.id}')" aria-label="Keluarkan ${escH(s.name)} dari audit"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>`).join(''):'<div class="audit-work-empty">Pilih barang di sebelah kiri.</div>';
   auditUpdateFoot();
 }
 function auditUpdateFoot(){
   const rows=auditState.ids.map(id=>bStock().find(s=>s.id===id)).filter(Boolean);
-  const nDiff=rows.filter(s=>{ const p=auditPhysOf(s); return p!==''&&Number(p)!==s.qty; }).length;
+  const sum=rows.reduce((t,s)=>t+(auditDeltaOf(s)||0),0);
   document.getElementById('auditCountItems').textContent=rows.length;
-  document.getElementById('auditCountDiff').textContent=nDiff;
-  document.getElementById('auditSaveBtn').disabled=!rows.length;
+  document.getElementById('auditCountDiff').textContent=(sum>0?'+':'')+sum;
+  document.getElementById('auditSaveBtn').disabled=!rows.length&&!(auditState.edit&&auditState.edit.keep.length);
   document.getElementById('auditClearBtn').disabled=!rows.length && !auditState.note;
   const info=document.getElementById('auditDraftInfo');
-  info.textContent=auditState.savedAt?'Draft tersimpan '+new Date(auditState.savedAt).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
+  info.textContent=!auditState.edit&&auditState.savedAt?'Draft tersimpan '+new Date(auditState.savedAt).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
 }
-function auditAdd(id){
-  if(auditState.ids.includes(id)) return;
-  auditState.ids.push(id); auditPersist(); renderAuditPick(); renderAuditWork();
-  const inp=document.getElementById('audit_'+id); if(inp){ inp.focus(); inp.select(); }
-}
-function auditAddVisible(){
-  auditVisible().forEach(s=>{ if(!auditState.ids.includes(s.id)) auditState.ids.push(s.id); });
+function auditTap(id){
+  if(!bStock().some(x=>x.id===id)) return;
+  if(!auditState.ids.includes(id)){ auditState.ids.push(id); auditState.phys[id]=1; }
+  else auditState.phys[id]=(Number(auditState.phys[id])||0)+1;
+  auditState.last=id;
   auditPersist(); renderAuditPick(); renderAuditWork();
+  const row=document.getElementById('arow_'+id), list=document.getElementById('auditWork');
+  if(row&&list&&list.scrollHeight>list.clientHeight) list.scrollTop=row.offsetTop-list.clientHeight/2+row.clientHeight/2;
 }
+const auditAdd=auditTap;
 function auditRemove(id){
   auditState.ids=auditState.ids.filter(x=>x!==id); delete auditState.phys[id];
+  if(auditState.last===id) auditState.last=null;
   auditPersist(); renderAuditPick(); renderAuditWork();
 }
 function auditClearAll(){
@@ -3257,12 +3311,9 @@ function auditClearAll(){
   auditPersist(); renderAuditPick(); renderAuditWork();
 }
 function auditPhysChanged(id){
-  const s=bStock().find(x=>x.id===id); if(!s) return;
   const raw=document.getElementById('audit_'+id).value;
   auditState.phys[id]=raw==='' ? '' : Number(raw);
-  const cell=document.getElementById('diff_'+id);
-  cell.innerHTML=raw===''?'-':auditDiffHTML(Number(raw)-s.qty);
-  auditPersist(); auditUpdateFoot();
+  auditPersist(); auditUpdateFoot(); renderAuditPick();
 }
 function auditNoteChanged(){ auditState.note=document.getElementById('auditNote').value; auditPersist(); auditUpdateFoot(); }
 function auditSaveDraft(){ auditPersist(); auditUpdateFoot(); }
@@ -3293,6 +3344,90 @@ async function saveAudit(){
   alert('Audit tersimpan & stok disesuaikan.'); renderAll();
   await dbCall(sb.from('audits').insert(toDbAudit(na)), 'simpan audit');
   await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update(toDbStock(s)).eq('id',s.id), 'update stok dari audit')));
+}
+/* Ubah audit tersimpan seperti Kelola: halaman Stok Audit yang sama dibuka dalam
+   mode ubah, kanan berisi barang yang sudah diaudit dengan angkanya, kiri daftar
+   semua barang untuk menambah lagi. Stok digeser sebesar perubahannya, bukan
+   disetel ulang, supaya transaksi setelah audit tidak hilang:
+   - barang lama yang fisiknya diubah: stok += fisik baru - fisik lama
+   - barang tambahan: stok disamakan dengan hitungan fisik
+   - barang yang dikeluarkan: selisihnya dulu dibatalkan (stok -= selisih) */
+let auditStash=null;
+function openEditAudit(id){
+  if(currentUser.role!=='owner'&&!canAccess('audit')){ alert('Anda tidak punya akses mengubah audit'); return; }
+  const a=audits.find(x=>x.id===id); if(!a) return;
+  if(a.branch!==currentBranch){ alert('Pindah ke cabang audit ini dulu untuk mengubahnya.'); return; }
+  auditLoadState();
+  if(!auditState.edit) auditStash=auditState;
+  const orig={}, phys={}, ids=[], keep=[];
+  const have=new Set(bStock().map(s=>s.id));
+  (a.items||[]).forEach(i=>{
+    if(i.id&&have.has(i.id)){ orig[i.id]={system:i.system,physical:i.physical,name:i.name}; phys[i.id]=i.physical; ids.push(i.id); }
+    else keep.push(i); /* barangnya sudah dihapus dari stok: catatannya dibiarkan apa adanya */
+  });
+  auditState={branch:currentBranch,ids,phys,note:auditNoteOf(a),savedAt:null,edit:{id,date:a.date,by:a.by,orig,keep}};
+  document.getElementById('auditSearch').value='';
+  navTo('audit'); renderAudit(); scrollTo({top:0,behavior:'instant'});
+}
+function auditResetEdit(){
+  const ed=auditState.edit; if(!ed) return;
+  if(!confirm('Kembalikan daftar ke isi audit semula? Perubahan yang belum diperbarui hilang.')) return;
+  const stash=auditStash; openEditAudit(ed.id); auditStash=stash;
+}
+function auditCancelEdit(){
+  auditState=auditStash&&auditStash.branch===currentBranch?auditStash:{branch:null,ids:[],phys:{},note:'',savedAt:null};
+  auditStash=null; renderAudit();
+}
+async function saveAuditEdit(){
+  const ed=auditState.edit, a=ed&&audits.find(x=>x.id===ed.id); if(!a) return;
+  const rows=auditState.ids.map(id=>bStock().find(s=>s.id===id)).filter(Boolean);
+  if(!rows.length&&!ed.keep.length){ alert('Audit harus berisi minimal satu barang.'); return; }
+  const note=auditState.note.trim();
+  const items=[], moves=[];
+  for(const s of rows){
+    const raw=auditPhysOf(s), p=raw===''?NaN:Number(raw);
+    if(!Number.isInteger(p)||p<0){ alert(`Isi stok fisik "${s.name}" dengan bilangan bulat 0 atau lebih.`); return; }
+    const o=ed.orig[s.id], sys=o?o.system:s.qty;
+    const d=o?p-o.physical:p-s.qty;
+    if(d) moves.push({s,d});
+    items.push({name:s.name,system:sys,physical:p,diff:p-sys,id:s.id});
+  }
+  Object.keys(ed.orig).forEach(id=>{
+    if(auditState.ids.includes(id)) return;
+    const s=bStock().find(x=>x.id===id), o=ed.orig[id], d=-(o.physical-o.system);
+    if(s&&d) moves.push({s,d});
+  });
+  const neg=moves.find(m=>m.s.qty+m.d<0);
+  if(neg){ alert(`Stok "${neg.s.name}" akan jadi minus (${neg.s.qty+neg.d}). Periksa lagi hitungannya.`); return; }
+  if(!confirm(moves.length?`Perbarui audit? Stok ${moves.length} barang ikut disesuaikan:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'Perbarui audit? Stok barang tidak berubah.')) return;
+  const all=[...items,...ed.keep.map(i=>({...i}))];
+  all.forEach(i=>{ if(note) i.note=note; else delete i.note; });
+  const prev=a.items, prevQty=moves.map(m=>m.s.qty);
+  a.items=all; moves.forEach(m=>{ m.s.qty+=m.d; });
+  auditState={branch:null,ids:[],phys:{},note:'',savedAt:null}; if(auditStash){ auditState=auditStash; auditStash=null; }
+  renderAll();
+  const ok=await dbCall(sb.from('audits').update(toDbAudit(a)).eq('id',a.id), 'ubah audit');
+  if(!ok){ a.items=prev; moves.forEach((m,k)=>{ m.s.qty=prevQty[k]; }); renderAll(); return; }
+  await Promise.all(moves.map(m=>dbCall(sb.from('stock').update(toDbStock(m.s)).eq('id',m.s.id), 'update stok dari ubah audit')));
+  alert('Audit diperbarui.');
+}
+/* Hapus audit: selisih yang dulu diterapkan dibatalkan (stok -= selisih), seperti
+   peringatan Kelola bahwa inventori ikut terpengaruh. Barang yang sudah dihapus
+   dari stok dilewati. */
+async function delAudit(id){
+  if(currentUser.role!=='owner'&&!canAccess('hapus_transaksi')){ alert('Anda tidak punya akses menghapus transaksi'); return; }
+  const a=audits.find(x=>x.id===id); if(!a) return;
+  const moves=(a.items||[]).filter(i=>i.diff).map(i=>({s:stock.find(x=>x.id===i.id),d:-i.diff})).filter(m=>m.s);
+  const neg=moves.find(m=>m.s.qty+m.d<0);
+  if(neg){ alert(`Audit tidak bisa dihapus: stok "${neg.s.name}" akan jadi minus (${neg.s.qty+neg.d}).`); return; }
+  if(!confirm(`Hapus audit ${fmtDateShort(a.date)} oleh ${a.by||'-'}?`+(moves.length?`\n\nSelisihnya dibatalkan, stok ${moves.length} barang kembali:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'\n\nStok barang tidak berubah.'))) return;
+  if(auditState.edit&&auditState.edit.id===id) auditCancelEdit();
+  const idx=audits.indexOf(a), prevQty=moves.map(m=>m.s.qty);
+  audits.splice(idx,1); moves.forEach(m=>{ m.s.qty+=m.d; });
+  closeModal(); renderAll();
+  const ok=await dbCall(sb.from('audits').delete().eq('id',id), 'hapus audit');
+  if(!ok){ audits.splice(idx,0,a); moves.forEach((m,k)=>{ m.s.qty=prevQty[k]; }); renderAll(); return; }
+  await Promise.all(moves.map(m=>dbCall(sb.from('stock').update(toDbStock(m.s)).eq('id',m.s.id), 'kembalikan stok dari hapus audit')));
 }
 function renderAuditHistory(){
   const box=document.getElementById('auditHistory');
@@ -4824,7 +4959,8 @@ function riwDetailHTML(e){
       <div style="overflow-x:auto"><table class="riw-d-table"><thead><tr><th>Nama</th><th class="num">Jumlah</th>${showCost?'<th class="num">Modal/unit</th>':''}</tr></thead><tbody><tr><td><b>${escH(p.itemName||'-')}</b></td><td class="num" data-l="Jumlah">+${p.qty||0}</td>${showCost?`<td class="num" data-l="Modal/unit">${rp(p.cost||0)}</td>`:''}</tr></tbody></table></div>`;
   }
   const a=e.rec, items=a.items||[], note=auditNoteOf(a);
-  return head('')
+  return head((owner||canAccess('audit')?iconBtn('Ubah audit',`riwAfterAction();openEditAudit('${a.id}')`,IC_EDIT):'')
+      +(owner||canAccess('hapus_transaksi')?iconBtn('Hapus audit',`delAudit('${a.id}')`,IC_TRASH):''))
     +`<div class="riw-d-sum"><div>${e.count} Barang <span class="dim">/</span> ${e.qty} selisih</div><div>Petugas: ${escH(a.by||'-')}</div></div>
     <div style="overflow-x:auto"><table class="riw-d-table"><thead><tr><th>Nama</th><th class="num">Stok</th><th class="num">Selisih</th></tr></thead><tbody>${items.map(i=>`<tr><td><b>${escH(i.name)}</b></td><td class="num" data-l="Stok">${i.system} &rarr; ${i.physical}</td><td class="num" data-l="Selisih">${auditDiffHTML(i.diff)}</td></tr>`).join('')}</tbody></table></div>
     <div class="riw-d-more"><span>Lainnya</span></div>${kv('Catatan',escH(note||'-'))}`;
