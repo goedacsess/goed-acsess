@@ -278,6 +278,9 @@
      ikut melar saat lebar berubah, dan label sumbu jadi berdesakan lalu miring. */
   .dash-chart-wrap{ position:relative; height:300px; }
   @media(max-width:900px){ .dash-chart-wrap{ height:260px; } }
+  /* Grafik dengan maintainAspectRatio:false WAJIB di wadah bertinggi tetap. Tanpa itu
+     Chart.js mengikuti tinggi wadah, wadah ikut membesar, dan grafik memanjang terus. */
+  .dash-chart-wrap.dash-chart-sm{ height:240px; }
   .chart-legend-row .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; }
 
   .asset-mini-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
@@ -1187,11 +1190,11 @@
         <div class="breakdown-grid">
           <div class="breakdown-box">
             <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Kontribusi Omset per Seri Perangkat</h4>
-            <canvas id="dashDeviceChart" height="150"></canvas>
+            <div class="dash-chart-wrap dash-chart-sm"><canvas id="dashDeviceChart"></canvas></div>
           </div>
           <div class="breakdown-box">
             <h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple-t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Komposisi Metode Pembayaran Masuk</h4>
-            <canvas id="dashPaymentChart" height="150"></canvas>
+            <div class="dash-chart-wrap dash-chart-sm"><canvas id="dashPaymentChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -4156,7 +4159,7 @@ function renderDashCharts(){
     const dc=document.getElementById('dashDeviceChart');
     if(dc) dashDeviceChartInstance=new Chart(dc.getContext('2d'),{type:'bar', data:{labels:d.deviceSeriesData.map(x=>x.name), datasets:[{label:'Omset Servis', data:d.deviceSeriesData.map(x=>x.revenue), backgroundColor:'#0F6E56', borderRadius:4}]}, options:dashChartOpts()});
     const pc=document.getElementById('dashPaymentChart');
-    if(pc && d.paymentData.length) dashPaymentChartInstance=new Chart(pc.getContext('2d'),{type:'doughnut', data:{labels:d.paymentData.map(x=>x.name), datasets:[{data:d.paymentData.map(x=>x.value), backgroundColor:['#0F6E56','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#10B981','#64748B']}]}, options:{responsive:true, plugins:{legend:{position:'bottom'}}}});
+    if(pc && d.paymentData.length) dashPaymentChartInstance=new Chart(pc.getContext('2d'),{type:'doughnut', data:{labels:d.paymentData.map(x=>x.name), datasets:[{data:d.paymentData.map(x=>x.value), backgroundColor:['#0F6E56','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#10B981','#64748B']}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}}});
   }
 }
 function renderDashboard(){
