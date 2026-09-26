@@ -1669,7 +1669,7 @@ function ssFilter(baseId){
   const q = (qEl.value||'').toLowerCase();
   const dd = document.getElementById(baseId+'_dd');
   const matches = d.options.filter(o=>o.label.toLowerCase().includes(q)).slice(0,60);
-  dd.innerHTML = matches.length ? matches.map(o=>`<div class="ss-item" onclick="ssPick('${baseId}','${String(o.value).replace(/'/g,"\\'")}')"><span>${o.label}</span>${o.sub?`<span class="ss-sub">${o.sub}</span>`:''}</div>`).join('') : '<div class="ss-empty">Tidak ditemukan</div>';
+  dd.innerHTML = matches.length ? matches.map(o=>`<div class="ss-item" onclick="ssPick('${baseId}','${String(o.value).replace(/'/g,"\\'")}')"><span>${escH(o.label)}</span>${o.sub?`<span class="ss-sub">${escH(o.sub)}</span>`:''}</div>`).join('') : '<div class="ss-empty">Tidak ditemukan</div>';
   dd.classList.remove('hidden');
 }
 function ssPick(baseId, value){
@@ -1687,6 +1687,21 @@ document.addEventListener('click', function(e){
 });
 
 // Helper: panggil Supabase, kasih peringatan kalau gagal (tanpa hentikan aplikasi)
+/* Stok diubah di server sebagai "tambah/kurangi sekian" (fungsi ubah_stok dari
+   supabase/migrasi-3), bukan menimpa angka akhir: dua perangkat yang menjual barang
+   sama bersamaan tidak lagi saling menimpa. Selama migrasinya belum dijalankan,
+   jatuh kembali ke cara lama. */
+let ubahStokRpc=true;
+async function dbUbahStok(s, delta, label){
+  if(!delta || DEMO_MODE) return true;
+  if(ubahStokRpc){
+    const {data,error}=await sb.rpc('ubah_stok',{p_id:s.id,p_delta:delta});
+    if(!error){ if(Number.isFinite(data)) s.qty=data; return true; }
+    if(error.code==='PGRST202' || /could not find the function/i.test(error.message||'')) ubahStokRpc=false;
+    else { console.error(label,error); alert('Gagal sinkron ke server ('+label+'): '+error.message); return false; }
+  }
+  return dbCall(sb.from('stock').update({qty:s.qty}).eq('id',s.id), label);
+}
 async function dbCall(promise, label, silent){
   /* Query Supabase baru dikirim saat di-await, jadi keluar lebih awal di sini
      membuat sesi demo tidak pernah menyentuh jaringan sama sekali. */
@@ -1703,6 +1718,7 @@ async function dbCall(promise, label, silent){
 function toDbUser(u){ return {id:u.id, name:u.name, username:u.user, role:u.role, branch_id:u.branch||null}; }
 function fromDbUser(r){ return {id:r.id, name:r.name, user:r.username, role:r.role, branch:r.branch_id, authId:r.auth_id}; }
 function fromDbBranch(r){ return {id:r.id, name:r.name, addr:r.addr, phone:r.phone}; }
+function toDbStockInfo(s){ const d=toDbStock(s); delete d.qty; return d; }
 function toDbStock(s){ return {id:s.id, branch_id:s.branch, name:s.name, sku:s.sku, category:s.category||null, qty:s.qty, min_qty:s.min, cost:s.cost, price:s.price}; }
 function fromDbStock(r){ return {id:r.id, branch:r.branch_id, name:r.name, sku:r.sku, category:r.category, qty:r.qty, min:r.min_qty, cost:r.cost, price:r.price}; }
 function toDbService(s){ return {id:s.id, branch_id:s.branch, inv:s.inv, service_date:s.date, cust:s.cust, phone:s.phone, device:s.device, issue:s.issue, parts:s.parts, part_name:s.partName, part_cost:s.partCost, part_price:s.partPrice, jasa:s.jasa, revenue:s.revenue, cogs:s.cogs, status:s.status, paid_amount:s.paidAmount, payment_method:s.paymentMethod}; }
@@ -1979,11 +1995,11 @@ function openEditPaymentMethodModal(type,id){
   const src = type==='service'?services : type==='purchase'?purchases : expenses;
   const rec = src.find(x=>x.id===id);
   if(!rec) return;
-  const label = type==='service'?`${rec.inv} • ${rec.cust}` : type==='purchase'?rec.itemName : (rec.desc||rec.cat);
+  const label = type==='service'?`${escH(rec.inv)} • ${escH(rec.cust)}` : type==='purchase'?rec.itemName : (rec.desc||rec.cat);
   showModal(`<h3>Ubah Metode Pembayaran</h3>
     <p style="color:var(--gray);font-size:14px;margin-bottom:12px">${label}</p>
-    <label>Metode Pembayaran</label><input id="edit_paymethod" list="edit_paymethodList" value="${rec.paymentMethod||'Cash'}">
-    <datalist id="edit_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
+    <label>Metode Pembayaran</label><input id="edit_paymethod" list="edit_paymethodList" value="${escH(rec.paymentMethod||'Cash')}">
+    <datalist id="edit_paymethodList">${paymentMethodOptions().map(m=>`<option value="${escH(m)}">`).join('')}</datalist>
     <div class="flex-row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="saveEditPaymentMethod('${type}','${id}')">Simpan</button></div>`);
 }
 async function saveEditPaymentMethod(type,id){
@@ -2151,7 +2167,7 @@ function canAccess(permKey){
 function initApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('userBox').innerHTML = `<b>${currentUser.name}</b><br><span style="font-size:11.5px;text-transform:capitalize">${currentUser.role}</span>`;
+  document.getElementById('userBox').innerHTML = `<b>${escH(currentUser.name)}</b><br><span style="font-size:11.5px;text-transform:capitalize">${currentUser.role}</span>`;
   if(currentUser.role==='kasir' && currentUser.branch && branches.some(b=>b.id===currentUser.branch)){
     currentBranch = currentUser.branch;
   } else if(currentUser.role==='manajer' && currentUser.branch){
@@ -2334,9 +2350,9 @@ function renderBranchSelect(){
   } else if(currentUser.role==='manajer'){
     const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
     const myBranchObjs=branches.filter(b=>myBranches.includes(b.id));
-    wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${myBranchObjs.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>`;
+    wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${myBranchObjs.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${escH(b.name)}</option>`).join('')}</select>`;
   } else {
-    wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>`;
+    wrap.innerHTML = `<select id="branchSelect" onchange="switchBranch(this.value)">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${escH(b.name)}</option>`).join('')}</select>`;
   }
 }
 function switchBranch(id){
@@ -2353,9 +2369,9 @@ function switchBranch(id){
 function openBranchModal(id){
   const b=id? branches.find(x=>x.id===id):{name:'',addr:'',phone:''};
   showModal(`<h3>${id?'Edit':'Tambah'} Cabang</h3>
-    <label>Nama Cabang</label><input id="b_name" value="${b.name}">
-    <label>Alamat</label><input id="b_addr" value="${b.addr||''}">
-    <label>Telepon</label><input id="b_phone" value="${b.phone||''}">
+    <label>Nama Cabang</label><input id="b_name" value="${escH(b.name)}">
+    <label>Alamat</label><input id="b_addr" value="${escH(b.addr||'')}">
+    <label>Telepon</label><input id="b_phone" value="${escH(b.phone||'')}">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveBranch('${id||''}')">Simpan</button></div>`);
 }
 async function saveBranch(id){
@@ -2392,19 +2408,19 @@ async function delBranch(id){
 }
 function renderBranchTable(){
   document.getElementById('branchTable').innerHTML=`<table class="tbl-stack"><thead><tr><th>Nama</th><th>Alamat</th><th>Telepon</th><th></th></tr></thead><tbody>`+
-    branches.map(b=>`<tr><td class="td-head" data-l=""><b>${b.name}</b></td><td data-l="Alamat">${b.addr||'-'}</td><td data-l="Telepon">${b.phone||'-'}</td>
+    branches.map(b=>`<tr><td class="td-head" data-l=""><b>${escH(b.name)}</b></td><td data-l="Alamat">${escH(b.addr||'-')}</td><td data-l="Telepon">${escH(b.phone||'-')}</td>
     <td class="td-act"><div class="row-actions"><button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openBranchModal('${b.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button> <button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delBranch('${b.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></td></tr>`).join('')+`</tbody></table>`;
 }
 
 /* ============ USERS ============ */
 function openUserModal(id){
   const u=id? users.find(x=>x.id===id):{name:'',user:'',pass:'',role:'kasir',branch:currentBranch};
-  const branchOpts = branches.map(b=>`<option value="${b.id}" ${u.branch===b.id?'selected':''}>${b.name}</option>`).join('');
+  const branchOpts = branches.map(b=>`<option value="${b.id}" ${u.branch===b.id?'selected':''}>${escH(b.name)}</option>`).join('');
   const uBranchIds = (u.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
-  const branchChecks = branches.map(b=>`<div class="perm-item"><input type="checkbox" id="ub_${b.id}" value="${b.id}" ${uBranchIds.includes(b.id)?'checked':''}><label for="ub_${b.id}">${b.name}</label></div>`).join('');
+  const branchChecks = branches.map(b=>`<div class="perm-item"><input type="checkbox" id="ub_${b.id}" value="${b.id}" ${uBranchIds.includes(b.id)?'checked':''}><label for="ub_${b.id}">${escH(b.name)}</label></div>`).join('');
   showModal(`<h3>${id?'Edit':'Tambah'} User</h3>
-    <label>Nama Lengkap</label><input id="u_name" value="${u.name}">
-    <label>Username</label><input id="u_user" value="${u.user}">
+    <label>Nama Lengkap</label><input id="u_name" value="${escH(u.name)}">
+    <label>Username</label><input id="u_user" value="${escH(u.user)}">
     <label>Password</label><input id="u_pass" type="password" value="" placeholder="${id?'Kosongkan bila tidak diganti':'Minimal 6 karakter'}">
     <label>Role</label><select id="u_role" onchange="toggleUserBranchField()">
       <option value="kasir" ${u.role==='kasir'?'selected':''}>Kasir (1 cabang, akses terbatas)</option>
@@ -2475,7 +2491,7 @@ async function delUser(id){
 
 function renderUserTable(){
   document.getElementById('userTable').innerHTML=`<table class="tbl-stack"><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Cabang</th><th></th></tr></thead><tbody>`+
-    users.map(u=>`<tr><td class="td-head" data-l=""><b>${u.name}</b></td><td data-l="Username">${u.user}</td><td data-l="Role"><span class="badge ${u.role==='owner'?'badge-ok':u.role==='manajer'?'badge-info':'badge-mid'}">${u.role}</span></td>
+    users.map(u=>`<tr><td class="td-head" data-l=""><b>${escH(u.name)}</b></td><td data-l="Username">${escH(u.user)}</td><td data-l="Role"><span class="badge ${u.role==='owner'?'badge-ok':u.role==='manajer'?'badge-info':'badge-mid'}">${u.role}</span></td>
     <td data-l="Cabang">${u.role==='owner'?'<span style="color:var(--gray)">Semua cabang</span>':u.role==='manajer'?(u.branch?u.branch.split(',').map(x=>branchName(x.trim())).join(', '):'-'):branchName(u.branch)}</td>
     <td class="td-act"><div class="row-actions"><button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openUserModal('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button> <button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delUser('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></td></tr>`).join('')+`</tbody></table>`;
 }
@@ -2812,11 +2828,11 @@ function openStockModal(id){
   const isOwner = currentUser.role==='owner';
   const allCats=[...new Set([...CATEGORY_LIST, ...stock.map(x=>x.category).filter(Boolean)])].sort();
   showModal(`<h3>${id?'Edit':'Tambah'} Sparepart</h3>
-    <label>Nama Sparepart</label><input id="m_name" value="${s.name}">
+    <label>Nama Sparepart</label><input id="m_name" value="${escH(s.name)}">
     <div class="form-grid">
-      <div><label>Kode / SKU</label><input id="m_sku" value="${s.sku}"></div>
-      <div><label>Kategori</label><input id="m_category" list="categoryList" value="${s.category||''}" placeholder="Pilih atau ketik kategori baru">
-        <datalist id="categoryList">${allCats.map(c=>`<option value="${c}">`).join('')}</datalist>
+      <div><label>Kode / SKU</label><input id="m_sku" value="${escH(s.sku)}"></div>
+      <div><label>Kategori</label><input id="m_category" list="categoryList" value="${escH(s.category||'')}" placeholder="Pilih atau ketik kategori baru">
+        <datalist id="categoryList">${allCats.map(c=>`<option value="${escH(c)}">`).join('')}</datalist>
         <div style="font-size:11.5px;color:var(--gray);margin-top:-8px;margin-bottom:12px">Belum ada kategorinya? Langsung ketik nama kategori baru di sini.</div>
       </div>
     </div>
@@ -2829,12 +2845,15 @@ function openStockModal(id){
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveStock('${id||''}')">Simpan</button></div>`);
 }
 async function saveStock(id){
-  const d={name:val('m_name'),sku:val('m_sku'),category:val('m_category'),qty:+val('m_qty'),min:+val('m_min'),cost:valRp('m_cost'),price:valRp('m_price')};
+  const d={name:val('m_name').trim(),sku:val('m_sku'),category:val('m_category'),qty:Number(val('m_qty')||0),min:Number(val('m_min')||0),cost:valRp('m_cost'),price:valRp('m_price')};
   if(!d.name){alert('Nama wajib');return;}
+  if(!Number.isInteger(d.qty)||d.qty<0){alert('Stok harus bilangan bulat 0 atau lebih.');return;}
+  if(!Number.isInteger(d.min)||d.min<0){alert('Stok minimum harus bilangan bulat 0 atau lebih.');return;}
+  if(!(d.cost>=0)||!(d.price>=0)){alert('Harga modal dan harga jual tidak boleh minus.');return;}
   if(id){
-    const item=stock.find(x=>x.id===id); Object.assign(item,d);
+    const item=stock.find(x=>x.id===id); const delta=d.qty-item.qty; Object.assign(item,d);
     closeModal(); renderAll();
-    await dbCall(sb.from('stock').update(toDbStock(item)).eq('id',id), 'edit stok');
+    if(await dbCall(sb.from('stock').update(toDbStockInfo(item)).eq('id',id), 'edit stok')) await dbUbahStok(item, delta, 'edit stok');
   } else {
     if(demoTolakTambah()) return;
     const ns={id:gid(),branch:currentBranch,...d}; stock.push(ns);
@@ -2874,7 +2893,7 @@ function renderStok(q=''){
   if(catSelect){
     const usedCats=[...new Set(bStock().map(s=>s.category).filter(Boolean))].sort();
     const cur=catSelect.value;
-    catSelect.innerHTML=`<option value="">Semua Kategori</option>`+usedCats.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
+    catSelect.innerHTML=`<option value="">Semua Kategori</option>`+usedCats.map(c=>`<option value="${escH(c)}" ${c===cur?'selected':''}>${escH(c)}</option>`).join('');
   }
   if(!list.length){
     const disaring=q||catFilter;
@@ -2887,7 +2906,7 @@ function renderStok(q=''){
     /* .sk-sub hanya tampil di HP: di sana kolom modal, jual, dan SKU dilipat
        ke bawah nama supaya tabel tidak perlu digulir ke samping. */
     const sub=`<span class="sk-sub">${showModal_cost?`<span class="sk-c"><i aria-hidden="true">▾</i>${rp(s.cost)}</span>`:''}<span class="sk-p"><i aria-hidden="true">▴</i>${rp(s.price)}</span><span class="sk-k">${escH(s.sku||'-')}</span></span>`;
-    return `<tr><td class="sk-main" style="cursor:pointer" onclick="openStockHistoryModal('${s.id}')"><b>${s.name}</b><br><span class="sk-sku" style="color:var(--gray);font-size:12px">${s.sku||'-'}</span>${s.category?`<br><span class="badge badge-mid sk-cat">${s.category}</span>`:''}${sub}</td>
+    return `<tr><td class="sk-main" style="cursor:pointer" onclick="openStockHistoryModal('${s.id}')"><b>${escH(s.name)}</b><br><span class="sk-sku" style="color:var(--gray);font-size:12px">${escH(s.sku||'-')}</span>${s.category?`<br><span class="badge badge-mid sk-cat">${escH(s.category)}</span>`:''}${sub}</td>
       <td class="qty-cell sk-qty">${s.qty} ${b}</td>
       <td class="sk-col">${showModal_cost?rp(s.cost):'<span style="color:var(--gray)">-</span>'}</td>
       <td class="sk-col">${rp(s.price)}</td>
@@ -2908,23 +2927,23 @@ function openStockHistoryModal(stockId){
   if(!s){ alert('Item tidak ditemukan'); return; }
   let events=[];
   bPurchases().filter(p=>p.itemId===stockId).forEach(p=>{
-    events.push({date:p.date, type:'masuk', qty:p.qty, ket:`Pembelian dari ${p.supplier||'-'}`});
+    events.push({date:p.date, type:'masuk', qty:p.qty, ket:`Pembelian dari ${escH(p.supplier||'-')}`});
   });
   bServices().forEach(t=>{
     (t.parts||[]).filter(part=>part.partId===stockId).forEach(part=>{
-      events.push({date:t.date, type:'keluar', qty:-(part.qty||1), ket:`Servis ${t.inv} • ${t.cust}`});
+      events.push({date:t.date, type:'keluar', qty:-(part.qty||1), ket:`Servis ${escH(t.inv)} • ${escH(t.cust)}`});
     });
   });
   bAudits().forEach(a=>{
     (a.items||[]).filter(i=>i.id===stockId && i.diff!==0).forEach(i=>{
-      events.push({date:a.date, type:'audit', qty:i.diff, ket:`Audit oleh ${a.by} (${i.system}→${i.physical})`});
+      events.push({date:a.date, type:'audit', qty:i.diff, ket:`Audit oleh ${escH(a.by)} (${i.system}→${i.physical})`});
     });
   });
   events.sort((a,b)=>b.date.localeCompare(a.date));
   const typeLabel={masuk:'Masuk',keluar:'Keluar',audit:'Audit'};
   const typeBadge={masuk:'badge-ok',keluar:'badge-low',audit:'badge-mid'};
   const rows=events.length? events.map(e=>`<tr><td>${e.date}</td><td><span class="badge ${typeBadge[e.type]}">${typeLabel[e.type]}</span></td><td>${e.ket}</td><td class="${e.qty>0?'green':'red'}">${e.qty>0?'+':''}${e.qty}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--gray)">Belum ada riwayat</td></tr>`;
-  showModal(`<h3>Riwayat Stok: ${s.name}</h3>
+  showModal(`<h3>Riwayat Stok: ${escH(s.name)}</h3>
     <p style="color:var(--gray);font-size:14px;margin-bottom:12px">Stok saat ini: <b>${s.qty}</b></p>
     <div style="max-height:400px;overflow-y:auto"><table><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Qty</th></tr>${rows}</table></div>
     <div class="flex-row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
@@ -2937,7 +2956,7 @@ const stClass={Antri:'st-antri',Proses:'st-proses',Selesai:'st-selesai',Diambil:
 let partRows = [];
 
 function getStockOpts(){
-  return bStock().map(s=>`<option value="${s.id}">${s.name} (stok:${s.qty}) - ${rp(s.price)}</option>`).join('');
+  return bStock().map(s=>`<option value="${s.id}">${escH(s.name)} (stok:${s.qty}) - ${rp(s.price)}</option>`).join('');
 }
 function addPartRow(){
   const rowId = gid();
@@ -2984,7 +3003,7 @@ function openServiceModal(){
       <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
     </div>
     <label>Metode Pembayaran</label><input id="s_paymethod" list="s_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
-    <datalist id="s_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
+    <datalist id="s_paymethodList">${paymentMethodOptions().map(m=>`<option value="${escH(m)}">`).join('')}</datalist>
     <label style="margin-bottom:10px">Sparepart Digunakan</label>
     <div id="partRowsContainer" style="margin-bottom:8px"></div>
     <button type="button" class="btn btn-gray btn-sm" onclick="addPartRow()" style="margin-bottom:16px">+ Tambah Sparepart</button>
@@ -3047,27 +3066,29 @@ async function saveService(){
     alert('TRANSAKSI TIDAK TERSIMPAN.\n\nKoneksi ke server bermasalah, jadi nota '+inv+' dibatalkan dan stok dikembalikan.\n\nPeriksa koneksi internet, lalu input ulang transaksinya.');
     return;
   }
-  await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update(toDbStock(s)).eq('id',s.id), 'update stok setelah servis')));
+  await Promise.all(rowsToApply.map(({s,qty})=>dbUbahStok(s, -qty, 'update stok setelah servis')));
 }
 
 async function delService(id){
   if(!canAccess('hapus_transaksi') && currentUser.role!=='owner'){alert('Anda tidak punya akses hapus transaksi');return;}
   if(!confirm('Hapus & kembalikan stok?'))return;
-  const t=services.find(x=>x.id===id);
-  let stockUpdates=[];
-  if(t && t.parts && t.parts.length){
-    t.parts.forEach(p=>{ const s=stock.find(x=>x.id===p.partId); if(s){ s.qty+=(p.qty||1); stockUpdates.push(s); } });
-  }
+  const t=services.find(x=>x.id===id); if(!t) return;
+  const idx=services.indexOf(t);
+  const back=(t.parts||[]).map(p=>({s:stock.find(x=>x.id===p.partId),q:p.qty||1})).filter(b=>b.s);
+  back.forEach(b=>{ b.s.qty+=b.q; });
   services=services.filter(x=>x.id!==id);
   renderAll();
-  await dbCall(sb.from('services').delete().eq('id',id), 'hapus transaksi');
-  await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update(toDbStock(s)).eq('id',s.id), 'kembalikan stok')));
+  /* Stok baru dikembalikan setelah transaksinya benar-benar terhapus di server.
+     Kalau hapus gagal, transaksi dan stok di layar dikembalikan seperti semula. */
+  const ok=await dbCall(sb.from('services').delete().eq('id',id), 'hapus transaksi');
+  if(!ok){ back.forEach(b=>{ b.s.qty-=b.q; }); services.splice(idx,0,t); renderAll(); return; }
+  await Promise.all(back.map(b=>dbUbahStok(b.s, b.q, 'kembalikan stok')));
 }
 
 function changeStatus(id){
   const t=services.find(x=>x.id===id);
   const opts=STATUSES.map(x=>`<button class="btn btn-sm ${stClass[x]}" style="margin:4px" onclick="setStatus('${id}','${x}')">${x}</button>`).join('');
-  showModal(`<h3>Ubah Status: ${t.inv}</h3><p style="color:var(--gray);margin-bottom:16px">${t.cust} • ${t.device}</p>${opts}<div style="margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
+  showModal(`<h3>Ubah Status: ${escH(t.inv)}</h3><p style="color:var(--gray);margin-bottom:16px">${escH(t.cust)} • ${escH(t.device)}</p>${opts}<div style="margin-top:16px"><button class="btn btn-gray" onclick="closeModal()">Tutup</button></div>`);
 }
 async function setStatus(id,st){
   const t=services.find(x=>x.id===id);
@@ -3100,12 +3121,12 @@ function renderTransaksi(q=''){
     return;
   }
   let rows=list.map(t=>`<tr>
-    <td class="td-head" data-l=""><b>${t.inv}</b><br><span style="color:var(--gray);font-size:12px">${t.date}</span></td>
-    <td data-l="Customer"><span><b>${t.cust}</b><br><span style="color:var(--gray);font-size:12px">${t.device}</span></span></td>
-    <td data-l="Servis"><span>${t.issue}<br><span style="color:var(--gray);font-size:12px" title="${(t.partName||'').replace(/"/g,'&quot;')}">${ringkasPart(t)}</span></span></td>
+    <td class="td-head" data-l=""><b>${escH(t.inv)}</b><br><span style="color:var(--gray);font-size:12px">${t.date}</span></td>
+    <td data-l="Customer"><span><b>${escH(t.cust)}</b><br><span style="color:var(--gray);font-size:12px">${escH(t.device)}</span></span></td>
+    <td data-l="Servis"><span>${escH(t.issue)}<br><span style="color:var(--gray);font-size:12px" title="${escH(t.partName||'')}">${escH(ringkasPart(t))}</span></span></td>
     <td data-l="Total">${rp(t.revenue)}</td>
     <td data-l="Profit">${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">-</span>'}</td>
-    <td data-l="Metode"><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('service','${t.id}')">${t.paymentMethod||'Cash'}</span></td>
+    <td data-l="Metode"><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('service','${t.id}')">${escH(t.paymentMethod||'Cash')}</span></td>
     <td data-l="Status"><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
     <td class="td-act"><div class="row-actions">
       <button class="btn btn-sm btn-icon btn-purple" title="Cetak Nota" onclick="printNota('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg></button>
@@ -3123,13 +3144,13 @@ function printNota(id){
   const w=window.open('','','width=380,height=600');
   let partLines='';
   if(t.parts&&t.parts.length){
-    t.parts.forEach(p=>{ partLines+=`<tr><td>${p.partName}${p.qty>1?' x'+p.qty:''}</td><td class="r">${rp(p.partPrice*(p.qty||1))}</td></tr>`; });
+    t.parts.forEach(p=>{ partLines+=`<tr><td>${escH(p.partName)}${p.qty>1?' x'+p.qty:''}</td><td class="r">${rp(p.partPrice*(p.qty||1))}</td></tr>`; });
   } else if(t.partName){
-    partLines=`<tr><td>${t.partName}</td><td class="r">${rp(t.partPrice)}</td></tr>`;
+    partLines=`<tr><td>${escH(t.partName)}</td><td class="r">${rp(t.partPrice)}</td></tr>`;
   }
   /* Jendela cetak ini about:blank, jadi URL font harus absolut supaya ketemu. */
   const fontUrl = n => new URL('vendor/fonts/'+n, location.href).href;
-  w.document.write(`<html><head><title>Nota ${t.inv}</title><style>
+  w.document.write(`<html><head><title>Nota ${escH(t.inv)}</title><style>
     @font-face{font-family:'Inter';font-weight:400 800;font-display:block;src:url('${fontUrl('inter-var.woff2')}') format('woff2');}
     body{font-family:'Inter','Segoe UI',Tahoma,sans-serif;font-size:12.5px;line-height:1.5;padding:16px;color:#000;-webkit-font-smoothing:antialiased;}
     .c{text-align:center;} .line{border-top:1px dashed #000;margin:9px 0;}
@@ -3140,20 +3161,20 @@ function printNota(id){
     .small{font-size:10.5px;color:#333;}
     td.lbl{color:#333;}
   </style></head><body>
-    <div class="c"><h2>${b.name||APP_NAME}</h2>
-    <div class="small">${b.addr||''}<br>${b.phone?'Telp: '+b.phone:''}</div></div>
+    <div class="c"><h2>${escH(b.name||APP_NAME)}</h2>
+    <div class="small">${escH(b.addr||'')}<br>${escH(b.phone?'Telp: '+b.phone:'')}</div></div>
     <div class="line"></div>
     <table>
-      <tr><td class="lbl">No</td><td class="r">${t.inv}</td></tr>
+      <tr><td class="lbl">No</td><td class="r">${escH(t.inv)}</td></tr>
       <tr><td class="lbl">Tanggal</td><td class="r">${t.date}</td></tr>
-      <tr><td class="lbl">Kasir</td><td class="r">${currentUser.name}</td></tr>
-      <tr><td class="lbl">Customer</td><td class="r">${t.cust}</td></tr>
-      ${t.phone?`<tr><td class="lbl">No.HP</td><td class="r">${t.phone}</td></tr>`:''}
-      <tr><td class="lbl">Device</td><td class="r">${t.device||'-'}</td></tr>
+      <tr><td class="lbl">Kasir</td><td class="r">${escH(currentUser.name)}</td></tr>
+      <tr><td class="lbl">Customer</td><td class="r">${escH(t.cust)}</td></tr>
+      ${t.phone?`<tr><td class="lbl">No.HP</td><td class="r">${escH(t.phone)}</td></tr>`:''}
+      <tr><td class="lbl">Device</td><td class="r">${escH(t.device||'-')}</td></tr>
     </table>
     <div class="line"></div>
     <table>
-      <tr><td>${t.issue||'Servis'}</td><td class="r">${rp(t.jasa)}</td></tr>
+      <tr><td>${escH(t.issue||'Servis')}</td><td class="r">${rp(t.jasa)}</td></tr>
       ${partLines}
     </table>
     <div class="line"></div>
@@ -3346,7 +3367,7 @@ async function saveAudit(){
   document.getElementById('auditNote').value='';
   alert('Audit tersimpan & stok disesuaikan.'); renderAll();
   await dbCall(sb.from('audits').insert(toDbAudit(na)), 'simpan audit');
-  await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update(toDbStock(s)).eq('id',s.id), 'update stok dari audit')));
+  await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update({qty:s.qty}).eq('id',s.id), 'update stok dari audit')));
 }
 /* Ubah audit tersimpan seperti Kelola: halaman Stok Audit yang sama dibuka dalam
    mode ubah, kanan berisi barang yang sudah diaudit dengan angkanya, kiri daftar
@@ -3411,7 +3432,7 @@ async function saveAuditEdit(){
   renderAll();
   const ok=await dbCall(sb.from('audits').update(toDbAudit(a)).eq('id',a.id), 'ubah audit');
   if(!ok){ a.items=prev; moves.forEach((m,k)=>{ m.s.qty=prevQty[k]; }); renderAll(); return; }
-  await Promise.all(moves.map(m=>dbCall(sb.from('stock').update(toDbStock(m.s)).eq('id',m.s.id), 'update stok dari ubah audit')));
+  await Promise.all(moves.map(m=>dbUbahStok(m.s, m.d, 'update stok dari ubah audit')));
   alert('Audit diperbarui.');
 }
 /* Hapus audit: selisih yang dulu diterapkan dibatalkan (stok -= selisih), seperti
@@ -3430,7 +3451,7 @@ async function delAudit(id){
   closeModal(); renderAll();
   const ok=await dbCall(sb.from('audits').delete().eq('id',id), 'hapus audit');
   if(!ok){ audits.splice(idx,0,a); moves.forEach((m,k)=>{ m.s.qty=prevQty[k]; }); renderAll(); return; }
-  await Promise.all(moves.map(m=>dbCall(sb.from('stock').update(toDbStock(m.s)).eq('id',m.s.id), 'kembalikan stok dari hapus audit')));
+  await Promise.all(moves.map(m=>dbUbahStok(m.s, m.d, 'kembalikan stok dari hapus audit')));
 }
 function renderAuditHistory(){
   const box=document.getElementById('auditHistory');
@@ -3617,7 +3638,8 @@ async function savePurchases(){
   for(const j of jobs){
     const stokOk=j.isNew
       ? await dbCall(sb.from('stock').insert(toDbStock(j.stockRec)),'tambah stok baru dari pembelian',true)
-      : await dbCall(sb.from('stock').update(toDbStock(j.stockRec)).eq('id',j.stockRec.id),'update stok dari pembelian',true);
+      : (await dbCall(sb.from('stock').update(toDbStockInfo(j.stockRec)).eq('id',j.stockRec.id),'update modal dari pembelian',true)
+         && await dbUbahStok(j.stockRec, j.it.qty, 'update stok dari pembelian'));
     const beliOk=stokOk && await dbCall(sb.from('purchases').insert(toDbPurchase(j.np)),'simpan pembelian',true);
     if(!beliOk){
       purchases=purchases.filter(x=>x.id!==j.np.id); j.restore(); failed.push(j.it);
@@ -3639,7 +3661,7 @@ function renderPembelian(){ pbRender(); pbRenderHistory(); }
 function pbRenderHistory(){
   const list=bPurchases();
   if(!list.length){ document.getElementById('pembelianTable').innerHTML='<div class="empty">Belum ada pembelian stok di cabang ini. Pilih barang di panel atas, lalu simpan.</div>'; return; }
-  let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td class="td-head" data-l=""><b>${p.itemName}</b><br><span style="color:var(--gray);font-size:12px">${p.date}</span></td><td data-l="Tanggal" class="hide-m">${p.date}</td><td data-l="Qty">${p.qty}</td><td data-l="Modal/unit">${rp(p.cost)}</td><td data-l="Total">${rp(p.total)}</td><td data-l="Supplier">${p.supplier||'-'}</td><td data-l="Metode"><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('purchase','${p.id}')">${p.paymentMethod||'Cash'}</span></td><td class="td-act"><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
+  let tot=0; let rows=list.map(p=>{tot+=p.total; return `<tr><td class="td-head" data-l=""><b>${escH(p.itemName)}</b><br><span style="color:var(--gray);font-size:12px">${p.date}</span></td><td data-l="Tanggal" class="hide-m">${p.date}</td><td data-l="Qty">${p.qty}</td><td data-l="Modal/unit">${rp(p.cost)}</td><td data-l="Total">${rp(p.total)}</td><td data-l="Supplier">${escH(p.supplier||'-')}</td><td data-l="Metode"><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('purchase','${p.id}')">${escH(p.paymentMethod||'Cash')}</span></td><td class="td-act"><button class="btn btn-sm btn-red" onclick="delPurchase('${p.id}')">Hapus</button></td></tr>`;}).join('');
   document.getElementById('pembelianTable').innerHTML=`<table class="tbl-stack"><thead><tr><th>Item</th><th class="hide-m">Tanggal</th><th>Qty</th><th>Modal/unit</th><th>Total</th><th>Supplier</th><th>Metode</th><th></th></tr></thead><tbody>${rows}</tbody><tfoot><tr class="stok-total"><td colspan="4">TOTAL PEMBELIAN</td><td colspan="4">${rp(tot)}</td></tr></tfoot></table>`;
 }
 
@@ -3654,7 +3676,7 @@ function openExpenseModal(){
     <label for="e_date">Tanggal</label><input id="e_date" type="date" value="${todayStr()}" max="${todayStr()}">
     <label for="e_desc">Catatan</label><input id="e_desc"><label for="e_amount">Nominal (Rp)</label><input id="e_amount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)">
     <label>Metode Pembayaran</label><input id="e_paymethod" list="e_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
-    <datalist id="e_paymethodList">${paymentMethodOptions().map(m=>`<option value="${m}">`).join('')}</datalist>
+    <datalist id="e_paymethodList">${paymentMethodOptions().map(m=>`<option value="${escH(m)}">`).join('')}</datalist>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-red" onclick="saveExpense()">Simpan</button></div>`);
 }
 async function saveExpense(){
@@ -3815,7 +3837,7 @@ function importStockCSV(file){
         if(sku&&!ex.sku) next.sku=sku;
         if(category) next.category=category;
         if(next.cost===ex.cost&&next.price===ex.price&&next.sku===ex.sku&&next.category===ex.category){ skipped++; continue; }
-        const ok=await dbCall(sb.from('stock').update(toDbStock(next)).eq('id',ex.id), 'import stok: '+name);
+        const ok=await dbCall(sb.from('stock').update(toDbStockInfo(next)).eq('id',ex.id), 'import stok: '+name);
         if(ok){ Object.assign(ex,next); updated++; } else failed++;
         continue;
       }
@@ -3930,11 +3952,11 @@ function openKelolaImportModal(rows){
   const typeCounts={};
   rows.forEach(r=>{ const t=r['Jenis Transaksi']||'(tidak diketahui)'; typeCounts[t]=(typeCounts[t]||0)+1; });
   showModal(`<h3>Import dari Kelola (Sistem Lama)</h3>
-    <p style="color:var(--gray);font-size:13px;margin-bottom:12px">Ditemukan ${rows.length} baris. Ringkasan: ${Object.entries(typeCounts).map(([k,v])=>`${k}: ${v}`).join(', ')}.</p>
+    <p style="color:var(--gray);font-size:13px;margin-bottom:12px">Ditemukan ${rows.length} baris. Ringkasan: ${Object.entries(typeCounts).map(([k,v])=>`${escH(k)}: ${v}`).join(', ')}.</p>
     <label>Import data dari cabang (sesuai nama di file lama)</label>
-    <select id="kl_source">${sourceBranches.map(b=>`<option value="${b}">${b}</option>`).join('')}</select>
+    <select id="kl_source">${sourceBranches.map(b=>`<option value="${escH(b)}">${escH(b)}</option>`).join('')}</select>
     <label>Masukkan ke cabang Goed Access</label>
-    <select id="kl_target">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${b.name}</option>`).join('')}</select>
+    <select id="kl_target">${branches.map(b=>`<option value="${b.id}" ${b.id===currentBranch?'selected':''}>${escH(b.name)}</option>`).join('')}</select>
     <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Data "Stok Audit" akan dilewati (belum didukung). Import ini murni menambah riwayat, jumlah stok saat ini tidak diubah.</p>
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="runKelolaImport()">Mulai Import</button></div>`);
 }
@@ -4224,9 +4246,9 @@ function renderDashboard(){
   document.getElementById('dashRecentCount').textContent = sv.length? `Menampilkan ${Math.min(6,sv.length)} dari ${sv.length} data` : '';
   document.getElementById('dashRecent').innerHTML = sv.length? `<table class="dash-table tbl-stack"><thead><tr><th>Invoice</th><th>Customer</th><th>Device &amp; Keluhan</th><th style="text-align:right">Total</th><th style="text-align:center">Status</th></tr></thead><tbody>`+
     sv.slice(0,6).map(t=>`<tr>
-      <td class="td-head" data-l=""><b>${t.inv}</b><div class="sub-line">${fmtDateShort(t.date)}</div></td>
-      <td data-l="Customer"><span><b>${t.cust}</b>${t.phone?`<div class="sub-line">${t.phone}</div>`:''}</span></td>
-      <td data-l="Servis"><span><span style="color:var(--primary-t);font-weight:600">${t.device||'-'}</span><div class="sub-line">${t.issue||''}</div></span></td>
+      <td class="td-head" data-l=""><b>${escH(t.inv)}</b><div class="sub-line">${fmtDateShort(t.date)}</div></td>
+      <td data-l="Customer"><span><b>${escH(t.cust)}</b>${t.phone?`<div class="sub-line">${escH(t.phone)}</div>`:''}</span></td>
+      <td data-l="Servis"><span><span style="color:var(--primary-t);font-weight:600">${escH(t.device||'-')}</span><div class="sub-line">${escH(t.issue||'')}</div></span></td>
       <td data-l="Total" style="text-align:right" class="font-mono"><b>${rp(t.revenue)}</b></td>
       <td data-l="Status" style="text-align:center"><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td>
     </tr>`).join('')+`</tbody></table>` : '<div class="empty">Belum ada transaksi servis pada periode yang dipilih.</div>';
@@ -4245,7 +4267,7 @@ function renderDashboard(){
 
   /* LOW STOCK */
   const low=sk.filter(s=>s.qty<=s.min).slice(0,4);
-  document.getElementById('dashLowStock').innerHTML = low.length? low.map(s=>`<div class="lowstock-row"><div><b style="font-size:12.5px">${s.name}</b><div class="sub-line">Min: ${s.min} unit</div></div><span class="badge badge-low">Sisa ${s.qty}</span></div>`).join('') : `<div class="empty" style="padding:18px 10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Semua stok sparepart aman.</div>`;
+  document.getElementById('dashLowStock').innerHTML = low.length? low.map(s=>`<div class="lowstock-row"><div><b style="font-size:12.5px">${escH(s.name)}</b><div class="sub-line">Min: ${s.min} unit</div></div><span class="badge badge-low">Sisa ${s.qty}</span></div>`).join('') : `<div class="empty" style="padding:18px 10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Semua stok sparepart aman.</div>`;
 
   /* CHARTS DATA */
   dashChartData={
@@ -4279,13 +4301,13 @@ function generateAIReview(){
   if(topExp)insights.push(`Pengeluaran terbesar: <b>${topExp[0]}</b> ${rp(topExp[1])} (${(topExp[1]/st.totalExpense*100).toFixed(0)}%).`);
   insights.push(`Rata-rata nilai/transaksi: <b>${rp(avgTrx)}</b>.`);
   if(pending>0)insights.push(`Ada <b>${pending} servis berstatus "Selesai"</b> belum diambil customer.`);
-  if(low.length)warnings.push(`<b>${low.length} part menipis</b>: ${low.map(s=>s.name).join(', ')}.`);
-  if(dead.length)warnings.push(`<b>${dead.length} item overstock</b>: ${dead.map(s=>s.name).join(', ')}.`);
+  if(low.length)warnings.push(`<b>${low.length} part menipis</b>: ${escH(low.map(s=>s.name).join(', '))}.`);
+  if(dead.length)warnings.push(`<b>${dead.length} item overstock</b>: ${escH(dead.map(s=>s.name).join(', '))}.`);
   actions.push('Naikkan harga jasa servis kompleks yang bernilai tambah tinggi.');
-  if(low.length)actions.push(`Segera restock: ${low.map(s=>s.name).join(', ')}.`);
+  if(low.length)actions.push(`Segera restock: ${escH(low.map(s=>s.name).join(', '))}.`);
   if(netMargin<15)actions.push('Target net margin minimal 20-25%, tinjau pengeluaran terbesar.');
   actions.push('Tawarkan layanan tambahan: tempered glass, anti-air, garansi berbayar.');
-  if(dead.length)actions.push(`Buat promo bundling item overstock: ${dead.map(s=>s.name).join(', ')}.`);
+  if(dead.length)actions.push(`Buat promo bundling item overstock: ${escH(dead.map(s=>s.name).join(', '))}.`);
 
   /* ANALISIS PELANGGAN */
   const custMap={};
@@ -4315,7 +4337,7 @@ function generateAIReview(){
   let content=[];
   if(topDevice) content.push(`Buat konten "before-after" hasil servis <b>${topDevice[0]}</b> untuk Instagram/TikTok, device ini paling sering ditangani di toko ini.`);
   if(lcdCount>1) content.push('Buat video edukasi singkat "Tanda-tanda LCD iPhone perlu diganti", relevan karena servis LCD cukup sering.');
-  if(low.length) content.push(`Buat promo flash sale untuk item stok menipis (${low.slice(0,2).map(s=>s.name).join(', ')}) supaya cepat restock & tetap ada penjualan.`);
+  if(low.length) content.push(`Buat promo flash sale untuk item stok menipis (${escH(low.slice(0,2).map(s=>s.name).join(', '))}) supaya cepat restock & tetap ada penjualan.`);
   content.push('Posting testimoni customer 2-3x/minggu untuk membangun kepercayaan calon customer baru.');
   content.push('Buat konten "tips merawat HP" mingguan, cara halus menawarkan servis tanpa terkesan memaksa.');
   if(topCustomers.length) content.push(`Ucapkan terima kasih khusus (DM/WA) ke ${topCustomers.length} customer dengan transaksi terbesar bulan ini, untuk menjaga hubungan jangka panjang.`);
@@ -4338,7 +4360,7 @@ function generateAIReview(){
     <div class="ai-section"><span class="ai-tag" style="background:var(--green)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Langkah yang Bisa Diambil</span><ul>${actions.map(a=>`<li>${a}</li>`).join('')}</ul></div>
     <div class="ai-section"><span class="ai-tag" style="background:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.3"/><path d="M15.5 14.2c2.3.4 4.5 2.2 4.5 5.8"/></svg>Pelanggan</span><ul>
       <li>Total pelanggan unik: <b>${custList.length}</b>, dengan <b>${repeatCust.length}</b> pelanggan repeat (${custList.length?((repeatCust.length/custList.length)*100).toFixed(0):0}%).</li>
-      ${topCustomers.length?`<li>Top pelanggan: ${topCustomers.map(c=>`${c.name} (${rp(c.total)})`).join(', ')}.</li>`:''}
+      ${topCustomers.length?`<li>Top pelanggan: ${topCustomers.map(c=>`${escH(c.name)} (${rp(c.total)})`).join(', ')}.</li>`:''}
     </ul></div>
     <div class="ai-section"><span class="ai-tag" style="background:var(--orange)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Peluang Penjualan Tambahan</span><ul>${sales.map(s=>`<li>${s}</li>`).join('')}</ul></div>
     <div class="ai-section"><span class="ai-tag" style="background:#5B6B8C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Ide Konten Promosi</span><ul>${content.map(c=>`<li>${c}</li>`).join('')}</ul></div>
@@ -4351,7 +4373,7 @@ function openEditDateModal(id){
   if(!canAccess('edit_tanggal') && currentUser.role!=='owner'){alert('Anda tidak punya akses mengubah tanggal transaksi');return;}
   const t=services.find(x=>x.id===id);
   showModal(`<h3>Ubah Tanggal Transaksi</h3>
-    <p style="color:var(--gray);margin-bottom:12px">${t.inv} • ${t.cust}</p>
+    <p style="color:var(--gray);margin-bottom:12px">${escH(t.inv)} • ${escH(t.cust)}</p>
     <label>Tanggal Baru</label><input type="date" id="ed_date" value="${t.date}">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn" onclick="saveEditDate('${id}')">Simpan</button></div>`);
 }
@@ -4368,8 +4390,8 @@ async function saveEditDate(id){
 function openPayServiceModal(id){
   const t=services.find(x=>x.id===id);
   const sisa=t.revenue-(t.paidAmount||0);
-  showModal(`<h3>Catat Pembayaran: ${t.inv}</h3>
-    <p style="color:var(--gray);margin-bottom:12px">${t.cust} • Sisa piutang: <b class="red">${rp(sisa)}</b></p>
+  showModal(`<h3>Catat Pembayaran: ${escH(t.inv)}</h3>
+    <p style="color:var(--gray);margin-bottom:12px">${escH(t.cust)} • Sisa piutang: <b class="red">${rp(sisa)}</b></p>
     <label>Jumlah Dibayar</label><input id="pay_amount" type="text" inputmode="numeric" value="${fmtNum(sisa)}" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="savePayService('${id}')">Simpan</button></div>`);
 }
@@ -4385,7 +4407,7 @@ function openPayPurchaseModal(id){
   const p=purchases.find(x=>x.id===id);
   const sisa=p.total-(p.paidAmount||0);
   showModal(`<h3>Catat Pembayaran ke Supplier</h3>
-    <p style="color:var(--gray);margin-bottom:12px">${p.itemName} • Sisa utang: <b class="red">${rp(sisa)}</b></p>
+    <p style="color:var(--gray);margin-bottom:12px">${escH(p.itemName)} • Sisa utang: <b class="red">${rp(sisa)}</b></p>
     <label>Jumlah Dibayar</label><input id="pay_amount2" type="text" inputmode="numeric" value="${fmtNum(sisa)}" oninput="formatRupiahLive(this)">
     <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="savePayPurchase('${id}')">Simpan</button></div>`);
 }
@@ -4400,11 +4422,11 @@ async function savePayPurchase(id){
 function renderUtangPiutang(){
   const piutang=bPiutang();
   document.getElementById('piutangTable').innerHTML = piutang.length? `<table class="tbl-stack"><thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Sudah Dibayar</th><th>Sisa</th><th></th></tr></thead><tbody>`+
-    piutang.map(t=>`<tr><td class="td-head" data-l=""><b>${t.inv}</b></td><td data-l="Customer">${t.cust}</td><td data-l="Total">${rp(t.revenue)}</td><td data-l="Sudah Dibayar">${rp(t.paidAmount||0)}</td><td class="red" data-l="Sisa"><b>${rp(t.revenue-(t.paidAmount||0))}</b></td>
+    piutang.map(t=>`<tr><td class="td-head" data-l=""><b>${escH(t.inv)}</b></td><td data-l="Customer">${escH(t.cust)}</td><td data-l="Total">${rp(t.revenue)}</td><td data-l="Sudah Dibayar">${rp(t.paidAmount||0)}</td><td class="red" data-l="Sisa"><b>${rp(t.revenue-(t.paidAmount||0))}</b></td>
     <td class="td-act"><button class="btn btn-sm btn-green" onclick="openPayServiceModal('${t.id}')">Catat Bayar</button></td></tr>`).join('')+`</tbody></table>` : '<div class="empty"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Tidak ada piutang customer</div>';
   const utang=bUtang();
   document.getElementById('utangTable').innerHTML = utang.length? `<table class="tbl-stack"><thead><tr><th>Item</th><th>Supplier</th><th>Total</th><th>Sudah Dibayar</th><th>Sisa</th><th></th></tr></thead><tbody>`+
-    utang.map(p=>`<tr><td class="td-head" data-l=""><b>${p.itemName}</b></td><td data-l="Supplier">${p.supplier||'-'}</td><td data-l="Total">${rp(p.total)}</td><td data-l="Sudah Dibayar">${rp(p.paidAmount||0)}</td><td class="red" data-l="Sisa"><b>${rp(p.total-(p.paidAmount||0))}</b></td>
+    utang.map(p=>`<tr><td class="td-head" data-l=""><b>${escH(p.itemName)}</b></td><td data-l="Supplier">${escH(p.supplier||'-')}</td><td data-l="Total">${rp(p.total)}</td><td data-l="Sudah Dibayar">${rp(p.paidAmount||0)}</td><td class="red" data-l="Sisa"><b>${rp(p.total-(p.paidAmount||0))}</b></td>
     <td class="td-act"><button class="btn btn-sm btn-green" onclick="openPayPurchaseModal('${p.id}')">Catat Bayar</button></td></tr>`).join('')+`</tbody></table>` : '<div class="empty"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Tidak ada utang ke supplier</div>';
 }
 
@@ -4432,10 +4454,10 @@ function renderActivity(){
   if(!list.length){ document.getElementById('activityTable').innerHTML='<div class="empty">Belum ada catatan. Tulis catatan hari ini di kolom atas, lalu simpan.</div>'; return; }
   document.getElementById('activityTable').innerHTML = list.map(a=>`<div style="border-bottom:1px solid #eee;padding:12px 0">
     <div class="flex-row" style="justify-content:space-between">
-      <b>${a.date}</b> <span style="color:var(--gray);font-size:12px">oleh ${a.author}</span>
+      <b>${a.date}</b> <span style="color:var(--gray);font-size:12px">oleh ${escH(a.author)}</span>
       ${currentUser.role==='owner'?`<button class="btn btn-sm btn-red" onclick="delActivity('${a.id}')">Hapus</button>`:''}
     </div>
-    <p style="font-size:14px;margin-top:6px">${a.note.replace(/</g,'&lt;')}</p>
+    <p style="font-size:14px;margin-top:6px">${escH(a.note)}</p>
   </div>`).join('');
 }
 
@@ -4527,7 +4549,7 @@ function renderLaporanKeuangan(){
     <tr><td>Pendapatan</td><td style="text-align:right">${rp(lr.revenue)}</td></tr>
     <tr><td>HPP (Modal Sparepart)</td><td style="text-align:right">(${rp(lr.cogs)})</td></tr>
     <tr style="border-top:1px solid #ddd;font-weight:700"><td>Laba Kotor</td><td style="text-align:right">${rp(lr.grossProfit)}</td></tr>
-    ${Object.entries(lr.expenseByCategory).map(([k,v])=>`<tr><td style="padding-left:20px;color:var(--gray)">${k}</td><td style="text-align:right;color:var(--gray)">(${rp(v)})</td></tr>`).join('')}
+    ${Object.entries(lr.expenseByCategory).map(([k,v])=>`<tr><td style="padding-left:20px;color:var(--gray)">${escH(k)}</td><td style="text-align:right;color:var(--gray)">(${rp(v)})</td></tr>`).join('')}
     <tr><td>Total Beban Operasional</td><td style="text-align:right">(${rp(lr.totalExpense)})</td></tr>
     <tr style="border-top:1px solid #ddd;font-weight:700"><td>Laba Bersih</td><td style="text-align:right;color:${lr.netProfit>=0?'var(--green-t)':'var(--red-t)'}">${rp(lr.netProfit)}</td></tr>
   </table>`;
@@ -4694,7 +4716,7 @@ function printLaporanKeuangan(){
       <tr><td>Pendapatan</td><td class="r">${rp(lr.revenue)}</td></tr>
       <tr><td>Harga Pokok Penjualan (HPP)</td><td class="r">(${rp(lr.cogs)})</td></tr>
       <tr class="line bold"><td>Laba Kotor</td><td class="r">${rp(lr.grossProfit)}</td></tr>
-      ${Object.entries(lr.expenseByCategory).map(([k,v])=>`<tr><td style="padding-left:16px">${k}</td><td class="r">(${rp(v)})</td></tr>`).join('')}
+      ${Object.entries(lr.expenseByCategory).map(([k,v])=>`<tr><td style="padding-left:16px">${escH(k)}</td><td class="r">(${rp(v)})</td></tr>`).join('')}
       <tr><td>Total Beban Operasional</td><td class="r">(${rp(lr.totalExpense)})</td></tr>
       <tr class="line bold"><td>LABA BERSIH</td><td class="r">${rp(lr.netProfit)}</td></tr>
     </table>
@@ -4777,7 +4799,7 @@ async function doFaceEnroll(){
   const existing=faceEnrollments.find(f=>f.userId===currentUser.id);
   const record={id:existing?existing.id:gid(), userId:currentUser.id, descriptor};
   if(existing) Object.assign(existing,record); else faceEnrollments.push(record);
-  document.getElementById('faceStatusText').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Wajah berhasil didaftarkan untuk <b>${currentUser.name}</b>`;
+  document.getElementById('faceStatusText').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Wajah berhasil didaftarkan untuk <b>${escH(currentUser.name)}</b>`;
   await dbCall(sb.from('face_enrollments').upsert(toDbFaceEnroll(record)), 'daftar wajah');
 }
 async function doFaceCheckIn(){
@@ -4810,11 +4832,11 @@ async function logAttendance(user){
   let checkType;
   if(!hasIn) checkType='masuk';
   else if(!hasOut) checkType='pulang';
-  else { document.getElementById('faceStatusText').innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg><b>${user.name}</b> sudah absen masuk &amp; pulang hari ini.`; return; }
+  else { document.getElementById('faceStatusText').innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg><b>${escH(user.name)}</b> sudah absen masuk &amp; pulang hari ini.`; return; }
   const time=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
   const na={id:gid(), userId:user.id, userName:user.name, branch:currentBranch, date:today, checkType, time};
   attendanceLog.unshift(na);
-  document.getElementById('faceStatusText').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg><b>${user.name}</b> berhasil absen <b>${checkType}</b> jam ${time}`;
+  document.getElementById('faceStatusText').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg><b>${escH(user.name)}</b> berhasil absen <b>${checkType}</b> jam ${time}`;
   renderAttendanceTable();
   await dbCall(sb.from('attendance_log').insert(toDbAttendance(na)), 'catat absensi');
 }
@@ -4822,7 +4844,7 @@ function renderAttendanceTable(){
   const list=attendanceLog.filter(a=>a.branch===currentBranch).slice(0,50);
   if(!list.length){ document.getElementById('attendanceTable').innerHTML='<div class="empty">Belum ada absensi tercatat. Absen masuk dan pulang akan muncul di sini.</div>'; return; }
   document.getElementById('attendanceTable').innerHTML=`<table class="tbl-stack"><thead><tr><th>Nama</th><th>Tanggal</th><th>Jenis</th><th>Jam</th></tr></thead><tbody>`+
-    list.map(a=>`<tr><td class="td-head" data-l=""><b>${a.userName}</b></td><td data-l="Tanggal">${a.date}</td><td data-l="Jenis"><span class="badge ${a.checkType==='masuk'?'badge-ok':'badge-mid'}">${a.checkType==='masuk'?'Masuk':'Pulang'}</span></td><td data-l="Jam">${a.time}</td></tr>`).join('')+`</tbody></table>`;
+    list.map(a=>`<tr><td class="td-head" data-l=""><b>${escH(a.userName)}</b></td><td data-l="Tanggal">${a.date}</td><td data-l="Jenis"><span class="badge ${a.checkType==='masuk'?'badge-ok':'badge-mid'}">${a.checkType==='masuk'?'Masuk':'Pulang'}</span></td><td data-l="Jam">${a.time}</td></tr>`).join('')+`</tbody></table>`;
 }
 function renderAbsensi(){ renderAttendanceTable(); }
 
@@ -5277,7 +5299,7 @@ const Office = (function(){
     if(!staff.length){
       seats=[]; syncRoster(); render();
       const canManage = currentUser.role==='owner';
-      showOverlay('<p>Belum ada user yang terdaftar di cabang '+branchName(currentBranch)+', jadi belum ada meja yang bisa diisi.</p>'+
+      showOverlay('<p>Belum ada user yang terdaftar di cabang '+escH(branchName(currentBranch))+', jadi belum ada meja yang bisa diisi.</p>'+
         (canManage?'<button class="btn btn-sm" onclick="navTo(\'users\')">Buka Kelola User</button>':''));
       return;
     }
@@ -5298,7 +5320,7 @@ const Office = (function(){
 
     const hadir=seats.filter(s=>s.state==='hadir').length;
     if(!todayLog.length){
-      showOverlay('<p>Belum ada yang absen masuk hari ini di '+branchName(currentBranch)+'. Meja akan terisi begitu ada yang absen.</p>'+
+      showOverlay('<p>Belum ada yang absen masuk hari ini di '+escH(branchName(currentBranch))+'. Meja akan terisi begitu ada yang absen.</p>'+
         '<button class="btn btn-sm" onclick="navTo(\'absensi\')">Buka halaman Absensi</button>');
     } else if(!hadir){
       showOverlay('<p>Semua orang sudah absen pulang. Toko kosong menurut catatan absensi hari ini.</p>');

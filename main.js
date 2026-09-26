@@ -37,7 +37,18 @@ ipcMain.handle('check-update-now', () => {
 ipcMain.handle('quit-and-install', () => {
   autoUpdater.quitAndInstall();
 });
+// Hanya alamat web dan halaman izin kamera macOS yang boleh dibuka. Skema lain
+// (file:, smb:, ms-msdt:, dll.) bisa menjalankan program di komputer kasir.
+function bolehDibukaDiLuar(url) {
+  try {
+    const u = new URL(String(url));
+    if (u.protocol === 'https:' || u.protocol === 'http:') return true;
+    return u.protocol === 'x-apple.systempreferences:' && u.href.startsWith('x-apple.systempreferences:com.apple.preference.security');
+  } catch (e) { return false; }
+}
+
 ipcMain.handle('open-external', (event, url) => {
+  if (!bolehDibukaDiLuar(url)) return false;
   shell.openExternal(url);
 });
 ipcMain.handle('get-app-version', () => {
@@ -85,12 +96,17 @@ function createWindow() {
   });
 
   // Izinkan window cetak nota, buka link luar di browser
+  // Jendela cetak nota dibuka kosong (about:blank) lalu diisi; itu saja yang boleh
+  // jadi jendela aplikasi. Alamat web dibuka di browser, sisanya ditolak.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
-    }
-    return { action: 'allow' };
+    if (url === '' || url === 'about:blank') return { action: 'allow' };
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  // Halaman utama tidak boleh berpindah ke alamat lain (mis. lewat tautan atau
+  // skrip sisipan); hanya muat ulang file aplikasinya sendiri yang diizinkan.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://')) event.preventDefault();
   });
 }
 
