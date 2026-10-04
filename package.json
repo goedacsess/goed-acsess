@@ -1,6 +1,6 @@
 {
   "name": "iservis-pro",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "description": "Software Kasir Servis iPhone",
   "main": "main.js",
   "author": "Goed Access",
@@ -13,6 +13,10 @@
     "publish:win": "electron-builder --win --x64 --config.directories.output=dist/win --publish always"
   },
   "devDependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/ios": "^5.7.8",
     "@electron/notarize": "^2.3.2",
     "electron": "^31.7.7",
     "electron-builder": "^24.13.3"
@@ -67,10 +71,6 @@
     "afterSign": "scripts/notarize.js"
   },
   "dependencies": {
-    "@capacitor/android": "^5.7.8",
-    "@capacitor/cli": "^5.7.8",
-    "@capacitor/core": "^5.7.8",
-    "@capacitor/ios": "^5.7.8",
     "electron-updater": "^6.3.9"
   },
   "allowScripts": {
