@@ -421,6 +421,22 @@
     #transaksiTable,#pembelianTable,#stokTable,#piutangTable,#utangTable,
     #userTable,#branchTable,#attendanceTable,#dashRecent{ overflow-x:auto; }
   }
+  /* Sorotan baris ikut lengkung panel, bukan kotak siku yang menempel ke tepi. */
+  @media(min-width:901px){
+    tbody tr:hover td:first-child{ border-top-left-radius:10px; border-bottom-left-radius:10px; }
+    tbody tr:hover td:last-child{ border-top-right-radius:10px; border-bottom-right-radius:10px; }
+  }
+  /* Jendela desktop sempit (mis. aplikasi tidak dimaksimalkan): tabel Kasir butuh
+     ~885px, jadi kolom paling kanan terpotong dan tombol hapus hilang di balik gulir.
+     Rapatkan padding dan susun tombol aksi 2 per baris supaya muat. */
+  @media(min-width:901px) and (max-width:1439px){
+    #transaksiTable th,#transaksiTable td,#piutangTable th,#piutangTable td,#pembelianTable th,#pembelianTable td{ padding-left:12px; padding-right:12px; }
+    #transaksiTable .row-actions{ display:grid; grid-template-columns:repeat(2,auto); justify-content:end; gap:6px; }
+  }
+  @media(min-width:901px) and (max-width:1099px){
+    #transaksiTable th,#transaksiTable td{ padding-left:8px; padding-right:8px; }
+    #transaksiTable .row-actions{ grid-template-columns:auto; }
+  }
   .sk-cat{ margin-top:4px; display:inline-block; }
   .sheet-btn{ display:flex; align-items:center; gap:12px; width:100%; min-height:52px; padding:0 14px; margin-bottom:8px; background:var(--card-bg); color:var(--text); border:1px solid var(--border-strong); border-radius:8px; font-size:15px; font-weight:500; text-align:left; cursor:pointer; }
   .sheet-btn:hover{ background:var(--hover-bg); }
@@ -517,6 +533,10 @@
   .riw-d-table td.num,.riw-d-table th.num{ text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
   .riw-d-table .sub{ display:block; font-size:12px; color:var(--gray); font-weight:400; }
   .riw-d-more{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; padding-top:16px; border-top:1px solid var(--border); font-weight:600; }
+  .nota-hp-prev{ background:#fff; border-radius:var(--radius-md); padding:8px; margin:8px 0 14px; max-height:52vh; overflow-y:auto; text-align:center; }
+  .nota-hp-prev img{ width:100%; max-width:384px; height:auto; display:block; margin:0 auto; }
+  .nota-hp-btns{ display:grid; gap:8px; }
+  .nota-hp-btns .btn{ width:100%; min-height:44px; justify-content:center; }
   .riw-d-kv{ display:flex; justify-content:space-between; gap:16px; padding:6px 0; font-size:14px; }
   .riw-d-kv span:last-child{ text-align:right; overflow-wrap:anywhere; }
   @media(max-width:900px){
@@ -3141,7 +3161,117 @@ function renderTransaksi(q=''){
 }
 
 /* ============ NOTA / STRUK ============ */
+/* ============ NOTA DI APLIKASI HP ============
+   WebView aplikasi HP (Capacitor) tidak bisa membuka jendela cetak, jadi di sana
+   printNota menampilkan pratinjau dengan tiga jalan keluar: kirim teks ke WhatsApp
+   pelanggan, bagikan sebagai gambar, atau kirim teks selebar struk 58mm ke
+   aplikasi printer Bluetooth (mis. RawBT). Di desktop/browser tetap jendela cetak. */
+const isNativeApp=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const capPlugin=n=>window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins[n];
+function notaData(t){
+  const b=branches.find(x=>x.id===t.branch)||{};
+  const items=[[t.issue||'Servis', t.jasa||0]];
+  if(t.parts&&t.parts.length) t.parts.forEach(p=>items.push([p.partName+((p.qty||1)>1?' x'+p.qty:''), (p.partPrice||0)*(p.qty||1)]));
+  else if(t.partName) items.push([t.partName, t.partPrice||0]);
+  const info=[['No',t.inv],['Tanggal',fmtDateShort(t.date)],['Kasir',currentUser.name],['Customer',t.cust||'-']];
+  if(t.phone) info.push(['No.HP',t.phone]);
+  info.push(['Device',t.device||'-']);
+  const paid=t.paidAmount==null?t.revenue:t.paidAmount;
+  const bawah=[['Status',t.status||'-']];
+  if((t.revenue||0)-paid>0) bawah.unshift(['Dibayar',rp(paid)],['Sisa',rp(t.revenue-paid)]);
+  return {toko:b.name||APP_NAME, alamat:b.addr||'', telp:b.phone?'Telp: '+b.phone:'', info, items:items.filter(i=>i[0]), total:t.revenue||0, bawah,
+    penutup:['Terima kasih atas kepercayaan Anda.','Garansi servis berlaku sesuai ketentuan.']};
+}
+/* Teks struk lebar tetap (58mm = 32 karakter). Label kiri dipotong ke baris baru
+   kalau terlalu panjang supaya angka di kanan tetap lurus. */
+function notaTeksStruk(t,W=32){
+  const d=notaData(t), garis='-'.repeat(W);
+  const potong=s=>{ const out=[]; let cur=''; for(const k of String(s).split(' ')){ for(let w=k;;){ const coba=cur?cur+' '+w:w; if(coba.length<=W){ cur=coba; break; } if(cur){ out.push(cur); cur=''; continue; } out.push(w.slice(0,W)); w=w.slice(W); if(!w) break; } } if(cur) out.push(cur); return out; };
+  const tengah=s=>potong(s).map(x=>' '.repeat(Math.max(0,Math.floor((W-x.length)/2)))+x);
+  const lr=(l,r)=>{ l=String(l); r=String(r); const muat=W-r.length-1; const out=[];
+    while(l.length>muat){ let cut=l.lastIndexOf(' ',muat); if(cut<=0) cut=muat; out.push(l.slice(0,cut)); l=l.slice(cut).trim(); }
+    out.push(l+' '.repeat(Math.max(1,W-l.length-r.length))+r); return out; };
+  return [...tengah(d.toko.toUpperCase()), ...(d.alamat?tengah(d.alamat):[]), ...(d.telp?tengah(d.telp):[]), garis,
+    ...d.info.flatMap(([k,v])=>lr(k,v)), garis,
+    ...d.items.flatMap(([k,v])=>lr(k,rp(v))), garis,
+    ...lr('TOTAL',rp(d.total)), ...d.bawah.flatMap(([k,v])=>lr(k,v)), garis,
+    ...d.penutup.flatMap(tengah), '', ''].join('\n');
+}
+function notaTeksWA(t){
+  const d=notaData(t);
+  return [`*NOTA SERVIS - ${d.toko}*`, ...d.info.map(([k,v])=>`${k}: ${v}`), '', '*Rincian*',
+    ...d.items.map(([k,v])=>`- ${k}: ${rp(v)}`), `*TOTAL: ${rp(d.total)}*`, ...d.bawah.map(([k,v])=>`${k}: ${v}`), '', ...d.penutup].join('\n');
+}
+/* Nomor Indonesia ke format wa.me: 0812.. / +62 812.. / 812.. -> 62812.. */
+function waNomor(p){ let n=String(p||'').replace(/\D/g,''); if(!n) return ''; if(n.startsWith('0')) n='62'+n.slice(1); else if(n.startsWith('8')) n='62'+n; return n.length>=10?n:''; }
+/* Gambar struk 384px (lebar cetak printer 58mm), digambar 2x supaya tajam. */
+async function notaGambar(t){
+  const d=notaData(t), W=384, P=16, S=2;
+  try{ if(document.fonts) await Promise.all([document.fonts.load('400 13px Inter'),document.fonts.load('700 17px Inter')]); }catch(e){}
+  const c=document.createElement('canvas'), x=c.getContext('2d');
+  const F=(w,s)=>`${w} ${s}px Inter, "Segoe UI", sans-serif`;
+  const ops=[]; let y=P;
+  const wrap=(txt,font,maxW)=>{ x.font=font; const kata=String(txt).split(' '), out=[]; let cur='';
+    for(const k of kata){ const coba=cur?cur+' '+k:k; if(x.measureText(coba).width>maxW&&cur){ out.push(cur); cur=k; } else cur=coba; } out.push(cur); return out; };
+  const tengah=(txt,font,lh)=>wrap(txt,font,W-2*P).forEach(l=>{ ops.push(['c',l,font,y]); y+=lh; });
+  const baris=(l,r,font,lh)=>{ x.font=font; const rw=x.measureText(r).width; const ls=wrap(l,font,W-2*P-rw-10);
+    ls.forEach((s,i)=>{ ops.push(['l',s,font,y]); if(i===ls.length-1) ops.push(['r',r,font,y]); y+=lh; }); };
+  const garis=()=>{ y+=4; ops.push(['g',y]); y+=10; };
+  tengah(d.toko,F(700,17),22); if(d.alamat) tengah(d.alamat,F(400,11),15); if(d.telp) tengah(d.telp,F(400,11),15);
+  garis(); d.info.forEach(([k,v])=>baris(k,String(v),F(400,13),19));
+  garis(); d.items.forEach(([k,v])=>baris(k,rp(v),F(400,13),19));
+  garis(); baris('TOTAL',rp(d.total),F(700,14),21); d.bawah.forEach(([k,v])=>baris(k,String(v),F(400,13),19));
+  garis(); d.penutup.forEach(l=>tengah(l,F(400,11),15)); y+=P;
+  c.width=W*S; c.height=Math.ceil(y)*S; x.scale(S,S);
+  x.fillStyle='#fff'; x.fillRect(0,0,W,y); x.fillStyle='#000'; x.textBaseline='top';
+  for(const o of ops){
+    if(o[0]==='g'){ x.setLineDash([4,3]); x.strokeStyle='#000'; x.beginPath(); x.moveTo(P,o[1]+.5); x.lineTo(W-P,o[1]+.5); x.stroke(); continue; }
+    x.font=o[2]; x.textAlign=o[0]==='c'?'center':o[0]==='r'?'right':'left';
+    x.fillText(o[1], o[0]==='c'?W/2:o[0]==='r'?W-P:P, o[3]);
+  }
+  return c.toDataURL('image/png');
+}
+async function openNotaHP(id){
+  const t=services.find(x=>x.id===id); if(!t) return;
+  showModal(`<h3>Nota ${escH(t.inv)}</h3><div class="nota-hp-prev"><div class="empty">Menyiapkan nota...</div></div>
+    <div class="nota-hp-btns">
+      <button type="button" class="btn btn-green" onclick="notaKeWA('${id}')">Kirim ke WhatsApp</button>
+      <button type="button" class="btn btn-tool" onclick="notaBagikanGambar('${id}')">Bagikan gambar</button>
+      <button type="button" class="btn btn-tool" onclick="notaCetakStruk('${id}')">Cetak struk (printer Bluetooth)</button>
+      <button type="button" class="btn btn-gray" onclick="closeModal()">Tutup</button>
+    </div>`);
+  const url=await notaGambar(t);
+  const prev=document.querySelector('#modalContent .nota-hp-prev');
+  if(prev) prev.innerHTML=`<img src="${url}" alt="Pratinjau nota ${escH(t.inv)}">`;
+}
+function notaKeWA(id){
+  const t=services.find(x=>x.id===id); if(!t) return;
+  const no=waNomor(t.phone);
+  if(!no&&!confirm('Nomor HP pelanggan belum diisi. Buka WhatsApp dan pilih kontaknya sendiri?')) return;
+  location.href=`https://wa.me/${no}?text=${encodeURIComponent(notaTeksWA(t))}`;
+}
+async function notaBagikan(opts, nama){
+  const Share=capPlugin('Share');
+  if(!Share){ alert('Fitur bagikan butuh aplikasi versi terbaru. Perbarui aplikasi dari Play Store atau App Store.'); return; }
+  try{ await Share.share(opts); }
+  catch(e){ if(!/cancel/i.test(String(e&&e.message||e))) alert('Gagal membagikan '+nama+': '+(e&&e.message||e)); }
+}
+async function notaBagikanGambar(id){
+  const t=services.find(x=>x.id===id); if(!t) return;
+  const Fs=capPlugin('Filesystem');
+  if(!Fs){ alert('Fitur bagikan butuh aplikasi versi terbaru. Perbarui aplikasi dari Play Store atau App Store.'); return; }
+  try{
+    const data=(await notaGambar(t)).split(',')[1];
+    const f=await Fs.writeFile({path:`nota-${String(t.inv).replace(/[^\w-]/g,'')}.png`, data, directory:'CACHE'});
+    await notaBagikan({title:'Nota '+t.inv, files:[f.uri]}, 'gambar nota');
+  }catch(e){ alert('Gagal menyiapkan gambar nota: '+(e&&e.message||e)); }
+}
+function notaCetakStruk(id){
+  const t=services.find(x=>x.id===id); if(!t) return;
+  notaBagikan({title:'Nota '+t.inv, text:notaTeksStruk(t), dialogTitle:'Pilih aplikasi printer (mis. RawBT)'}, 'struk');
+}
 function printNota(id){
+  if(isNativeApp()) return openNotaHP(id);
   const t=services.find(x=>x.id===id);
   const b=branches.find(x=>x.id===t.branch)||{};
   const w=window.open('','','width=380,height=600');
