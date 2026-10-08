@@ -341,7 +341,10 @@
   .btn-red{background:var(--red);}
   .btn-green{background:var(--green);}
   .btn-gray{background:var(--gray);}
-  .btn-orange{background:var(--orange);}
+  /* Teks putih di atas abu terang mode gelap (#95a09c) hanya 2,7:1; di atas
+     oranye #B8863D 3,2:1. Latar digelapkan supaya lolos 4,5:1. */
+  body.dark-mode .btn-gray{ background:#56615d; }
+  .btn-orange{background:#86622c;}
   .btn-purple{background:var(--purple);}
 
   input,select,textarea{ width:100%; height:40px; padding:0 14px; border:1px solid var(--border-strong); border-radius:8px; font-size:14px; margin-bottom:12px; background:var(--input-bg); color:var(--text); transition:border-color .15s var(--ease),box-shadow .15s var(--ease); font-family:inherit; }
@@ -486,8 +489,8 @@
   body.demo-on .exp-fab{ bottom:76px; }
   .exp-mtd{ display:none; }
   @media(max-width:900px){
-    .exp-col-m{ display:none; }
-    .exp-mtd{ display:block; margin-top:4px; padding:0; min-height:44px; min-width:44px; background:none; border:0; color:var(--primary-t); font-size:13px; font-weight:600; text-decoration:underline; cursor:pointer; text-align:left; }
+    /* Di HP metode bayar cukup tampil sebagai baris "Metode" di kartu; link di bawah
+       catatan dulu ikut tampil sehingga metodenya muncul dua kali. */
     .exp-table-wrap th,.exp-table-wrap td{ padding:12px 10px; }
     .exp-summary{ grid-template-columns:1fr; padding:20px; gap:16px; }
     .exp-bar{ justify-content:stretch; }
@@ -521,7 +524,8 @@
   .riw-row2 .aside{ margin-left:auto; font-size:12px; color:var(--gray); white-space:nowrap; }
   .riw-badge{ font-size:11px; font-weight:600; padding:1px 7px; border-radius:6px; white-space:nowrap; }
   .riw-badge.ok{ background:rgba(15,110,86,.14); color:var(--green-t); }
-  .riw-badge.warn{ background:rgba(184,134,61,.18); color:var(--orange-t); }
+  .riw-badge.warn{ background:rgba(184,134,61,.18); color:#74531f; }
+  body.dark-mode .riw-badge.warn{ color:#e0aa5c; }
   .riw-detail{ overflow-y:auto; padding:20px 24px; }
   .riw-d-empty{ display:flex; align-items:center; justify-content:center; height:100%; min-height:200px; color:var(--gray); text-align:center; }
   .riw-d-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-bottom:16px; border-bottom:1px solid var(--border); }
@@ -4923,7 +4927,7 @@ async function initFaceModels(){
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
     ]);
     faceModelsLoaded=true;
-    if(statusEl) statusEl.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Model siap. Aktifkan kamera untuk mulai.';
+    if(statusEl) statusEl.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Model siap.';
   }catch(err){
     console.error('Gagal load model wajah:',err);
     if(statusEl) statusEl.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Gagal memuat model wajah. Cek koneksi internet, lalu buka ulang halaman ini.';
