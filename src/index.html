@@ -804,7 +804,21 @@
   .audit-hist-item:last-child{ border-bottom:0; }
   .audit-hist-line{ font-size:13px; color:var(--gray); margin-top:3px; }
   @media(max-width:900px){
-    .audit-layout{ grid-template-columns:1fr; }
+    /* minmax(0,1fr): kolom tunggal tidak boleh dilebarkan isi terlebarnya
+       (tabel Stok Masuk), yang dulu mendorong panel Pilih Barang keluar layar. */
+    .audit-layout{ grid-template-columns:minmax(0,1fr); }
+    /* Stok Masuk di HP: tiap barang jadi kartu, nama + hapus, lalu Qty dan Modal
+       berdampingan, lalu Subtotal. */
+    #pbWork thead{ display:none; }
+    #pbWork table,#pbWork tbody{ display:block; min-width:0; }
+    #pbWork tr{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px; gap:8px 10px; padding:12px 0; border-bottom:1px solid var(--border); }
+    #pbWork td{ padding:0; border:0; text-align:left; background:transparent!important; }
+    #pbWork td.audit-row-name{ grid-column:1 / 3; grid-row:1; min-width:0; }
+    #pbWork td:last-child{ grid-column:3; grid-row:1; justify-self:end; }
+    #pbWork td[data-l]{ display:flex; flex-direction:column; gap:4px; }
+    #pbWork td[data-l]::before{ content:attr(data-l); font-size:12px; color:var(--gray); }
+    #pbWork td.pb-sub{ grid-column:1 / 4; flex-direction:row; justify-content:space-between; font-weight:600; }
+    #pbWork .audit-phys,#pbWork .audit-phys:not(.pb-cost){ width:100%; }
     .audit-pick-list{ max-height:320px; }
     .audit-hist-search{ max-width:none; margin:0; flex-basis:100%; }
     .audit-work table{ min-width:0; }
@@ -3694,9 +3708,9 @@ function pbRenderWork(){
   else el.innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Barang</th><th class="num">Qty</th><th class="num">Modal/unit</th><th class="num">Subtotal</th><th><span class="sr-only">Hapus</span></th></tr></thead><tbody>${items.map((it,i)=>{
     const s=pbStockOf(it);
     return `<tr><td class="audit-row-name"><b>${escH(pbNameOf(it))}</b>${it.kind==='new'?'<span class="audit-muted" style="display:block">Barang baru'+(it.sku?' / '+escH(it.sku):'')+'</span>':`<span class="audit-muted" style="display:block">Stok ${s?s.qty:0}</span>`}</td>
-      <td class="num"><input type="number" inputmode="numeric" min="1" step="1" class="audit-phys" id="pbQty_${i}" value="${it.qty}" aria-label="Qty ${escH(pbNameOf(it))}" oninput="pbRowChanged(${i})"></td>
-      <td class="num"><input type="text" inputmode="numeric" class="audit-phys pb-cost" id="pbCost_${i}" value="${fmtNum(it.cost)}" aria-label="Modal per unit ${escH(pbNameOf(it))}" oninput="formatRupiahLive(this);pbRowChanged(${i})"></td>
-      <td class="num" id="pbSub_${i}">${rp((it.qty||0)*(it.cost||0))}</td>
+      <td class="num" data-l="Qty"><input type="number" inputmode="numeric" min="1" step="1" class="audit-phys" id="pbQty_${i}" value="${it.qty}" aria-label="Qty ${escH(pbNameOf(it))}" oninput="pbRowChanged(${i})"></td>
+      <td class="num" data-l="Modal/unit"><input type="text" inputmode="numeric" class="audit-phys pb-cost" id="pbCost_${i}" value="${fmtNum(it.cost)}" aria-label="Modal per unit ${escH(pbNameOf(it))}" oninput="formatRupiahLive(this);pbRowChanged(${i})"></td>
+      <td class="num pb-sub" data-l="Subtotal" id="pbSub_${i}">${rp((it.qty||0)*(it.cost||0))}</td>
       <td><button type="button" class="btn btn-tool btn-icon" onclick="pbRemove(${i})" aria-label="Hapus ${escH(pbNameOf(it))} dari daftar">${AUDIT_IC_X}</button></td></tr>`; }).join('')}</tbody></table></div>`;
   pbUpdateFoot();
 }
