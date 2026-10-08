@@ -748,6 +748,10 @@
   /* ===== STOCK AUDIT: dua panel (pilih barang, lalu hitung fisik) ===== */
   .audit-layout{ display:grid; grid-template-columns:minmax(300px,5fr) 7fr; gap:20px; align-items:start; margin-bottom:20px; }
   .audit-layout .panel{ margin-bottom:0; }
+  /* Pembelian Stok: tabel Stok Masuk butuh ~480px, jadi di layar 901-1279px (iPad,
+     jendela desktop kecil) dua kolom berdampingan mendorong halaman melebar ke
+     samping. Susun atas-bawah di rentang itu. */
+  @media(min-width:901px) and (max-width:1279px){ #pembelian .audit-layout{ grid-template-columns:minmax(0,1fr); } }
   .audit-muted{ font-size:13px; color:var(--gray); }
   .audit-filters{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; margin-bottom:8px; }
   .audit-filters input,.audit-filters select{ margin-bottom:0; }
@@ -4496,7 +4500,7 @@ function generateAIReview(){
   const gColor=score>=60?'var(--green-t)':score>=40?'var(--orange-t)':'var(--red-t)';
   document.getElementById('aiResult').innerHTML=`<div class="ai-box">
     <div class="ai-section"><span class="ai-tag">Skor Kesehatan Toko</span>
-      <h3 style="color:${gColor};font-size:32px">${score}/100 (${grade})</h3>
+      <h3 style="color:${gColor};font-size:32px">${score}/100 · ${grade}</h3>
       <div class="progress"><div class="progress-bar" style="width:${score}%;background:${gColor}"></div></div></div>
     <div class="ai-section"><span class="ai-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="14 6 21 6 21 13"/></svg>Ringkasan Keuangan</span><ul>
       <li>Pendapatan: <b>${rp(st.revenue)}</b> (${st.serviceCount} servis)</li>
