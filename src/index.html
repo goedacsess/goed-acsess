@@ -215,6 +215,11 @@
   .nav-item .ico svg{ width:18px; height:18px; display:block; }
   .nav-item.active .ico{ color:#FF8A3D; opacity:1; }
   .nav-divider{ height:1px; background:rgba(255,255,255,.08); margin:10px 20px; }
+  /* Hanya daftar menu yang digulir; nama pengguna dan Logout selalu menempel di
+     bawah. Sebelumnya seluruh sidebar yang digulir, jadi di layar pendek (iPad
+     mendatar 820px) tombol Logout berada di luar layar dan tidak ditemukan. */
+  .sidebar{ overflow-y:hidden; }
+  #navMenu{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
   .userbox{ padding:12px 20px; font-size:13px; color:#9aa4a9; border-top:1px solid rgba(255,255,255,.08); margin-top:auto; }
   .main{ margin-left:var(--sidebar-w); padding:0 32px 60px; min-height:100vh; }
   .topbar{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; margin-bottom:20px; gap:14px; flex-wrap:wrap; border-bottom:1px solid var(--border); }
@@ -842,7 +847,10 @@
 
   @media(max-width:900px){
     .hamburger-btn{ display:flex; align-items:center; }
-    .sidebar{ transform:translateX(-100%); transition:transform .28s var(--ease); z-index:500; width:260px; }
+    /* Laci menu di atas bilah demo (z 590) dan tab bawah, setinggi layar penuh,
+       supaya tombol keluar di dasarnya tidak tertutup. */
+    .sidebar{ transform:translateX(-100%); transition:transform .28s var(--ease); z-index:600; width:260px; padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)); }
+    body.demo-on .sidebar{ height:100vh; }
     .sidebar.mobile-open{ transform:translateX(0); }
     .logo span,.nav-item span:not(.ico),.branch-sel,.userbox{ display:inline !important; }
     /* ruang bawah harus cukup untuk pil tab bawah + bilah demo, supaya isi terakhir
@@ -1525,9 +1533,9 @@
         </div>
         <div style="flex:1;min-width:250px">
           <div style="padding:16px;background:var(--light);border-radius:12px;margin-bottom:12px;text-align:center;min-height:50px;display:flex;align-items:center;justify-content:center">
-            <p style="font-size:15px" id="faceStatusText">Aktifkan kamera untuk mulai.</p>
+            <p style="font-size:15px" id="faceStatusText">Kamera dipakai untuk mencocokkan wajah saat absen masuk dan pulang.</p>
           </div>
-          <button class="btn" style="width:100%;margin-bottom:8px" onclick="startFaceCamera()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Aktifkan Kamera</button>
+          <button class="btn" style="width:100%;margin-bottom:8px" onclick="startFaceCamera()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Lanjutkan</button>
           <button class="btn btn-green" style="width:100%;margin-bottom:8px" onclick="doFaceCheckIn()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>Absen Sekarang</button>
           <button class="btn btn-gray" style="width:100%" onclick="doFaceEnroll()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.9 3.6-7 8-7s8 3.1 8 7"/></svg>Daftarkan Wajah Saya</button>
         </div>
@@ -2327,6 +2335,12 @@ function applyAppSettings(){
   if(loginNameEl) loginNameEl.textContent = name.toUpperCase();
 }
 
+/* Absensi Wajah tidak tersedia di aplikasi iPhone/iPad: fitur ini dihapus dari versi
+   iOS supaya tidak ada pengumpulan data wajah di sana (App Review 2.1 / 5.1.1).
+   Desktop dan Android tetap punya. */
+const PAGE_HIDDEN_IOS=new Set(['absensi']);
+const isIOSApp=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios');
+const pageHidden=id=>PAGE_HIDDEN_IOS.has(id)&&isIOSApp();
 function buildNavMenu(){
   const menu = document.getElementById('navMenu');
   menu.innerHTML = '';
@@ -2338,6 +2352,7 @@ function buildNavMenu(){
       }
       return;
     }
+    if(pageHidden(n.id)) return;
     if(n.ownerOnly && currentUser.role!=='owner') return;
     if(n.permKey && currentUser.role!=='owner' && !canAccess(n.permKey)) return;
     const el = document.createElement('div');
@@ -2611,7 +2626,7 @@ function navTo(page){
 
 /* ============ PENCARIAN GLOBAL ============ */
 const GS_LIMIT=5;
-const gsPageOk=id=>{ const n=NAV_DEF.find(x=>x.id===id); return !!n && !(n.ownerOnly && currentUser.role!=='owner') && !(n.permKey && currentUser.role!=='owner' && !canAccess(n.permKey)); };
+const gsPageOk=id=>{ const n=NAV_DEF.find(x=>x.id===id); return !!n && !pageHidden(id) && !(n.ownerOnly && currentUser.role!=='owner') && !(n.permKey && currentUser.role!=='owner' && !canAccess(n.permKey)); };
 const gsHit=(q,...fields)=>fields.some(f=>String(f??'').toLowerCase().includes(q));
 function gsCollect(q){
   const groups=[];
@@ -2806,6 +2821,7 @@ if(/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent||'')){ const k
   new MutationObserver(list=>list.forEach(m=>m.addedNodes.forEach(scan))).observe(document.body,{childList:true,subtree:true});
 })();
 function nav(page,el){
+  if(pageHidden(page)) page='dashboard';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(page).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -4923,7 +4939,7 @@ async function startFaceCamera(){
 }
 async function doFaceEnroll(){
   if(!faceModelsLoaded){ alert('Model pengenalan wajah belum siap, tunggu sebentar lalu coba lagi.'); return; }
-  if(!faceStream){ alert('Aktifkan kamera dulu.'); return; }
+  if(!faceStream){ alert('Ketuk Lanjutkan dulu untuk membuka kamera.'); return; }
   document.getElementById('faceStatusText').textContent='Mendeteksi wajah...';
   const video=document.getElementById('faceVideo');
   const detection=await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
@@ -4937,7 +4953,7 @@ async function doFaceEnroll(){
 }
 async function doFaceCheckIn(){
   if(!faceModelsLoaded){ alert('Model pengenalan wajah belum siap, tunggu sebentar lalu coba lagi.'); return; }
-  if(!faceStream){ alert('Aktifkan kamera dulu.'); return; }
+  if(!faceStream){ alert('Ketuk Lanjutkan dulu untuk membuka kamera.'); return; }
   if(!faceEnrollments.length){ alert('Belum ada wajah terdaftar. Daftarkan wajah dulu sebelum absen.'); return; }
   document.getElementById('faceStatusText').textContent='Mendeteksi wajah...';
   const video=document.getElementById('faceVideo');
@@ -5454,7 +5470,7 @@ const Office = (function(){
     const hadir=seats.filter(s=>s.state==='hadir').length;
     if(!todayLog.length){
       showOverlay('<p>Belum ada yang absen masuk hari ini di '+escH(branchName(currentBranch))+'. Meja akan terisi begitu ada yang absen.</p>'+
-        '<button class="btn btn-sm" onclick="navTo(\'absensi\')">Buka halaman Absensi</button>');
+        (pageHidden('absensi')?'':'<button class="btn btn-sm" onclick="navTo(\'absensi\')">Buka halaman Absensi</button>'));
     } else if(!hadir){
       showOverlay('<p>Semua orang sudah absen pulang. Toko kosong menurut catatan absensi hari ini.</p>');
     } else {
