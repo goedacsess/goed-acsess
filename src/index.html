@@ -130,6 +130,9 @@
      saat digulir. */
   .tabbar{ backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat)); -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat)); }
   .modal{ backdrop-filter:blur(calc(var(--lg-blur) * 1.5)) saturate(var(--lg-sat)); -webkit-backdrop-filter:blur(calc(var(--lg-blur) * 1.5)) saturate(var(--lg-sat)); }
+  /* Modal bisa digulir; kilau ::after (absolute, setinggi area awal) ikut tergulir
+     dan muncul sebagai garis kotak di tengah isi. Bingkai inset sudah cukup. */
+  .modal::after{ display:none; }
   /* Tanpa backdrop-filter, kaca harus jatuh ke permukaan padat supaya teks
      tidak menumpuk di atas apa pun yang ada di belakangnya. */
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
@@ -546,6 +549,48 @@
   .nota-hp-prev img{ width:100%; max-width:384px; height:auto; display:block; margin:0 auto; }
   .nota-hp-btns{ display:grid; gap:8px; }
   .nota-hp-btns .btn{ width:100%; min-height:44px; justify-content:center; }
+  /* Transaksi Servis Baru: modal lebar dua kolom (pilih sparepart | form). */
+  .modal.modal-wide{ max-width:1100px; width:94%; }
+  .svc-layout{ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; align-items:start; }
+  .svc-pick h4{ font-size:15px; font-weight:700; margin:0 0 10px; }
+  .svc-filters{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; margin-bottom:8px; }
+  .svc-filters input,.svc-filters select{ margin-bottom:0; }
+  .svc-filters .cs-wrap{ margin-bottom:0; }
+  .svc-pick-list{ max-height:58vh; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-md); }
+  .svc-pick-item{ min-height:56px; }
+  .svc-pick-item.on{ background:rgb(var(--canvas-tint-1) / .09); }
+  .svc-pick-item .api-qty{ display:flex; flex-direction:column; align-items:flex-end; }
+  .svc-pick-item .api-qty small{ font-size:12px; margin-top:2px; }
+  .svc-sel-head{ display:flex; justify-content:space-between; align-items:center; font-weight:600; margin:4px 0 6px; }
+  .svc-sel-list{ border-top:1px solid var(--border); margin-bottom:14px; }
+  .svc-sel-empty{ color:var(--gray); font-size:13px; padding:14px 0; border-bottom:1px solid var(--border); }
+  .svc-sel-row{ display:grid; grid-template-columns:minmax(0,1fr) auto 120px 96px 44px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .svc-sel-name{ min-width:0; overflow-wrap:anywhere; }
+  .svc-sel-name .api-sub{ display:block; font-size:12px; color:var(--gray); }
+  .svc-step{ display:inline-flex; align-items:center; border:1px solid var(--border-strong); border-radius:10px; overflow:hidden; }
+  .svc-step button{ width:40px; height:44px; border:0; background:transparent; color:var(--text); font-size:18px; cursor:pointer; }
+  .svc-step button:hover{ background:var(--hover-bg); }
+  .svc-step span{ min-width:32px; text-align:center; font-weight:600; font-variant-numeric:tabular-nums; }
+  .svc-price{ margin:0; }
+  .svc-price span{ display:none; }
+  .svc-price input{ margin:0; text-align:right; }
+  .svc-sub{ text-align:right; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .svc-total{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; padding:12px 0; margin:6px 0 12px; border-top:1px solid var(--border); font-size:14px; color:var(--gray); }
+  .svc-total b{ color:var(--text); font-size:16px; }
+  @media(max-width:900px){
+    .modal.modal-wide{ width:94%; }
+    /* HP: data pelanggan, lalu pilih sparepart, lalu yang terpilih, lalu bayar. */
+    .svc-layout{ display:flex; flex-direction:column; gap:0; }
+    .svc-form{ display:contents; }
+    .svc-f1{ order:1; } .svc-pick{ order:2; margin-bottom:14px; } .svc-f3{ order:3; } .svc-f4{ order:4; }
+    .svc-pick-list{ max-height:300px; }
+    .svc-sel-row{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"nm del" "st sub" "pr pr"; }
+    .svc-sel-name{ grid-area:nm; } .svc-sel-row .ar-del{ grid-area:del; justify-self:end; }
+    .svc-step{ grid-area:st; justify-self:start; }
+    .svc-price{ grid-area:pr; display:flex; flex-direction:column; gap:4px; }
+    .svc-price span{ display:block; font-size:12px; color:var(--gray); }
+    .svc-sub{ grid-area:sub; align-self:center; }
+  }
   .riw-d-kv{ display:flex; justify-content:space-between; gap:16px; padding:6px 0; font-size:14px; }
   .riw-d-kv span:last-child{ text-align:right; overflow-wrap:anywhere; }
   @media(max-width:900px){
@@ -842,10 +887,6 @@
   .sr-only{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
   /* MULTI ITEM */
-  .part-row{ display:grid; grid-template-columns:1fr 120px 120px 36px; gap:8px; align-items:start; margin-bottom:8px; }
-  .part-row input, .part-row select{ margin-bottom:0; }
-  .part-row .btn-del-part{ background:var(--red); color:#fff; border:none; border-radius:9px; width:36px; height:40px; cursor:pointer; font-size:16px; margin-top:0; transition:.15s; }
-  .part-row .btn-del-part:hover{ filter:brightness(1.08); }
 
   /* PERMISSION GRID */
   .perm-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
@@ -929,8 +970,6 @@
     .insight-card .ic-label{ font-size:12.5px; }
     .asset-mini-card{ padding:12px 14px; }
     .asset-mini-card .val{ font-size:16px; }
-    .part-row{ grid-template-columns:1fr; gap:6px; }
-    .part-row .btn-del-part{ width:100%; height:44px; }
     .panel{ padding:18px 16px; border-radius:var(--radius-md); }
     .modal{ width:94%; max-width:none; padding:22px 20px; max-height:92vh; border-radius:18px; }
     table{ font-size:13px; }
@@ -1029,16 +1068,6 @@
   .row-actions .btn-icon.btn-red{ color:var(--red-t); }
 
   /* ===== SEARCHABLE SELECT (combobox for sparepart/item search) ===== */
-  .ss-wrap{ position:relative; }
-  .ss-input{ cursor:text; }
-  .ss-dropdown{ position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--card-bg); border:1px solid var(--border-strong); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); max-height:260px; overflow-y:auto; z-index:80; }
-  .ss-dropdown.hidden{ display:none; }
-  .ss-item{ padding:9px 13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13.5px; border-bottom:1px solid var(--border); transition:background .1s; }
-  .ss-item:last-child{ border-bottom:none; }
-  .ss-item:hover{ background:var(--primary-light); }
-  .ss-item .ss-sub{ color:var(--gray); font-size:11.5px; white-space:nowrap; flex-shrink:0; }
-  .ss-empty{ padding:14px; text-align:center; color:var(--gray); font-size:13px; }
-  .part-row .ss-input{ margin-bottom:0; }
   @media(max-width:900px){ .row-actions{ justify-content:flex-start; flex-wrap:wrap; } }
   /* ===== Ruang Toko: kantor pixel yang isinya data absensi cabang aktif ===== */
   .ro-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -1703,41 +1732,6 @@ function formatRupiahLive(el){
   const pos=Math.max(el.value.length-cursorFromEnd,0);
   el.setSelectionRange(pos,pos);
 }
-
-/* ============ SEARCHABLE SELECT (combobox pencarian barang) ============ */
-let ssData = {};
-function ssHTML(baseId, placeholder, initialLabel){
-  return `<div class="ss-wrap">
-    <input type="text" id="${baseId}_q" class="ss-input" placeholder="${placeholder||'Cari...'}" autocomplete="off" value="${initialLabel||''}" oninput="ssFilter('${baseId}')" onfocus="ssFilter('${baseId}')">
-    <input type="hidden" id="${baseId}">
-    <div class="ss-dropdown hidden" id="${baseId}_dd"></div>
-  </div>`;
-}
-function ssInit(baseId, options, onPick){
-  ssData[baseId] = {options, onPick};
-}
-function ssFilter(baseId){
-  const d = ssData[baseId]; if(!d) return;
-  const qEl = document.getElementById(baseId+'_q'); if(!qEl) return;
-  const q = (qEl.value||'').toLowerCase();
-  const dd = document.getElementById(baseId+'_dd');
-  const matches = d.options.filter(o=>o.label.toLowerCase().includes(q)).slice(0,60);
-  dd.innerHTML = matches.length ? matches.map(o=>`<div class="ss-item" onclick="ssPick('${baseId}','${String(o.value).replace(/'/g,"\\'")}')"><span>${escH(o.label)}</span>${o.sub?`<span class="ss-sub">${escH(o.sub)}</span>`:''}</div>`).join('') : '<div class="ss-empty">Tidak ditemukan</div>';
-  dd.classList.remove('hidden');
-}
-function ssPick(baseId, value){
-  const d = ssData[baseId]; if(!d) return;
-  const opt = d.options.find(o=>String(o.value)===String(value));
-  document.getElementById(baseId).value = value;
-  document.getElementById(baseId+'_q').value = opt?opt.label:'';
-  document.getElementById(baseId+'_dd').classList.add('hidden');
-  if(d.onPick) d.onPick(value);
-}
-document.addEventListener('click', function(e){
-  if(!e.target.closest('.ss-wrap')){
-    document.querySelectorAll('.ss-dropdown').forEach(el=>el.classList.add('hidden'));
-  }
-});
 
 // Helper: panggil Supabase, kasih peringatan kalau gagal (tanpa hentikan aplikasi)
 /* Stok diubah di server sebagai "tambah/kurangi sekian" (fungsi ubah_stok dari
@@ -2610,7 +2604,7 @@ async function savePermissions(){
 }
 
 /* ============ MODAL ============ */
-function showModal(h){ document.getElementById('modalContent').innerHTML=h; document.getElementById('modalBg').classList.add('active'); }
+function showModal(h){ const mc=document.getElementById('modalContent'); mc.classList.remove('modal-wide'); mc.innerHTML=h; document.getElementById('modalBg').classList.add('active'); }
 function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
 document.getElementById('modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
 
@@ -3014,62 +3008,97 @@ function openStockHistoryModal(stockId){
 const STATUSES=['Antri','Proses','Selesai','Diambil','Batal'];
 const stClass={Antri:'st-antri',Proses:'st-proses',Selesai:'st-selesai',Diambil:'st-diambil',Batal:'st-batal'};
 
-let partRows = [];
-
-function getStockOpts(){
-  return bStock().map(s=>`<option value="${s.id}">${escH(s.name)} (stok:${s.qty}) - ${rp(s.price)}</option>`).join('');
-}
-function addPartRow(){
-  const rowId = gid();
-  partRows.push(rowId);
-  const div = document.createElement('div');
-  div.className='part-row';
-  div.id='pr_'+rowId;
-  div.innerHTML=`
-    ${ssHTML('prs_'+rowId, 'Cari sparepart...')}
-    <input type="text" inputmode="numeric" id="prp_${rowId}" placeholder="Harga jual" value="0" style="margin-bottom:0" oninput="formatRupiahLive(this)">
-    <input type="number" id="prq_${rowId}" placeholder="Qty" value="1" min="1" style="margin-bottom:0">
-    <button type="button" class="btn-del-part" aria-label="Hapus sparepart ini" onclick="removePartRow('${rowId}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
-  document.getElementById('partRowsContainer').appendChild(div);
-  const opts=[{value:'',label:'-- Tanpa sparepart --'},...bStock().map(s=>({value:s.id,label:s.name,sub:`stok:${s.qty} · ${rp(s.price)}`}))];
-  ssInit('prs_'+rowId, opts, ()=>onPartChange(rowId));
-}
-function removePartRow(rowId){
-  partRows = partRows.filter(r=>r!==rowId);
-  const el=document.getElementById('pr_'+rowId);
-  if(el) el.remove();
-}
-function onPartChange(rowId){
-  const sel=document.getElementById('prs_'+rowId).value;
-  const s=stock.find(x=>x.id===sel);
-  if(s) document.getElementById('prp_'+rowId).value=fmtNum(s.price);
-  else document.getElementById('prp_'+rowId).value='';
-}
-
+/* ============ TRANSAKSI SERVIS BARU (gaya Kelola) ============
+   Kiri: daftar sparepart dengan cari dan filter kategori, ketuk = tambah 1.
+   Kanan: data pelanggan/servis, sparepart terpilih (- / + jumlah, harga bisa
+   diubah), total. Di HP disusun atas-bawah. */
+let svcParts=[];   // [{id, qty, price}]
+let svcQ='', svcCat='';
 function openServiceModal(){
-  partRows=[];
+  svcParts=[]; svcQ=''; svcCat='';
+  const cats=[...new Set(bStock().map(s=>s.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));
   showModal(`<h3>Transaksi Servis Baru</h3>
-    <div class="form-grid">
-      <div><label>Nama Customer</label><input id="s_cust"></div>
-      <div><label>No. HP Customer</label><input id="s_phone"></div>
-    </div>
-    <label>Device / iPhone</label><input id="s_device" placeholder="cth: iPhone 12 Pro">
-    <label>Jenis Kerusakan / Servis</label><input id="s_issue" placeholder="cth: Ganti LCD">
-    <div class="form-grid">
-      <div><label>Biaya Jasa</label><input id="s_jasa" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
-      <div><label>Status Awal</label><select id="s_status">${STATUSES.map(x=>`<option>${x}</option>`).join('')}</select></div>
-    </div>
-    <div class="form-grid">
-      <div><label>Status Pembayaran</label><select id="s_paystatus" onchange="document.getElementById('s_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Lunas</option><option value="belum">Belum Lunas / Cicilan</option></select></div>
-      <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
-    </div>
-    <label>Metode Pembayaran</label><input id="s_paymethod" list="s_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
-    <datalist id="s_paymethodList">${paymentMethodOptions().map(m=>`<option value="${escH(m)}">`).join('')}</datalist>
-    <label style="margin-bottom:10px">Sparepart Digunakan</label>
-    <div id="partRowsContainer" style="margin-bottom:8px"></div>
-    <button type="button" class="btn btn-gray btn-sm" onclick="addPartRow()" style="margin-bottom:16px">+ Tambah Sparepart</button>
-    <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="saveService()">Simpan</button></div>`);
-  addPartRow();
+  <div class="svc-layout">
+    <section class="svc-pick" aria-label="Pilih sparepart">
+      <h4>Pilih Sparepart</h4>
+      <div class="svc-filters">
+        <input type="search" id="svcSearch" placeholder="Cari nama atau SKU" autocomplete="off" aria-label="Cari sparepart" oninput="svcQ=this.value;svcPickRender()">
+        <select id="svcCatSel" aria-label="Filter kategori" onchange="svcCat=this.value;svcPickRender()"><option value="">Semua Kategori</option>${cats.map(c=>`<option value="${escH(c)}">${escH(c)}</option>`).join('')}</select>
+      </div>
+      <div id="svcPickList" class="svc-pick-list"></div>
+    </section>
+    <section class="svc-form" aria-label="Data servis">
+      <div class="svc-f1"><div class="form-grid">
+        <div><label>Nama Customer</label><input id="s_cust"></div>
+        <div><label>No. HP Customer</label><input id="s_phone" inputmode="tel"></div>
+      </div>
+      <div class="form-grid">
+        <div><label>Device / iPhone</label><input id="s_device" placeholder="cth: iPhone 12 Pro"></div>
+        <div><label>Jenis Kerusakan / Servis</label><input id="s_issue" placeholder="cth: Ganti LCD"></div>
+      </div></div>
+      <div class="svc-f3"><div class="svc-sel-head"><span>Sparepart Digunakan</span><span class="audit-muted" id="svcSelCount"></span></div>
+      <div id="svcSelList" class="svc-sel-list"></div></div>
+      <div class="svc-f4"><div class="form-grid">
+        <div><label>Biaya Jasa</label><input id="s_jasa" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this);svcTotals()"></div>
+        <div><label>Status Awal</label><select id="s_status">${STATUSES.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-grid">
+        <div><label>Status Pembayaran</label><select id="s_paystatus" onchange="document.getElementById('s_payamount_wrap').style.display=this.value==='belum'?'block':'none'"><option value="lunas">Lunas</option><option value="belum">Belum Lunas</option></select></div>
+        <div id="s_payamount_wrap" style="display:none"><label>Dibayar Sekarang</label><input id="s_payamount" type="text" inputmode="numeric" value="0" oninput="formatRupiahLive(this)"></div>
+      </div>
+      <label>Metode Pembayaran</label><input id="s_paymethod" list="s_paymethodList" placeholder="Cash / Transfer / QRIS / ..." value="Cash">
+      <datalist id="s_paymethodList">${paymentMethodOptions().map(m=>`<option value="${escH(m)}">`).join('')}</datalist>
+      <div class="svc-total" id="svcTotal"></div>
+      <div class="flex-row" style="justify-content:flex-end"><button class="btn btn-gray" onclick="closeModal()">Batal</button><button class="btn btn-green" onclick="saveService()">Simpan</button></div></div>
+    </section>
+  </div>`);
+  document.getElementById('modalContent').classList.add('modal-wide');
+  svcPickRender(); svcSelRender();
+}
+function svcPickRender(){
+  const box=document.getElementById('svcPickList'); if(!box) return;
+  const q=svcQ.trim().toLowerCase();
+  const list=bStock().filter(s=>(!svcCat||s.category===svcCat)&&(!q||(s.name||'').toLowerCase().includes(q)||(s.sku||'').toLowerCase().includes(q)))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||'','id'));
+  if(!bStock().length){ box.innerHTML='<div class="empty">Belum ada sparepart. Tambahkan di menu Data Stok.</div>'; return; }
+  if(!list.length){ box.innerHTML='<div class="empty">Tidak ada sparepart yang cocok.</div>'; return; }
+  box.innerHTML=list.map(s=>{ const dipakai=(svcParts.find(p=>p.id===s.id)||{}).qty||0, sisa=s.qty-dipakai, habis=sisa<=0;
+    return `<button type="button" class="audit-pick-item svc-pick-item${dipakai?' on':''}" ${habis?'disabled':''} onclick="svcAdd('${s.id}')" aria-label="${escH(s.name)}, stok ${s.qty}${habis?', habis':''}">
+      <span class="api-name">${escH(s.name)}<span class="api-sub">${escH([rp(s.price||0), s.category||'', s.sku||''].filter(Boolean).join(' / '))}</span></span>
+      <span class="api-qty">${s.qty}${dipakai?`<small class="audit-diff-neg">-${dipakai}</small>`:''}${habis&&!dipakai?'<small class="audit-muted">habis</small>':''}</span></button>`; }).join('');
+}
+function svcAdd(id){
+  const s=bStock().find(x=>x.id===id); if(!s) return;
+  const it=svcParts.find(p=>p.id===id);
+  if(it){ if(it.qty>=s.qty){ alert('Stok '+s.name+' tinggal '+s.qty+'.'); return; } it.qty++; }
+  else { if(s.qty<1){ alert('Stok '+s.name+' habis.'); return; } svcParts.push({id, qty:1, price:s.price||0}); }
+  svcPickRender(); svcSelRender();
+}
+function svcQty(i,d){
+  const it=svcParts[i]; if(!it) return; const s=bStock().find(x=>x.id===it.id);
+  const n=it.qty+d; if(n<1){ svcParts.splice(i,1); }
+  else if(s&&n>s.qty){ alert('Stok '+s.name+' tinggal '+s.qty+'.'); return; }
+  else it.qty=n;
+  svcPickRender(); svcSelRender();
+}
+function svcPrice(i,el){ formatRupiahLive(el); const it=svcParts[i]; if(it){ it.price=parseRupiah(el.value); const sub=document.getElementById('svcSub_'+i); if(sub) sub.textContent=rp(it.price*it.qty); svcTotals(); } }
+function svcSelRender(){
+  const box=document.getElementById('svcSelList'); if(!box) return;
+  document.getElementById('svcSelCount').textContent=svcParts.length?svcParts.length+' barang':'';
+  box.innerHTML=svcParts.length?svcParts.map((it,i)=>{ const s=bStock().find(x=>x.id===it.id)||{name:'?'};
+    return `<div class="svc-sel-row">
+      <div class="svc-sel-name"><b>${escH(s.name)}</b><span class="api-sub">Stok ${s.qty??0}</span></div>
+      <div class="svc-step" role="group" aria-label="Jumlah ${escH(s.name)}"><button type="button" onclick="svcQty(${i},-1)" aria-label="Kurangi">−</button><span>${it.qty}</span><button type="button" onclick="svcQty(${i},1)" aria-label="Tambah">+</button></div>
+      <label class="svc-price"><span>Harga</span><input type="text" inputmode="numeric" value="${fmtNum(it.price)}" aria-label="Harga jual ${escH(s.name)}" oninput="svcPrice(${i},this)"></label>
+      <div class="svc-sub" id="svcSub_${i}">${rp(it.price*it.qty)}</div>
+      <button type="button" class="ar-del" onclick="svcQty(${i},-${it.qty})" aria-label="Keluarkan ${escH(s.name)}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>`; }).join(''):'<div class="svc-sel-empty">Belum ada sparepart. Ketuk barang di daftar untuk menambahkan, atau biarkan kosong kalau hanya jasa.</div>';
+  svcTotals();
+}
+function svcTotals(){
+  const el=document.getElementById('svcTotal'); if(!el) return;
+  const part=svcParts.reduce((t,p)=>t+p.price*p.qty,0), jasa=valRp('s_jasa')||0;
+  el.innerHTML=`<span>Sparepart ${rp(part)}</span><span>Jasa ${rp(jasa)}</span><b>Total ${rp(part+jasa)}</b>`;
 }
 
 async function saveService(){
@@ -3078,11 +3107,8 @@ async function saveService(){
   let stockUpdates=[];
   let rowsToApply=[];
   let pendingQty=new Map();
-  for(const rowId of partRows){
-    const partId=document.getElementById('prs_'+rowId).value;
-    const partPrice=parseRupiah(document.getElementById('prp_'+rowId).value);
-    const qty=+document.getElementById('prq_'+rowId).value||1;
-    if(!partId) continue;
+  for(const it of svcParts){
+    const partId=it.id, partPrice=it.price||0, qty=it.qty||1;
     const s=stock.find(x=>x.id===partId);
     if(!s){alert('Sparepart tidak ditemukan');return;}
     const alreadyRequested=pendingQty.get(partId)||0;
