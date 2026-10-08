@@ -584,6 +584,15 @@
     .svc-form{ display:contents; }
     .svc-f1{ order:1; } .svc-pick{ order:2; margin-bottom:14px; } .svc-f3{ order:3; } .svc-f4{ order:4; }
     .svc-pick-list{ max-height:300px; }
+  }
+  @media(min-width:901px) and (max-width:1199px){
+    /* Kolom form sempit: nama di baris sendiri supaya tidak patah tiga baris. */
+    .svc-sel-row{ grid-template-columns:auto minmax(0,1fr) auto 44px; grid-template-areas:"nm nm nm del" "st pr sub sub"; }
+    .svc-sel-name{ grid-area:nm; } .svc-sel-row .ar-del{ grid-area:del; justify-self:end; }
+    .svc-step{ grid-area:st; } .svc-price{ grid-area:pr; } .svc-sub{ grid-area:sub; }
+  }
+  @media(max-width:600px){
+    .svc-filters{ grid-template-columns:minmax(0,1fr); }
     .svc-sel-row{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"nm del" "st sub" "pr pr"; }
     .svc-sel-name{ grid-area:nm; } .svc-sel-row .ar-del{ grid-area:del; justify-self:end; }
     .svc-step{ grid-area:st; justify-self:start; }
