@@ -353,6 +353,10 @@
   input,select,textarea{ width:100%; height:40px; padding:0 14px; border:1px solid var(--border-strong); border-radius:8px; font-size:14px; margin-bottom:12px; background:var(--input-bg); color:var(--text); transition:border-color .15s var(--ease),box-shadow .15s var(--ease); font-family:inherit; }
   textarea{ height:auto; min-height:72px; padding:10px 14px; }
   input::placeholder,textarea::placeholder{ color:var(--gray); opacity:1; }
+  /* Memilih dari datalist dianggap autofill oleh Chromium dan diberi latar terang bawaan; tutup dengan warna tema. */
+  input:-webkit-autofill,input:-webkit-autofill:hover{ -webkit-text-fill-color:var(--text); caret-color:var(--text); box-shadow:inset 0 0 0 1000px var(--input-bg); transition:background-color 99999s; }
+  input:-webkit-autofill:focus{ box-shadow:inset 0 0 0 1000px var(--input-bg),0 0 0 3px var(--primary-light); }
+  body.dark-mode input,body.dark-mode select,body.dark-mode textarea{ color-scheme:dark; }
   input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--primary-t); box-shadow:0 0 0 3px var(--primary-light); }
   label{ font-size:13px; color:var(--text); display:block; margin-bottom:6px; font-weight:500; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
@@ -362,6 +366,13 @@
   @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
   .modal{ border-radius:12px; padding:24px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
   .modal h3{ margin-bottom:18px; font-size:18px; font-weight:700; }
+  /* Pengganti alert/confirm bawaan: kartu kaca kecil di atas modal mana pun. */
+  .dlg-bg{ position:fixed; inset:0; z-index:700; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(15,20,18,.45); animation:fadeIn .15s var(--ease); }
+  .modal.dlg{ width:100%; max-width:400px; padding:22px; }
+  .dlg-msg{ margin:0 0 20px; font-size:15px; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere; }
+  .dlg-btns{ display:flex; justify-content:flex-end; gap:8px; }
+  .dlg-btns .btn{ min-width:96px; min-height:40px; justify-content:center; }
+  @media(max-width:900px){ .dlg-btns .btn{ flex:1; min-height:44px; } }
 
   .badge{ padding:3px 8px; border-radius:6px; font-size:12px; font-weight:600; display:inline-block; border:1px solid rgba(0,0,0,.06); }
   .badge-low{background:#f5e6e4;color:var(--red-t);} .badge-ok{background:#e2ede9;color:var(--green-t);} .badge-mid{background:#f3e9d9;color:var(--orange-t);} .badge-info{background:#e7e9f5;color:var(--purple-t);}
@@ -2462,7 +2473,7 @@ async function delBranch(id){
     alert('Tidak bisa hapus. Cabang ini masih ditugaskan ke: '+assignedUsers.map(u=>u.name).join(', ')+'. Ubah dulu cabang user tersebut di menu Kelola User.');
     return;
   }
-  if(confirm('Hapus cabang ini?')){
+  if((await tanya('Hapus cabang ini?',{ok:'Hapus',bahaya:true}))){
     branches=branches.filter(x=>x.id!==id);
     if(currentBranch===id) currentBranch=branches[0].id;
     renderBranchSelect(); renderAll();
@@ -2544,7 +2555,7 @@ async function saveUser(id){
 async function delUser(id){
   if(users.length<=1){alert('Minimal 1 user');return;}
   if(id===currentUser.id){alert('Tidak bisa hapus akun yang sedang login');return;}
-  if(!confirm('Hapus user?')) return;
+  if(!(await tanya('Hapus user?',{ok:'Hapus',bahaya:true}))) return;
   if(DEMO_MODE){ users=users.filter(x=>x.id!==id); renderUserTable(); return; }
   const {error} = await sb.rpc('hapus_user',{p_id:id});
   if(error){ alert('Gagal menghapus user: '+error.message); return; }
@@ -2615,6 +2626,26 @@ async function savePermissions(){
 /* ============ MODAL ============ */
 function showModal(h){ const mc=document.getElementById('modalContent'); mc.classList.remove('modal-wide'); mc.innerHTML=h; document.getElementById('modalBg').classList.add('active'); }
 function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
+// Dialog bergaya aplikasi pengganti alert/confirm bawaan. Hasilnya Promise<boolean>.
+function dialogApp(msg,{ok='OK',batal='',bahaya=false}={}){
+  return new Promise(res=>{
+    const bg=document.createElement('div'); bg.className='dlg-bg';
+    bg.innerHTML=`<div class="modal dlg" role="alertdialog" aria-modal="true"><p class="dlg-msg"></p><div class="dlg-btns">${batal?`<button type="button" class="btn btn-gray" data-v="0">${escH(batal)}</button>`:''}<button type="button" class="btn${bahaya?' btn-red':''}" data-v="1">${escH(ok)}</button></div></div>`;
+    bg.querySelector('.dlg-msg').textContent=String(msg);
+    const fokusLama=document.activeElement;
+    const tutup=v=>{ document.removeEventListener('keydown',kunci,true); bg.remove(); if(fokusLama&&fokusLama.focus) fokusLama.focus(); res(v); };
+    const kunci=e=>{
+      if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); tutup(!batal); }
+      else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); tutup(true); }
+    };
+    bg.addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(b) tutup(b.dataset.v==='1'); else if(e.target===bg&&batal) tutup(false); });
+    document.addEventListener('keydown',kunci,true);
+    document.body.appendChild(bg);
+    bg.querySelector('[data-v="1"]').focus();
+  });
+}
+window.alert=m=>{ dialogApp(m); };
+const tanya=(msg,o={})=>dialogApp(msg,{ok:'Lanjutkan',batal:'Batal',...o});
 document.getElementById('modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
 
 /* ============ NAV ============ */
@@ -2927,7 +2958,7 @@ async function saveStock(id){
 }
 async function delStock(id){
   if(!canAccess('hapus_stok') && currentUser.role!=='owner'){alert('Anda tidak punya akses hapus stok');return;}
-  if(confirm('Hapus item?')){
+  if((await tanya('Hapus item?',{ok:'Hapus',bahaya:true}))){
     stock=stock.filter(x=>x.id!==id);
     renderAll();
     await dbCall(sb.from('stock').delete().eq('id',id), 'hapus stok');
@@ -3167,7 +3198,7 @@ async function saveService(){
 
 async function delService(id){
   if(!canAccess('hapus_transaksi') && currentUser.role!=='owner'){alert('Anda tidak punya akses hapus transaksi');return;}
-  if(!confirm('Hapus & kembalikan stok?'))return;
+  if(!(await tanya('Hapus & kembalikan stok?',{ok:'Hapus',bahaya:true})))return;
   const t=services.find(x=>x.id===id); if(!t) return;
   const idx=services.indexOf(t);
   const back=(t.parts||[]).map(p=>({s:stock.find(x=>x.id===p.partId),q:p.qty||1})).filter(b=>b.s);
@@ -3317,10 +3348,10 @@ async function openNotaHP(id){
   const prev=document.querySelector('#modalContent .nota-hp-prev');
   if(prev) prev.innerHTML=`<img src="${url}" alt="Pratinjau nota ${escH(t.inv)}">`;
 }
-function notaKeWA(id){
+async function notaKeWA(id){
   const t=services.find(x=>x.id===id); if(!t) return;
   const no=waNomor(t.phone);
-  if(!no&&!confirm('Nomor HP pelanggan belum diisi. Buka WhatsApp dan pilih kontaknya sendiri?')) return;
+  if(!no&&!(await tanya('Nomor HP pelanggan belum diisi. Buka WhatsApp dan pilih kontaknya sendiri?',{ok:'Buka WhatsApp'}))) return;
   location.href=`https://wa.me/${no}?text=${encodeURIComponent(notaTeksWA(t))}`;
 }
 async function notaBagikan(opts, nama){
@@ -3534,8 +3565,8 @@ function auditRemove(id){
   if(auditState.last===id) auditState.last=null;
   auditPersist(); renderAuditPick(); renderAuditWork();
 }
-function auditClearAll(){
-  if(auditState.ids.length && !confirm('Kosongkan daftar audit dan catatan?')) return;
+async function auditClearAll(){
+  if(auditState.ids.length && !(await tanya('Kosongkan daftar audit dan catatan?',{ok:'Kosongkan',bahaya:true}))) return;
   auditState.ids=[]; auditState.phys={}; auditState.note='';
   document.getElementById('auditNote').value='';
   auditPersist(); renderAuditPick(); renderAuditWork();
@@ -3561,7 +3592,7 @@ async function saveAudit(){
     items.push({name:s.name,system:s.qty,physical:p,diff:p-s.qty,id:s.id});
   }
   const nDiff=items.filter(i=>i.diff!==0).length;
-  if(nDiff && !confirm(`${nDiff} barang berselisih. Stok sistem akan disesuaikan dengan hitungan fisik. Lanjutkan?`)) return;
+  if(nDiff && !(await tanya(`${nDiff} barang berselisih. Stok sistem akan disesuaikan dengan hitungan fisik. Lanjutkan?`,{ok:'Simpan'}))) return;
   const note=auditState.note.trim();
   if(note) items.forEach(i=>{ i.note=note; });
   let stockUpdates=[];
@@ -3599,9 +3630,9 @@ function openEditAudit(id){
   document.getElementById('auditSearch').value='';
   navTo('audit'); renderAudit(); scrollTo({top:0,behavior:'instant'});
 }
-function auditResetEdit(){
+async function auditResetEdit(){
   const ed=auditState.edit; if(!ed) return;
-  if(!confirm('Kembalikan daftar ke isi audit semula? Perubahan yang belum diperbarui hilang.')) return;
+  if(!(await tanya('Kembalikan daftar ke isi audit semula? Perubahan yang belum diperbarui hilang.',{ok:'Kembalikan'}))) return;
   const stash=auditStash; openEditAudit(ed.id); auditStash=stash;
 }
 function auditCancelEdit(){
@@ -3629,7 +3660,7 @@ async function saveAuditEdit(){
   });
   const neg=moves.find(m=>m.s.qty+m.d<0);
   if(neg){ alert(`Stok "${neg.s.name}" akan jadi minus (${neg.s.qty+neg.d}). Periksa lagi hitungannya.`); return; }
-  if(!confirm(moves.length?`Perbarui audit? Stok ${moves.length} barang ikut disesuaikan:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'Perbarui audit? Stok barang tidak berubah.')) return;
+  if(!(await tanya(moves.length?`Perbarui audit? Stok ${moves.length} barang ikut disesuaikan:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'Perbarui audit? Stok barang tidak berubah.',{ok:'Perbarui'}))) return;
   const all=[...items,...ed.keep.map(i=>({...i}))];
   all.forEach(i=>{ if(note) i.note=note; else delete i.note; });
   const prev=a.items, prevQty=moves.map(m=>m.s.qty);
@@ -3650,7 +3681,7 @@ async function delAudit(id){
   const moves=(a.items||[]).filter(i=>i.diff).map(i=>({s:stock.find(x=>x.id===i.id),d:-i.diff})).filter(m=>m.s);
   const neg=moves.find(m=>m.s.qty+m.d<0);
   if(neg){ alert(`Audit tidak bisa dihapus: stok "${neg.s.name}" akan jadi minus (${neg.s.qty+neg.d}).`); return; }
-  if(!confirm(`Hapus audit ${fmtDateShort(a.date)} oleh ${a.by||'-'}?`+(moves.length?`\n\nSelisihnya dibatalkan, stok ${moves.length} barang kembali:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'\n\nStok barang tidak berubah.'))) return;
+  if(!(await tanya(`Hapus audit ${fmtDateShort(a.date)} oleh ${a.by||'-'}?`+(moves.length?`\n\nSelisihnya dibatalkan, stok ${moves.length} barang kembali:\n`+moves.map(m=>`${m.s.name}: ${m.s.qty} → ${m.s.qty+m.d}`).join('\n'):'\n\nStok barang tidak berubah.'),{ok:'Hapus',bahaya:true}))) return;
   if(auditState.edit&&auditState.edit.id===id) auditCancelEdit();
   const idx=audits.indexOf(a), prevQty=moves.map(m=>m.s.qty);
   audits.splice(idx,1); moves.forEach(m=>{ m.s.qty+=m.d; });
@@ -3773,8 +3804,8 @@ function pbAdd(id){
   const q=document.getElementById('pbQty_'+(pbState.items.length-1)); if(q){ q.focus(); q.select(); }
 }
 function pbRemove(i){ pbState.items.splice(i,1); pbPersist(); pbRenderPick(); pbRenderWork(); }
-function pbClear(){
-  if((pbState.items.length||pbState.vendor) && !confirm('Kosongkan daftar stok masuk?')) return;
+async function pbClear(){
+  if((pbState.items.length||pbState.vendor) && !(await tanya('Kosongkan daftar stok masuk?',{ok:'Kosongkan',bahaya:true}))) return;
   pbState={...pbState,items:[],vendor:'',payStatus:'lunas',payAmount:0,savedAt:null};
   pbPersist(); pbRender();
 }
@@ -3857,7 +3888,7 @@ async function savePurchases(){
   if(failed.length) alert(`${failed.length} BARANG TIDAK TERSIMPAN:\n\n${failed.map(i=>'- '+pbNameOf(i)).join('\n')}\n\nKoneksi ke server bermasalah, jadi catatan barang itu dibatalkan dan stoknya dikembalikan. Barang lain sudah tersimpan. Periksa koneksi lalu simpan lagi; barang yang gagal masih ada di daftar.`);
 }
 async function delPurchase(id){
-  if(confirm('Hapus catatan?')){
+  if((await tanya('Hapus catatan?',{ok:'Hapus',bahaya:true}))){
     purchases=purchases.filter(x=>x.id!==id);
     renderAll();
     await dbCall(sb.from('purchases').delete().eq('id',id), 'hapus pembelian');
@@ -3895,7 +3926,7 @@ async function saveExpense(){
   await dbCall(sb.from('expenses').insert(toDbExpense(ne)), 'simpan pengeluaran');
 }
 async function delExpense(id){
-  if(confirm('Hapus?')){
+  if((await tanya('Hapus?',{ok:'Hapus',bahaya:true}))){
     expenses=expenses.filter(x=>x.id!==id);
     renderAll();
     await dbCall(sb.from('expenses').delete().eq('id',id), 'hapus pengeluaran');
@@ -4019,11 +4050,11 @@ function parseMoney(v){
   const n=parseInt(t.replace(/\D/g,''),10)||0;
   return neg?-n:n;
 }
-function importStockCSV(file){
+async function importStockCSV(file){
   if(!file) return;
   if(demoTolakImpor()) return;
   const reset=()=>{ document.getElementById('importStockFile').value=''; };
-  if(!confirm('Import akan menambah barang baru ke cabang '+branchName(currentBranch)+'. Barang yang sudah ada (SKU atau nama sama) tidak ditambah dobel, hanya modal, harga jual, SKU, dan kategorinya yang dilengkapi. Jumlah stok barang yang sudah ada tidak diubah. Lanjutkan?')){ reset(); return; }
+  if(!(await tanya('Import akan menambah barang baru ke cabang '+branchName(currentBranch)+'. Barang yang sudah ada (SKU atau nama sama) tidak ditambah dobel, hanya modal, harga jual, SKU, dan kategorinya yang dilengkapi. Jumlah stok barang yang sudah ada tidak diubah. Lanjutkan?',{ok:'Import'}))){ reset(); return; }
   const run=async rows=>{
     let added=0, updated=0, skipped=0, failed=0;
     const mine=()=>stock.filter(x=>x.branch===currentBranch);
@@ -4081,10 +4112,10 @@ function downloadServiceTemplate(){
     [todayStr(),'Budi','081234567890','iPhone 11','Ganti LCD',300000,'Selesai','Lunas']
   ], 'Template_Import_Transaksi.csv');
 }
-function importServiceCSV(file){
+async function importServiceCSV(file){
   if(!file) return;
   if(demoTolakImpor()) return;
-  if(!confirm('Import transaksi ini TIDAK memotong stok sparepart (dianggap data riwayat lama). Lanjutkan import ke cabang '+branchName(currentBranch)+'?')) { document.getElementById('importServiceFile').value=''; return; }
+  if(!(await tanya('Import transaksi ini TIDAK memotong stok sparepart (dianggap data riwayat lama). Lanjutkan import ke cabang '+branchName(currentBranch)+'?',{ok:'Import'}))) { document.getElementById('importServiceFile').value=''; return; }
   Papa.parse(file, {
     header:true, skipEmptyLines:true,
     complete: async (result)=>{
@@ -4649,7 +4680,7 @@ async function saveActivity(){
 }
 async function delActivity(id){
   if(currentUser.role!=='owner'){alert('Hanya owner yang bisa hapus catatan aktivitas');return;}
-  if(confirm('Hapus catatan ini?')){
+  if((await tanya('Hapus catatan ini?',{ok:'Hapus',bahaya:true}))){
     activityLog=activityLog.filter(x=>x.id!==id);
     renderAll();
     await dbCall(sb.from('activity_log').delete().eq('id',id), 'hapus aktivitas');
