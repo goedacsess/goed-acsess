@@ -183,7 +183,8 @@
   .demo-bar .demo-count{ background:rgba(255,255,255,.18); border-radius:999px; padding:2px 10px; font-variant-numeric:tabular-nums; }
   /* Login sebagai kartu yang bisa ditutup, bukan layar penuh. Reviewer yang
      tidak sengaja menekan "Akun" harus selalu punya jalan kembali ke aplikasi. */
-  .login-bg.as-card{ background:rgba(10,16,13,.6); padding:20px; }
+  /* Di atas laci menu (600), bilah demo (590), dan modal (620). */
+  .login-bg.as-card{ background:rgba(10,16,13,.6); padding:20px; z-index:650; }
   .login-bg.as-card .login-content{
     position:relative; width:400px; max-width:100%; padding:34px 32px 28px; border-radius:22px;
     background-image:
@@ -1930,6 +1931,8 @@ function masukDemo(){
 /* Kartu login hanya membuka tampilan. Pencocokan kredensial dilakukan server
    lewat Supabase Auth, jadi aplikasi tidak perlu lagi mengunduh daftar user. */
 function keluarDemo(){
+  // Dipanggil dari laci menu di HP: tutup lacinya dulu supaya tidak menutupi kartu login.
+  closeMobileMenu();
   const kartu = document.getElementById('loginScreen');
   kartu.classList.add('as-card');
   kartu.classList.remove('hidden');
