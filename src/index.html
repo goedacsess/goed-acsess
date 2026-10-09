@@ -2953,7 +2953,7 @@ async function saveStock(id){
     if(demoTolakTambah()) return;
     const ns={id:gid(),branch:currentBranch,...d}; stock.push(ns);
     closeModal(); renderAll();
-    await dbCall(sb.from('stock').insert(toDbStock(ns)), 'tambah stok');
+    if(!await dbCall(sb.from('stock').insert(toDbStock(ns)), 'tambah stok')){ stock=stock.filter(x=>x.id!==ns.id); renderAll(); }
   }
 }
 async function delStock(id){
@@ -3156,6 +3156,8 @@ async function saveService(){
     pendingQty.set(partId,alreadyRequested+qty);
     rowsToApply.push({s,partId,partPrice,qty});
   }
+  // Sebelum stok dipotong: kalau ditolak sesudahnya, stok berkurang tanpa transaksi.
+  if(demoTolakTambah()) return;
   for(const {s,partId,partPrice,qty} of rowsToApply){
     s.qty-=qty;
     stockUpdates.push(s);
@@ -3168,7 +3170,6 @@ async function saveService(){
   const revenue=jasa+totalPartPrice;
   const payStatus=val('s_paystatus');
   const paidAmount = payStatus==='belum' ? Math.min(valRp('s_payamount')||0, revenue) : revenue;
-  if(demoTolakTambah()) return;
   const ns={
     id:gid(),branch:currentBranch,inv,date:todayStr(),
     cust:val('s_cust')||'Umum',phone:val('s_phone'),device:val('s_device'),issue:val('s_issue'),
@@ -3379,6 +3380,7 @@ function printNota(id){
   const t=services.find(x=>x.id===id);
   const b=branches.find(x=>x.id===t.branch)||{};
   const w=window.open('','','width=380,height=600');
+  if(!w){ alert('Jendela cetak diblokir. Izinkan pop-up, lalu coba lagi.'); return; }
   let partLines='';
   if(t.parts&&t.parts.length){
     t.parts.forEach(p=>{ partLines+=`<tr><td>${escH(p.partName)}${p.qty>1?' x'+p.qty:''}</td><td class="r">${rp(p.partPrice*(p.qty||1))}</td></tr>`; });
@@ -3579,9 +3581,6 @@ function auditPhysChanged(id){
 function auditNoteChanged(){ auditState.note=document.getElementById('auditNote').value; auditPersist(); auditUpdateFoot(); }
 function auditSaveDraft(){ auditPersist(); auditUpdateFoot(); }
 async function saveAudit(){
-  /* Penjaga dijalankan sebelum stok disentuh: kalau ditolak setelahnya, qty
-     terlanjur berubah tanpa catatan audit yang menjelaskannya. */
-  if(demoTolakTambah()) return;
   const rows=auditState.ids.map(id=>stock.find(s=>s.id===id)).filter(Boolean);
   if(!rows.length){ alert('Pilih minimal satu barang untuk diaudit.'); return; }
   const items=[];
@@ -3593,17 +3592,25 @@ async function saveAudit(){
   }
   const nDiff=items.filter(i=>i.diff!==0).length;
   if(nDiff && !(await tanya(`${nDiff} barang berselisih. Stok sistem akan disesuaikan dengan hitungan fisik. Lanjutkan?`,{ok:'Simpan'}))) return;
+  /* Penjaga dijalankan sebelum stok disentuh: kalau ditolak setelahnya, qty
+     terlanjur berubah tanpa catatan audit yang menjelaskannya. */
+  if(demoTolakTambah()) return;
   const note=auditState.note.trim();
   if(note) items.forEach(i=>{ i.note=note; });
   let stockUpdates=[];
-  items.forEach(it=>{ const s=stock.find(x=>x.id===it.id); if(s){ s.qty=it.physical; stockUpdates.push(s); } });
+  const qtyLama=new Map();
+  items.forEach(it=>{ const s=stock.find(x=>x.id===it.id); if(s){ qtyLama.set(s,s.qty); s.qty=it.physical; stockUpdates.push(s); } });
   const na={id:gid(),branch:currentBranch,date:todayStr(),by:currentUser.name,items};
   audits.unshift(na);
   auditState={branch:currentBranch,ids:[],phys:{},note:'',savedAt:null};
   try{ localStorage.removeItem(auditDraftKey()); }catch(e){}
   document.getElementById('auditNote').value='';
-  alert('Audit tersimpan & stok disesuaikan.'); renderAll();
-  await dbCall(sb.from('audits').insert(toDbAudit(na)), 'simpan audit');
+  renderAll();
+  // Stok di server baru diubah kalau catatan auditnya tersimpan, supaya tidak ada selisih tanpa catatan.
+  if(!await dbCall(sb.from('audits').insert(toDbAudit(na)), 'simpan audit')){
+    audits=audits.filter(x=>x.id!==na.id); qtyLama.forEach((q,s)=>{ s.qty=q; }); renderAll(); return;
+  }
+  alert('Audit tersimpan & stok disesuaikan.');
   await Promise.all(stockUpdates.map(s=>dbCall(sb.from('stock').update({qty:s.qty}).eq('id',s.id), 'update stok dari audit')));
 }
 /* Ubah audit tersimpan seperti Kelola: halaman Stok Audit yang sama dibuka dalam
@@ -3923,7 +3930,7 @@ async function saveExpense(){
   const ne={id:gid(),branch:currentBranch,date:val('e_date')||todayStr(),cat,desc:val('e_desc'),amount:a,paymentMethod:val('e_paymethod')||'Cash'};
   expenses.unshift(ne);
   closeModal(); renderAll();
-  await dbCall(sb.from('expenses').insert(toDbExpense(ne)), 'simpan pengeluaran');
+  if(!await dbCall(sb.from('expenses').insert(toDbExpense(ne)), 'simpan pengeluaran')){ expenses=expenses.filter(x=>x.id!==ne.id); renderAll(); }
 }
 async function delExpense(id){
   if((await tanya('Hapus?',{ok:'Hapus',bahaya:true}))){
@@ -3983,9 +3990,7 @@ function downloadPengeluaran(){
   if(!expShown.length){ alert('Tidak ada data untuk diekspor'); return; }
   const rows=[['Tanggal','Kategori','Catatan','Metode Pembayaran','Nominal']];
   expShown.forEach(e=>rows.push([e.date,e.cat||'',e.desc||'',e.paymentMethod||'Cash',e.amount]));
-  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`Pengeluaran_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`; a.click();
+  downloadCSVFile(rows, `Pengeluaran_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`);
 }
 
 /* ============ EXPORT EXCEL (CSV) ============ */
@@ -4001,16 +4006,27 @@ function exportExcel(type){
   else if(type==='expenses'){ name='Pengeluaran'; rows.push(['Tanggal','Kategori','Keterangan','Jumlah']);
     bExpenses().forEach(e=>rows.push([e.date,e.cat,e.desc||'',e.amount])); }
   if(rows.length<=1){ alert('Tidak ada data untuk diekspor'); return; }
-  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`${name}_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`; a.click();
+  downloadCSVFile(rows, `${name}_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`);
 }
 function downloadCSVFile(rows, filename){
-  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  simpanBerkas(csv, filename, 'text/csv;charset=utf-8;');
+}
+/* WebView aplikasi HP mengabaikan <a download>, jadi di sana berkas ditulis ke
+   cache lalu dibuka lewat menu Bagikan (simpan ke Files/Drive, kirim WA, cetak). */
+async function simpanBerkas(teks, filename, mime){
+  if(isNativeApp()){
+    const Fs=capPlugin('Filesystem');
+    if(!Fs){ alert('Fitur ini butuh aplikasi versi terbaru. Perbarui aplikasi dari Play Store atau App Store.'); return; }
+    try{
+      const f=await Fs.writeFile({path:filename.replace(/[^\w.-]/g,'_'), data:teks, directory:'CACHE', encoding:'utf8'});
+      await notaBagikan({title:filename, files:[f.uri]}, filename);
+    }catch(e){ alert('Gagal menyiapkan '+filename+': '+(e&&e.message||e)); }
+    return;
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([teks],{type:mime}));
   a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),10000);
 }
 
 /* ============ IMPORT CSV: STOK ============ */
@@ -4635,10 +4651,10 @@ function openPayServiceModal(id){
 async function savePayService(id){
   const amount=valRp('pay_amount');
   if(amount<=0){alert('Jumlah harus > 0');return;}
-  const t=services.find(x=>x.id===id);
-  t.paidAmount=Math.min((t.paidAmount||0)+amount, t.revenue);
+  const t=services.find(x=>x.id===id); const lama=t.paidAmount||0;
+  t.paidAmount=Math.min(lama+amount, t.revenue);
   closeModal(); renderAll();
-  await dbCall(sb.from('services').update({paid_amount:t.paidAmount}).eq('id',id), 'catat pembayaran piutang');
+  if(!await dbCall(sb.from('services').update({paid_amount:t.paidAmount}).eq('id',id), 'catat pembayaran piutang')){ t.paidAmount=lama; renderAll(); }
 }
 function openPayPurchaseModal(id){
   const p=purchases.find(x=>x.id===id);
@@ -4651,10 +4667,10 @@ function openPayPurchaseModal(id){
 async function savePayPurchase(id){
   const amount=valRp('pay_amount2');
   if(amount<=0){alert('Jumlah harus > 0');return;}
-  const p=purchases.find(x=>x.id===id);
-  p.paidAmount=Math.min((p.paidAmount||0)+amount, p.total);
+  const p=purchases.find(x=>x.id===id); const lama=p.paidAmount||0;
+  p.paidAmount=Math.min(lama+amount, p.total);
   closeModal(); renderAll();
-  await dbCall(sb.from('purchases').update({paid_amount:p.paidAmount}).eq('id',id), 'catat pembayaran utang');
+  if(!await dbCall(sb.from('purchases').update({paid_amount:p.paidAmount}).eq('id',id), 'catat pembayaran utang')){ p.paidAmount=lama; renderAll(); }
 }
 function renderUtangPiutang(){
   const piutang=bPiutang();
@@ -4939,8 +4955,7 @@ function printLaporanKeuangan(){
   const lr=calcLabaRugi(start,end);
   const ak=calcArusKas(start,end);
   const nc=calcNeraca();
-  const w=window.open('','','width=800,height=900');
-  w.document.write(`<html><head><title>Laporan Keuangan</title><style>
+  const html=`<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan Keuangan</title><style>
     body{font-family:Arial,sans-serif;padding:40px;color:#1a1a1a;}
     h1{font-size:22px;margin-bottom:4px;} h2{font-size:16px;margin:24px 0 10px;border-bottom:2px solid #0F6E56;padding-bottom:6px;}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;}
@@ -4977,7 +4992,12 @@ function printLaporanKeuangan(){
       <tr class="line bold"><td>Total Kewajiban &amp; Modal</td><td class="r">${rp(nc.utang+nc.modal)}</td></tr>
     </table>
     <div class="sub" style="margin-top:30px">Dicetak: ${new Date().toLocaleString('id-ID')}</div>
-  </body></html>`);
+  </body></html>`;
+  // Aplikasi HP tidak punya jendela cetak: bagikan berkasnya, lalu cetak atau simpan dari aplikasi tujuan.
+  if(isNativeApp()){ simpanBerkas(html, `Laporan_Keuangan_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.html`, 'text/html'); return; }
+  const w=window.open('','','width=800,height=900');
+  if(!w){ alert('Jendela cetak diblokir. Izinkan pop-up, lalu coba lagi.'); return; }
+  w.document.write(html);
   w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
 }
 
@@ -5233,9 +5253,7 @@ function downloadRiwayat(){
   const showCost=currentUser.role==='owner'||canAccess('lihat_modal');
   const rows=[['Tanggal','Jenis','Referensi','Pembeli','Vendor','Metode Pembayaran','Status Bayar','Jumlah Barang','Qty / Selisih','Total']];
   riwShown.forEach(e=>rows.push([e.date,RIW_TITLE[e.type],e.ref,e.buyer,e.vendor,e.method,e.pay==='lunas'?'Lunas':e.pay==='belum'?'Belum Lunas':'',e.count,e.qty,e.type==='audit'?'':(e.type==='masuk'&&!showCost?'':e.total)]));
-  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`Riwayat_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`; a.click();
+  downloadCSVFile(rows, `Riwayat_${branchName(currentBranch).replace(/\s/g,'')}_${todayStr()}.csv`);
 }
 
 /* ============ TAMPILAN HP (gaya Kelola) ============
