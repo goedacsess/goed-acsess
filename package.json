@@ -10,7 +10,8 @@
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win --x64 --config.directories.output=dist/win",
     "publish:mac": "electron-builder --mac --publish always",
-    "publish:win": "electron-builder --win --x64 --config.directories.output=dist/win --publish always"
+    "publish:win": "electron-builder --win --x64 --config.directories.output=dist/win --publish always",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@capacitor/android": "^5.7.8",
@@ -21,7 +22,8 @@
     "@capacitor/share": "^5.0.8",
     "@electron/notarize": "^2.3.2",
     "electron": "^31.7.7",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "patch-package": "^8.0.0"
   },
   "build": {
     "appId": "com.iservis.pro",
