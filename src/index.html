@@ -451,9 +451,12 @@
   }
   /* Jendela desktop sempit (mis. aplikasi tidak dimaksimalkan): tabel Kasir butuh
      ~885px, jadi kolom paling kanan terpotong dan tombol hapus hilang di balik gulir.
-     Rapatkan padding dan susun tombol aksi 2 per baris supaya muat. */
+     Rapatkan padding; tombol aksi tetap sebaris selama muat (1200px ke atas),
+     baru disusun 2 per baris lalu 1 per baris di jendela yang lebih sempit. */
   @media(min-width:901px) and (max-width:1439px){
     #transaksiTable th,#transaksiTable td,#piutangTable th,#piutangTable td,#pembelianTable th,#pembelianTable td{ padding-left:12px; padding-right:12px; }
+  }
+  @media(min-width:901px) and (max-width:1199px){
     #transaksiTable .row-actions{ display:grid; grid-template-columns:repeat(2,auto); justify-content:end; gap:6px; }
   }
   @media(min-width:901px) and (max-width:1099px){
@@ -502,11 +505,13 @@
   .exp-fab{ position:fixed; right:32px; bottom:32px; z-index:60; display:inline-flex; align-items:center; gap:8px; height:48px; padding:0 22px; border:0; border-radius:999px; background:var(--primary); color:#fff; font-size:14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-md); }
   .exp-fab:hover{ filter:brightness(1.08); }
   body.demo-on .exp-fab{ bottom:76px; }
-  .exp-mtd{ display:none; }
   @media(max-width:900px){
-    /* Di HP metode bayar cukup tampil sebagai baris "Metode" di kartu; link di bawah
-       catatan dulu ikut tampil sehingga metodenya muncul dua kali. */
-    .exp-table-wrap th,.exp-table-wrap td{ padding:12px 10px; }
+    /* Wadah kartu punya bingkai, jadi isinya perlu jarak dalam sendiri; aturan umum
+       .tbl-stack (padding 0 di samping) dipakai untuk tabel di dalam panel berpadding. */
+    .exp-table-wrap .tbl-stack tr{ padding:12px 14px; }
+    .exp-table-wrap .tbl-stack tr:last-child{ border-bottom:0; }
+    /* Ruang untuk tombol melayang "Tambah Pengeluaran" supaya kartu terakhir tidak tertutup. */
+    #pengeluaran{ padding-bottom:72px; }
     .exp-summary{ grid-template-columns:1fr; padding:20px; gap:16px; }
     .exp-bar{ justify-content:stretch; }
     .exp-bar .cs-wrap,.exp-bar .btn{ flex:1 1 140px; min-width:0; }
@@ -1670,10 +1675,9 @@
         </div>
       </div>
 
-      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:24px">
-
-      <!-- Cek Update - semua user -->
-      <div style="margin-bottom:28px">
+      <!-- Cek Update: hanya di aplikasi desktop; HP diperbarui lewat Play Store / App Store -->
+      <div id="updateSection" class="hidden" style="margin-bottom:28px">
+        <hr style="border:none;border-top:1px solid var(--border);margin-bottom:24px">
         <h3 style="font-size:16px;margin-bottom:14px;color:var(--dark)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>Update Aplikasi</h3>
         <p style="color:var(--gray);font-size:13px;margin-bottom:12px">Versi yang terpasang saat ini: <b id="currentVersionLabel">-</b></p>
         <button class="btn btn-gray" onclick="manualCheckUpdate()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>Cek Update Sekarang</button>
@@ -2335,6 +2339,7 @@ async function manualCheckUpdate(){
   alert('Sedang mengecek update di latar belakang. Kalau ada versi baru, akan otomatis terdownload dan notifikasi hijau muncul di atas.');
 }
 async function loadCurrentVersion(){
+  if(window.electronAPI) document.getElementById('updateSection')?.classList.remove('hidden');
   if(window.electronAPI && window.electronAPI.getAppVersion){
     const v = await window.electronAPI.getAppVersion();
     const el = document.getElementById('currentVersionLabel');
@@ -3982,7 +3987,7 @@ function renderPengeluaran(){
     return `<section class="exp-group"><div class="exp-group-head"><span>${expMonthLabel(k)}<span class="cnt">${g.length}</span></span><span class="sum">${rp(gs)}</span></div>
       <div class="exp-table-wrap"><table class="tbl-stack"><thead><tr><th>Tanggal</th><th>Kategori</th><th>Catatan</th><th class="exp-col-m">Metode</th><th class="num">Nominal</th><th><span class="sr-only">Aksi</span></th></tr></thead><tbody>${g.map(e=>`<tr>
         <td class="td-head" data-l="">${riwDate(e.date)}</td><td data-l="Kategori"><span class="exp-tag"><span class="exp-dot" style="background:${color(e.cat||'Lainnya')}"></span>${escH(e.cat||'Lainnya')}</span></td>
-        <td data-l="Catatan"><span>${escH(e.desc||'-')}<button type="button" class="exp-mtd" onclick="openEditPaymentMethodModal('expense','${e.id}')">${escH(e.paymentMethod||'Cash')}</button></span></td>
+        <td data-l="Catatan"><span>${escH(e.desc||'-')}</span></td>
         <td class="exp-col-m" data-l="Metode"><button type="button" class="btn btn-tool btn-sm" title="Ubah metode pembayaran" onclick="openEditPaymentMethodModal('expense','${e.id}')">${escH(e.paymentMethod||'Cash')}</button></td>
         <td class="num" data-l="Nominal"><b>${rp(e.amount)}</b></td>
         <td class="num td-act"><button type="button" class="btn btn-tool btn-icon" title="Hapus pengeluaran" aria-label="Hapus pengeluaran ${escH(e.cat||'')}" onclick="delExpense('${e.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red-t)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V3h6v3"/></svg></button></td></tr>`).join('')}</tbody></table></div></section>`;
