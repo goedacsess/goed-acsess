@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Skrip dan tombol aplikasi masih inline, jadi 'unsafe-inline' perlu. Yang dibatasi:
+     data hanya boleh dikirim ke server Supabase sendiri dan gambar hanya dari aplikasi,
+     supaya skrip sisipan tidak bisa mengirim sesi login ke server lain. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file: capacitor:; script-src 'self' file: capacitor: 'unsafe-inline'; style-src 'self' file: capacitor: 'unsafe-inline'; img-src 'self' file: capacitor: data: blob:; font-src 'self' file: capacitor: data:; connect-src 'self' file: capacitor: https://bmlvkotnhdogeckfqgmr.supabase.co wss://bmlvkotnhdogeckfqgmr.supabase.co; media-src 'self' blob: mediastream:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
 <title>Goed Access - Kasir Servis iPhone</title>
 <style>
   /* Font dibundel lokal, bukan dari Google Fonts: tampilan tetap sama walau internet
@@ -1788,13 +1792,24 @@ async function dbCall(promise, label, silent){
 
 /* ============ MAPPING JS (camelCase) <-> SUPABASE (snake_case) ============ */
 function toDbUser(u){ return {id:u.id, name:u.name, username:u.user, role:u.role, branch_id:u.branch||null}; }
+/* ID ikut dirangkai ke atribut onclick="...('id')". Data dari server bisa ditulis
+   pengguna lain lewat API, jadi baris dengan ID di luar pola gid() dibuang
+   supaya tanda kutip di ID tidak bisa menyisipkan kode. */
+const idAman = r => !!r && /^[A-Za-z0-9_-]{1,64}$/.test(String(r.id));
 function fromDbUser(r){ return {id:r.id, name:r.name, user:r.username, role:r.role, branch:r.branch_id, authId:r.auth_id}; }
 function fromDbBranch(r){ return {id:r.id, name:r.name, addr:r.addr, phone:r.phone}; }
 function toDbStockInfo(s){ const d=toDbStock(s); delete d.qty; return d; }
 function toDbStock(s){ return {id:s.id, branch_id:s.branch, name:s.name, sku:s.sku, category:s.category||null, qty:s.qty, min_qty:s.min, cost:s.cost, price:s.price}; }
 function fromDbStock(r){ return {id:r.id, branch:r.branch_id, name:r.name, sku:r.sku, category:r.category, qty:r.qty, min:r.min_qty, cost:r.cost, price:r.price}; }
 function toDbService(s){ return {id:s.id, branch_id:s.branch, inv:s.inv, service_date:s.date, cust:s.cust, phone:s.phone, device:s.device, issue:s.issue, parts:s.parts, part_name:s.partName, part_cost:s.partCost, part_price:s.partPrice, jasa:s.jasa, revenue:s.revenue, cogs:s.cogs, status:s.status, paid_amount:s.paidAmount, payment_method:s.paymentMethod}; }
-function fromDbService(r){ return {id:r.id, branch:r.branch_id, inv:r.inv, date:r.service_date, cust:r.cust, phone:r.phone, device:r.device, issue:r.issue, parts:r.parts||[], partName:r.part_name, partCost:r.part_cost, partPrice:r.part_price, jasa:r.jasa, revenue:r.revenue, cogs:r.cogs, status:r.status, paidAmount:r.paid_amount, paymentMethod:r.payment_method}; }
+// parts berupa JSON bebas dari server: paksa angka jadi angka, teks jadi teks.
+function bersihParts(v){
+  const n=x=>Number.isFinite(Number(x))?Number(x):0;
+  return (Array.isArray(v)?v:[]).filter(p=>p&&typeof p==='object').map(p=>({
+    partId:String(p.partId??''), partName:String(p.partName??''), partCost:n(p.partCost), partPrice:n(p.partPrice), qty:Math.max(1,Math.round(n(p.qty)||1))
+  }));
+}
+function fromDbService(r){ return {id:r.id, branch:r.branch_id, inv:r.inv, date:r.service_date, cust:r.cust, phone:r.phone, device:r.device, issue:r.issue, parts:bersihParts(r.parts), partName:r.part_name, partCost:r.part_cost, partPrice:r.part_price, jasa:r.jasa, revenue:r.revenue, cogs:r.cogs, status:r.status, paidAmount:r.paid_amount, paymentMethod:r.payment_method}; }
 function toDbPurchase(p){ return {id:p.id, branch_id:p.branch, purchase_date:p.date, item_id:p.itemId, item_name:p.itemName, qty:p.qty, cost:p.cost, total:p.total, supplier:p.supplier, paid_amount:p.paidAmount, payment_method:p.paymentMethod}; }
 function fromDbPurchase(r){ return {id:r.id, branch:r.branch_id, date:r.purchase_date, itemId:r.item_id, itemName:r.item_name, qty:r.qty, cost:r.cost, total:r.total, supplier:r.supplier, paidAmount:r.paid_amount, paymentMethod:r.payment_method}; }
 function toDbActivity(a){ return {id:a.id, branch_id:a.branch, log_date:a.date, author:a.author, note:a.note}; }
@@ -1806,7 +1821,15 @@ function fromDbAttendance(r){ return {id:r.id, userId:r.user_id, userName:r.user
 function toDbExpense(e){ return {id:e.id, branch_id:e.branch, expense_date:e.date, category:e.cat, description:e.desc, amount:e.amount, payment_method:e.paymentMethod}; }
 function fromDbExpense(r){ return {id:r.id, branch:r.branch_id, date:r.expense_date, cat:r.category, desc:r.description, amount:r.amount, paymentMethod:r.payment_method}; }
 function toDbAudit(a){ return {id:a.id, branch_id:a.branch, audit_date:a.date, audited_by:a.by, items:a.items}; }
-function fromDbAudit(r){ return {id:r.id, branch:r.branch_id, date:r.audit_date, by:r.audited_by, items:r.items||[]}; }
+function fromDbAudit(r){
+  // items berupa JSON bebas dari server: paksa tiap kolom ke tipenya sebelum dipakai di HTML.
+  const n=v=>Number.isFinite(Number(v))?Number(v):0;
+  const items=(Array.isArray(r.items)?r.items:[]).filter(i=>i&&typeof i==='object').map(i=>({
+    ...i, id:String(i.id??''), name:String(i.name??''), note:i.note==null?undefined:String(i.note),
+    system:n(i.system), physical:n(i.physical), diff:n(i.diff)
+  }));
+  return {id:r.id, branch:r.branch_id, date:r.audit_date, by:r.audited_by, items};
+}
 
 /* ============ DATA GLOBAL ============ */
 let branches = [];
@@ -2114,16 +2137,16 @@ async function bootstrapData(){
   const failed=[['cabang',bRes],['user',uRes],['stok',sRes],['servis',svRes],['pembelian',pRes],['pengeluaran',eRes],['audit',aRes],['pengaturan',asRes],['hak akses',kpRes],['aktivitas',alRes],['data wajah',feRes],['absensi',atRes]]
     .filter(([,r])=>r&&r.error).map(([label])=>label);
   if(failed.length) throw new Error('Data gagal dimuat: '+failed.join(', ')+'.');
-  branches  = (bRes.data||[]).map(fromDbBranch);
-  users     = (uRes.data||[]).map(fromDbUser);
-  stock     = (sRes.data||[]).map(fromDbStock);
-  services  = (svRes.data||[]).map(fromDbService);
-  purchases = (pRes.data||[]).map(fromDbPurchase);
-  expenses  = (eRes.data||[]).map(fromDbExpense);
-  audits    = (aRes.data||[]).map(fromDbAudit);
-  activityLog = (alRes.data||[]).map(fromDbActivity);
-  faceEnrollments = (feRes.data||[]).map(fromDbFaceEnroll);
-  attendanceLog = (atRes.data||[]).map(fromDbAttendance);
+  branches  = (bRes.data||[]).filter(idAman).map(fromDbBranch);
+  users     = (uRes.data||[]).filter(idAman).map(fromDbUser);
+  stock     = (sRes.data||[]).filter(idAman).map(fromDbStock);
+  services  = (svRes.data||[]).filter(idAman).map(fromDbService);
+  purchases = (pRes.data||[]).filter(idAman).map(fromDbPurchase);
+  expenses  = (eRes.data||[]).filter(idAman).map(fromDbExpense);
+  audits    = (aRes.data||[]).filter(idAman).map(fromDbAudit);
+  activityLog = (alRes.data||[]).filter(idAman).map(fromDbActivity);
+  faceEnrollments = (feRes.data||[]).filter(idAman).map(fromDbFaceEnroll);
+  attendanceLog = (atRes.data||[]).filter(idAman).map(fromDbAttendance);
   if(asRes.data) appSettings = {name:APP_NAME, icon:asRes.data.app_icon||''};
   if(kpRes.data && kpRes.data.perms) kasirPerms = kpRes.data.perms;
   if(branches.length) currentBranch = branches[0].id;
@@ -2131,6 +2154,7 @@ async function bootstrapData(){
 
 /* ============ REALTIME SYNC ANTAR DEVICE ============ */
 function applyRealtimeChange(arr, payload, fromDbFn){
+  if(payload.eventType!=='DELETE' && !idAman(payload.new)) return;
   if(payload.eventType==='INSERT'){
     const item=fromDbFn(payload.new);
     if(!arr.some(x=>x.id===item.id)) arr.unshift(item);
@@ -2428,7 +2452,7 @@ function renderBranchSelect(){
     return;
   }
   if(currentUser.role==='kasir'){
-    wrap.innerHTML = `<div class="branch-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="4" y="3" width="16" height="18"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><path d="M10 21v-4h4v4"/></svg>${branchName(currentBranch)}</div>`;
+    wrap.innerHTML = `<div class="branch-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="4" y="3" width="16" height="18"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><path d="M10 21v-4h4v4"/></svg>${escH(branchName(currentBranch))}</div>`;
   } else if(currentUser.role==='manajer'){
     const myBranches=(currentUser.branch||'').split(',').map(x=>x.trim()).filter(Boolean);
     const myBranchObjs=branches.filter(b=>myBranches.includes(b.id));
@@ -2574,7 +2598,7 @@ async function delUser(id){
 function renderUserTable(){
   document.getElementById('userTable').innerHTML=`<table class="tbl-stack"><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Cabang</th><th></th></tr></thead><tbody>`+
     users.map(u=>`<tr><td class="td-head" data-l=""><b>${escH(u.name)}</b></td><td data-l="Username">${escH(u.user)}</td><td data-l="Role"><span class="badge ${u.role==='owner'?'badge-ok':u.role==='manajer'?'badge-info':'badge-mid'}">${u.role}</span></td>
-    <td data-l="Cabang">${u.role==='owner'?'<span style="color:var(--gray)">Semua cabang</span>':u.role==='manajer'?(u.branch?u.branch.split(',').map(x=>branchName(x.trim())).join(', '):'-'):branchName(u.branch)}</td>
+    <td data-l="Cabang">${u.role==='owner'?'<span style="color:var(--gray)">Semua cabang</span>':u.role==='manajer'?(u.branch?u.branch.split(',').map(x=>escH(branchName(x.trim()))).join(', '):'-'):escH(branchName(u.branch))}</td>
     <td class="td-act"><div class="row-actions"><button class="btn btn-sm btn-icon btn-gray" title="Edit" onclick="openUserModal('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg></button> <button class="btn btn-sm btn-icon btn-red" title="Hapus" onclick="delUser('${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button></div></td></tr>`).join('')+`</tbody></table>`;
 }
 
@@ -3263,7 +3287,7 @@ function renderTransaksi(q=''){
     <td data-l="Total">${rp(t.revenue)}</td>
     <td data-l="Profit">${showProfit?`<b class="green">${rp(t.revenue-t.cogs)}</b>`:'<span style="color:var(--gray)">-</span>'}</td>
     <td data-l="Metode"><span class="badge badge-mid" style="cursor:pointer" title="Klik untuk ubah" onclick="openEditPaymentMethodModal('service','${t.id}')">${escH(t.paymentMethod||'Cash')}</span></td>
-    <td data-l="Status"><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${t.status||'Antri'}</button></td>
+    <td data-l="Status"><button class="st-pill ${stClass[t.status]||'st-antri'}" onclick="changeStatus('${t.id}')">${escH(t.status||'Antri')}</button></td>
     <td class="td-act"><div class="row-actions">
       <button class="btn btn-sm btn-icon btn-purple" title="Cetak Nota" onclick="printNota('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21V3z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg></button>
       ${showEditDate?`<button class="btn btn-sm btn-icon btn-gray" title="Ubah Tanggal" onclick="openEditDateModal('${t.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>`:''}
@@ -3427,7 +3451,7 @@ function printNota(id){
     <div class="line"></div>
     <table>
       <tr><td><b>TOTAL</b></td><td class="r"><b>${rp(t.revenue)}</b></td></tr>
-      <tr><td class="lbl">Status</td><td class="r">${t.status}</td></tr>
+      <tr><td class="lbl">Status</td><td class="r">${escH(t.status)}</td></tr>
     </table>
     <div class="line"></div>
     <div class="c small">Terima kasih atas kepercayaan Anda.<br>Garansi servis berlaku sesuai ketentuan.<br><br>** ${new Date().toLocaleString('id-ID')} **</div>
@@ -4511,7 +4535,7 @@ function renderDashboard(){
       <td data-l="Customer"><span><b>${escH(t.cust)}</b>${t.phone?`<div class="sub-line">${escH(t.phone)}</div>`:''}</span></td>
       <td data-l="Servis"><span><span style="color:var(--primary-t);font-weight:600">${escH(t.device||'-')}</span><div class="sub-line">${escH(t.issue||'')}</div></span></td>
       <td data-l="Total" style="text-align:right" class="font-mono"><b>${rp(t.revenue)}</b></td>
-      <td data-l="Status" style="text-align:center"><span class="st-pill ${stClass[t.status]||'st-antri'}">${t.status}</span></td>
+      <td data-l="Status" style="text-align:center"><span class="st-pill ${stClass[t.status]||'st-antri'}">${escH(t.status)}</span></td>
     </tr>`).join('')+`</tbody></table>` : '<div class="empty">Belum ada transaksi servis pada periode yang dipilih.</div>';
 
   /* PIPELINE STATUS */
@@ -4625,7 +4649,7 @@ function generateAIReview(){
     </ul></div>
     <div class="ai-section"><span class="ai-tag" style="background:var(--orange)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Peluang Penjualan Tambahan</span><ul>${sales.map(s=>`<li>${s}</li>`).join('')}</ul></div>
     <div class="ai-section"><span class="ai-tag" style="background:#5B6B8C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Ide Konten Promosi</span><ul>${content.map(c=>`<li>${c}</li>`).join('')}</ul></div>
-    <div style="font-size:12px;color:var(--gray);margin-top:10px;border-top:1px solid #eee;padding-top:12px">Review otomatis per ${todayStr()} untuk cabang ${branchName(currentBranch)}. Saran dihasilkan dari pola data transaksi, bukan analisis pasar eksternal.</div>
+    <div style="font-size:12px;color:var(--gray);margin-top:10px;border-top:1px solid #eee;padding-top:12px">Review otomatis per ${todayStr()} untuk cabang ${escH(branchName(currentBranch))}. Saran dihasilkan dari pola data transaksi, bukan analisis pasar eksternal.</div>
   </div>`;
 }
 
@@ -4970,7 +4994,7 @@ function printLaporanKeuangan(){
     td{padding:6px 4px;} .r{text-align:right;} .bold{font-weight:700;} .line{border-top:1px solid #333;}
     .center{text-align:center;} .sub{color:#666;font-size:12px;}
   </style></head><body>
-    <div class="center"><img src="${APP_LOGO}" alt="logo" style="width:60px;height:60px;border-radius:12px;margin-bottom:8px"><h1>${branchName(currentBranch)}</h1><div class="sub">Laporan Keuangan Periode: ${periodLabel}</div></div>
+    <div class="center"><img src="${APP_LOGO}" alt="logo" style="width:60px;height:60px;border-radius:12px;margin-bottom:8px"><h1>${escH(branchName(currentBranch))}</h1><div class="sub">Laporan Keuangan Periode: ${periodLabel}</div></div>
     <h2>Laporan Laba Rugi</h2>
     <table>
       <tr><td>Pendapatan</td><td class="r">${rp(lr.revenue)}</td></tr>

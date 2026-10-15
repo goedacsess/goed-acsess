@@ -39,10 +39,13 @@ ipcMain.handle('quit-and-install', () => {
 });
 // Hanya alamat web dan halaman izin kamera macOS yang boleh dibuka. Skema lain
 // (file:, smb:, ms-msdt:, dll.) bisa menjalankan program di komputer kasir.
+// Alamat web dibatasi ke host yang memang dipakai aplikasi: kalau ada skrip sisipan,
+// ia tidak bisa membuka https://situs-lain/?data=... untuk membocorkan sesi login.
+const HOST_LUAR = new Set(['wa.me', 'api.whatsapp.com', 'github.com']);
 function bolehDibukaDiLuar(url) {
   try {
     const u = new URL(String(url));
-    if (u.protocol === 'https:' || u.protocol === 'http:') return true;
+    if (u.protocol === 'https:') return HOST_LUAR.has(u.hostname);
     return u.protocol === 'x-apple.systempreferences:' && u.href.startsWith('x-apple.systempreferences:com.apple.preference.security');
   } catch (e) { return false; }
 }
@@ -100,9 +103,17 @@ function createWindow() {
   // jadi jendela aplikasi. Alamat web dibuka di browser, sisanya ditolak.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url === '' || url === 'about:blank') return { action: 'allow' };
-    if (/^https?:/i.test(url)) shell.openExternal(url);
+    if (bolehDibukaDiLuar(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
+  // Izin perangkat: hanya kamera untuk absensi wajah. Mikrofon, lokasi, notifikasi,
+  // clipboard, dan lainnya ditolak.
+  const ses = mainWindow.webContents.session;
+  const izinkan = (permission, details) =>
+    permission === 'media' && !(details && details.mediaTypes && details.mediaTypes.some(t => t !== 'video'));
+  ses.setPermissionRequestHandler((wc, permission, callback, details) => callback(izinkan(permission, details)));
+  ses.setPermissionCheckHandler((wc, permission, origin, details) =>
+    permission === 'media' && (!details || !details.mediaType || details.mediaType === 'video'));
   // Halaman utama tidak boleh berpindah ke alamat lain (mis. lewat tautan atau
   // skrip sisipan); hanya muat ulang file aplikasinya sendiri yang diizinkan.
   mainWindow.webContents.on('will-navigate', (event, url) => {
