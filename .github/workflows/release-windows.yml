@@ -1,17 +1,15 @@
 name: Build Windows Installer
 
-# Dipicu manual, atau otomatis saat tag versi didorong.
-# Build macOS tetap dikerjakan di mesin lokal karena sertifikat signing
-# Apple ada di sana dan sengaja tidak disimpan di repo.
+# Hanya dipicu manual (cadangan kalau Mac tidak tersedia). Rilis biasa sudah
+# membangun installer Windows dari Mac lewat `npm run publish:win`; kalau workflow
+# ini juga jalan otomatis saat tag dibuat, dua build berlomba mengunggah .exe dan
+# latest.yml, dan checksum update otomatis bisa tidak cocok.
 on:
   workflow_dispatch:
     inputs:
       tag:
         description: "Tag rilis tujuan, misal v2.4.4"
         required: true
-  push:
-    tags:
-      - "v*"
 
 jobs:
   windows:
