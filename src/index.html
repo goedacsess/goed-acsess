@@ -4806,7 +4806,8 @@ function calcLabaRugi(start,end){
 
 /* Metode bayar diketik bebas ("Cash", "cash", "Tunai"): kelompokkan tanpa beda huruf
    besar/kecil, dan anggap "Tunai" sama dengan "Cash", supaya rinciannya tidak pecah. */
-function labelMetode(m){ const t=String(m||'').trim()||'Cash'; const k=t.toLowerCase(); return (k==='cash'||k==='tunai')?'Cash':t; }
+const METODE_BAKU={cash:'Cash',tunai:'Cash',qris:'QRIS',transfer:'Transfer',tf:'Transfer',edc:'EDC',debit:'Debit',kredit:'Kredit'};
+function labelMetode(m){ const t=String(m||'').trim()||'Cash'; return METODE_BAKU[t.toLowerCase()]||t; }
 function tambahMetode(map,metode,jumlah){
   if(!jumlah) return;
   const nama=labelMetode(metode), k=nama.toLowerCase();
