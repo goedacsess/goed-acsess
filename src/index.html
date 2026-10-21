@@ -2309,14 +2309,19 @@ function initApp(){
   /* Sesi disimpan dan diperbarui oleh pustaka Supabase sendiri. Diberi batas
      waktu pendek karena token yang kedaluwarsa memicu penyegaran lewat
      jaringan, dan itu tidak boleh membuat aplikasi menggantung saat offline. */
-  let sesi = null;
+  let sesi = null, gagalSesi = null;
   try{
     if(sb){
       const r = await withTimeout(sb.auth.getSession(), 6000, 'Sesi tidak terbaca');
       sesi = r && r.data ? r.data.session : null;
+      if(!sesi && r && r.error) gagalSesi = r.error;
     }
-  }catch(e){ console.error('Gagal membaca sesi:', e); sesi = null; }
+  }catch(e){ console.error('Gagal membaca sesi:', e); sesi = null; gagalSesi = e; }
 
+  /* Sesi tersimpan tapi gagal dibaca (jaringan putus saat token diperbarui): jangan
+     buka demo, karena owner akan melihat data contoh dan mengira datanya hilang. */
+  const adaSesiTersimpan = (()=>{ try{ return Object.keys(localStorage).some(k=>/^sb-.+-auth-token$/.test(k)); }catch(e){ return false; } })();
+  if(!sesi && gagalSesi && adaSesiTersimpan){ tampilGagalTerhubung(gagalSesi); return; }
   if(!sesi){ masukDemo(); return; }
 
   try{
@@ -2336,14 +2341,17 @@ function initApp(){
     }
   } catch(err){
     console.error('Boot error:', err);
+    tampilGagalTerhubung(err);
+  }
+})();
+function tampilGagalTerhubung(err){
     document.getElementById('loadingScreen').innerHTML = `<div class="login-card" style="text-align:center">
       <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>Gagal Terhubung</h2>
       <p style="margin-bottom:6px">Tidak bisa terhubung ke server. Pastikan koneksi internet aktif, lalu coba lagi.</p>
       <p style="margin-bottom:16px;font-size:12px;color:#5a6862">${(err&&err.message)?String(err.message).slice(0,160).replace(/</g,'&lt;'):'Penyebab tidak diketahui.'}</p>
       <button class="btn" onclick="location.reload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:5px"><path d="M21 12a9 9 0 11-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>Coba Lagi</button>
     </div>`;
-  }
-})();
+}
 
 /* ============ CEK UPDATE APLIKASI ============ */
 function initUpdateChecker(){
