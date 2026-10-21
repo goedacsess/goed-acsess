@@ -791,6 +791,18 @@
   .lap-table td.num,.lap-table th.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .lap-table tfoot td{ font-weight:700; border-top:2px solid var(--border-strong); border-bottom:0; }
   .lap-table .lap-zero{ color:var(--gray); }
+  .lap-val{ display:flex; align-items:center; gap:4px; }
+  .lap-cell-m{ display:inline-flex; align-items:center; justify-content:flex-end; gap:2px; }
+  .lap-dd{ width:30px; height:30px; margin:-4px -6px -4px 0; border:0; background:none; color:var(--gray); display:inline-flex; align-items:center; justify-content:center; border-radius:50%; cursor:pointer; flex-shrink:0; }
+  .lap-dd:hover{ background:var(--hover-bg); color:var(--text); }
+  .lap-dd svg{ transition:transform .15s var(--ease); }
+  .lap-dd[aria-expanded="true"]{ color:var(--text); }
+  .lap-dd[aria-expanded="true"] svg{ transform:rotate(180deg); }
+  .lap-pop{ position:fixed; z-index:700; min-width:220px; max-width:calc(100vw - 16px); padding:6px 0; background:var(--card-bg); color:var(--text); border:1px solid var(--border-strong); border-radius:10px; box-shadow:var(--shadow-lg); }
+  .lap-pop-row{ display:flex; justify-content:space-between; gap:28px; padding:9px 16px; font-size:14px; }
+  .lap-pop-row span{ color:var(--gray); }
+  .lap-pop-row b{ font-weight:600; font-variant-numeric:tabular-nums; }
+  @media(max-width:900px){ .lap-dd{ width:40px; height:40px; margin:-10px -10px -10px -2px; } }
   @media(max-width:1100px){ .lap-cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:900px){
     /* Kelola: kisi dua kolom rapat tanpa bingkai luar, dipisah garis tipis saja. */
@@ -4784,15 +4796,25 @@ function calcLabaRugi(start,end){
   return {revenue,cogs,grossProfit,expenseByCategory,totalExpense,netProfit,serviceCount:sv.length};
 }
 
+/* Metode bayar diketik bebas ("Cash", "cash", "Tunai"): kelompokkan tanpa beda huruf
+   besar/kecil, dan anggap "Tunai" sama dengan "Cash", supaya rinciannya tidak pecah. */
+function labelMetode(m){ const t=String(m||'').trim()||'Cash'; const k=t.toLowerCase(); return (k==='cash'||k==='tunai')?'Cash':t; }
+function tambahMetode(map,metode,jumlah){
+  if(!jumlah) return;
+  const nama=labelMetode(metode), k=nama.toLowerCase();
+  (map[k]||(map[k]={nama,jumlah:0})).jumlah+=jumlah;
+}
+const urutMetode=map=>Object.values(map).filter(x=>x.jumlah).sort((a,b)=>b.jumlah-a.jumlah);
 function calcArusKas(start,end){
   const sv=bServices().filter(s=>s.date>=start && s.date<=end);
   const pu=bPurchases().filter(p=>p.date>=start && p.date<=end);
   const ex=bExpenses().filter(e=>e.date>=start && e.date<=end);
   const kasMasuk=sv.reduce((a,s)=>a+(s.paidAmount||0),0);
+  const metode={}; sv.forEach(s=>tambahMetode(metode,s.paymentMethod,s.paidAmount||0));
   const kasKeluarBeban=ex.reduce((a,e)=>a+e.amount,0);
   const kasKeluarPembelian=pu.reduce((a,p)=>a+(p.paidAmount||0),0);
   const kasKeluar=kasKeluarBeban+kasKeluarPembelian;
-  return {kasMasuk,kasKeluarBeban,kasKeluarPembelian,kasKeluar,kasBersih:kasMasuk-kasKeluar};
+  return {kasMasuk,kasMasukMetode:urutMetode(metode),kasKeluarBeban,kasKeluarPembelian,kasKeluar,kasBersih:kasMasuk-kasKeluar};
 }
 
 function calcNeraca(){
@@ -4841,6 +4863,7 @@ function renderLaporanKeuangan(){
 
   document.getElementById('arusKasTable').innerHTML = `<table>
     <tr><td>Kas Masuk (dari servis)</td><td style="text-align:right">${rp(ak.kasMasuk)}</td></tr>
+    ${ak.kasMasukMetode.map(m=>`<tr><td style="padding-left:20px;color:var(--gray)">${escH(m.nama)}</td><td style="text-align:right;color:var(--gray)">${rp(m.jumlah)}</td></tr>`).join('')}
     <tr><td>Kas Keluar - Beban Operasional</td><td style="text-align:right">(${rp(ak.kasKeluarBeban)})</td></tr>
     <tr><td>Kas Keluar - Pembelian Stok</td><td style="text-align:right">(${rp(ak.kasKeluarPembelian)})</td></tr>
     <tr style="border-top:1px solid #ddd;font-weight:700"><td>Arus Kas Bersih</td><td style="text-align:right;color:${ak.kasBersih>=0?'var(--green-t)':'var(--red-t)'}">${rp(ak.kasBersih)}</td></tr>
@@ -4904,6 +4927,25 @@ const LAP_INFO={
   stok:['Nilai Stok Terkini','Modal dari seluruh stok yang ada sekarang. Tidak bergantung pada periode yang dipilih.','p',`<svg viewBox="0 0 24 24" ${SVG_O}><path d="M3 9l9-5 9 5"/><path d="M5 9v10M19 9v10M9 12v7M15 12v7"/><path d="M3 21h18"/></svg>`],
   piutang:['Total Piutang','Sisa tagihan pelanggan yang belum dibayar sampai sekarang. Tidak bergantung pada periode yang dipilih.','o',`<svg viewBox="0 0 24 24" ${SVG_O}><path d="M6 3h12M6 21h12"/><path d="M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></svg>`]
 };
+let lapMetodeData={};
+function lapMetodeTutup(){
+  document.querySelectorAll('.lap-pop').forEach(x=>x.remove());
+  document.querySelectorAll('.lap-dd[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));
+}
+function lapMetodePop(btn,key){
+  const sudah=btn.getAttribute('aria-expanded')==='true';
+  lapMetodeTutup(); if(sudah) return;
+  const list=lapMetodeData[key]||[]; if(!list.length) return;
+  const pop=document.createElement('div'); pop.className='lap-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Uang masuk per metode pembayaran');
+  pop.innerHTML=list.map(m=>`<div class="lap-pop-row"><span>${escH(m.nama)}</span><b>${rp(m.jumlah)}</b></div>`).join('');
+  document.body.appendChild(pop); btn.setAttribute('aria-expanded','true');
+  const r=btn.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+  pop.style.left=Math.max(8,Math.min(r.right-w, innerWidth-w-8))+'px';
+  pop.style.top=(r.bottom+6+h>innerHeight-8 ? Math.max(8,r.top-6-h) : r.bottom+6)+'px';
+}
+document.addEventListener('click',e=>{ if(!e.target.closest('.lap-pop,.lap-dd')) lapMetodeTutup(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') lapMetodeTutup(); });
+addEventListener('scroll',lapMetodeTutup,true); addEventListener('resize',lapMetodeTutup);
 function lapInfo(k){
   const i=LAP_INFO[k]; if(!i) return;
   showModal(`<h3>${i[0]}</h3><p style="font-size:14px;line-height:1.6;margin-bottom:16px">${i[1]}</p><div class="flex-row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">Mengerti</button></div>`);
@@ -4922,9 +4964,9 @@ function lapEnumerate(start,end,group){
 }
 function lapBuckets(start,end,group){
   const keyOf=d=>group==='bulan'?String(d).slice(0,7):d;
-  const map=new Map(lapEnumerate(start,end,group).map(k=>[k,{key:k,penjualan:0,masuk:0,beli:0,keluar:0,kotor:0}]));
+  const map=new Map(lapEnumerate(start,end,group).map(k=>[k,{key:k,penjualan:0,masuk:0,beli:0,keluar:0,kotor:0,metode:{}}]));
   const inRange=d=>d>=start&&d<=end;
-  bServices().forEach(s=>{ const b=inRange(s.date)&&map.get(keyOf(s.date)); if(b){ b.penjualan+=s.revenue||0; b.masuk+=s.paidAmount||0; b.kotor+=(s.revenue||0)-(s.cogs||0); } });
+  bServices().forEach(s=>{ const b=inRange(s.date)&&map.get(keyOf(s.date)); if(b){ b.penjualan+=s.revenue||0; b.masuk+=s.paidAmount||0; tambahMetode(b.metode,s.paymentMethod,s.paidAmount||0); b.kotor+=(s.revenue||0)-(s.cogs||0); } });
   bPurchases().forEach(p=>{ const b=inRange(p.date)&&map.get(keyOf(p.date)); if(b) b.beli+=p.total||0; });
   bExpenses().forEach(x=>{ const b=inRange(x.date)&&map.get(keyOf(x.date)); if(b) b.keluar+=x.amount||0; });
   return [...map.values()].map(b=>({...b,profit:b.kotor-b.keluar}));
@@ -4941,7 +4983,11 @@ function renderLapOverview(period,start,end,nc){
   document.getElementById('lapNote').innerHTML=`<svg class="lap-note-ic" width="18" height="18" viewBox="0 0 24 24" ${SVG_O}><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg>`+'<span>Angka dihitung untuk cabang <b id="lapBranchName">'+escH(branchName(currentBranch))+'</b>.'+(forced?' Rentangnya lebih dari '+LAP_MAX_DAYS+' hari, jadi ditampilkan per bulan.':'')+'</span>';
   const rows=lapBuckets(start,end,group);
   const t=rows.reduce((a,b)=>({penjualan:a.penjualan+b.penjualan,masuk:a.masuk+b.masuk,beli:a.beli+b.beli,keluar:a.keluar+b.keluar,kotor:a.kotor+b.kotor,profit:a.profit+b.profit}),{penjualan:0,masuk:0,beli:0,keluar:0,kotor:0,profit:0});
-  const card=(k,val,cls='')=>`<div class="stat-card lap-card"><div class="stat-head"><span class="lap-ic ${LAP_INFO[k][2]}">${LAP_INFO[k][3]}</span><div class="label">${LAP_INFO[k][0]}</div><button type="button" class="lap-i" onclick="lapInfo('${k}')" aria-label="Arti ${LAP_INFO[k][0]}"><svg width="16" height="16" viewBox="0 0 24 24" ${SVG_O}><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg></button></div><div class="value ${cls}">${rp(val)}</div></div>`;
+  // Rincian uang masuk per metode, dibuka lewat tombol panah seperti di Kelola.
+  const metodeTotal={}; rows.forEach(b=>Object.values(b.metode).forEach(m=>tambahMetode(metodeTotal,m.nama,m.jumlah)));
+  lapMetodeData={total:urutMetode(metodeTotal)}; rows.forEach(b=>{ lapMetodeData[b.key]=urutMetode(b.metode); });
+  const tombolMetode=key=>(lapMetodeData[key]||[]).length?`<button type="button" class="lap-dd" onclick="lapMetodePop(this,'${key}')" aria-expanded="false" aria-label="Rincian uang masuk per metode pembayaran"><svg width="16" height="16" viewBox="0 0 24 24" ${SVG_O}><polyline points="6 9 12 15 18 9"/></svg></button>`:'';
+  const card=(k,val,cls='')=>`<div class="stat-card lap-card"><div class="stat-head"><span class="lap-ic ${LAP_INFO[k][2]}">${LAP_INFO[k][3]}</span><div class="label">${LAP_INFO[k][0]}</div><button type="button" class="lap-i" onclick="lapInfo('${k}')" aria-label="Arti ${LAP_INFO[k][0]}"><svg width="16" height="16" viewBox="0 0 24 24" ${SVG_O}><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/></svg></button></div><div class="value lap-val ${cls}">${rp(val)}${k==='masuk'?tombolMetode('total'):''}</div></div>`;
   document.getElementById('lapCards').innerHTML=
     card('penjualan',t.penjualan)+card('masuk',t.masuk)+card('beli',t.beli)+card('keluar',t.keluar,t.keluar?'red':'')+
     card('kotor',t.kotor,t.kotor<0?'red':'green')+card('bersih',t.profit,t.profit<0?'red':'green')+card('stok',nc.nilaiStok)+card('piutang',nc.piutang,nc.piutang?'orange':'');
@@ -4958,7 +5004,7 @@ function renderLapOverview(period,start,end,nc){
   document.getElementById('lapTable').innerHTML=!anyData
     ?'<div class="empty">Belum ada transaksi pada periode ini.</div>'
     :`<table class="lap-table tbl-stack"><thead><tr><th>${group==='bulan'?'Bulan':'Tanggal'}</th><th class="num">Total Penjualan</th><th class="num">Uang Masuk</th><th class="num">Total Pembelian</th><th class="num">Pengeluaran</th><th class="num">Profit Bersih</th></tr></thead><tbody>${
-      [...rows].reverse().map(b=>`<tr><td class="td-head" data-l=""><b>${label(b.key)}</b></td><td class="num" data-l="Total Penjualan">${cell(b.penjualan)}</td><td class="num" data-l="Uang Masuk">${cell(b.masuk)}</td><td class="num" data-l="Total Pembelian">${cell(b.beli)}</td><td class="num ${b.keluar?'red':''}" data-l="Pengeluaran">${cell(b.keluar)}</td><td class="num ${b.profit<0?'red':b.profit>0?'green':''}" data-l="Profit Bersih">${cell(b.profit)}</td></tr>`).join('')
+      [...rows].reverse().map(b=>`<tr><td class="td-head" data-l=""><b>${label(b.key)}</b></td><td class="num" data-l="Total Penjualan">${cell(b.penjualan)}</td><td class="num" data-l="Uang Masuk"><span class="lap-cell-m">${cell(b.masuk)}${b.masuk?tombolMetode(b.key):''}</span></td><td class="num" data-l="Total Pembelian">${cell(b.beli)}</td><td class="num ${b.keluar?'red':''}" data-l="Pengeluaran">${cell(b.keluar)}</td><td class="num ${b.profit<0?'red':b.profit>0?'green':''}" data-l="Profit Bersih">${cell(b.profit)}</td></tr>`).join('')
     }</tbody><tfoot class="stack-foot"><tr><td class="td-head" data-l="">Total</td><td class="num" data-l="Total Penjualan">${rp(t.penjualan)}</td><td class="num" data-l="Uang Masuk">${rp(t.masuk)}</td><td class="num" data-l="Total Pembelian">${rp(t.beli)}</td><td class="num" data-l="Pengeluaran">${rp(t.keluar)}</td><td class="num ${t.profit<0?'red':'green'}" data-l="Profit Bersih">${rp(t.profit)}</td></tr></tfoot></table>`;
   const periodLabel=period==='custom'?`${riwDate(start)} sampai ${riwDate(end)}`:document.getElementById('lapPeriod').selectedOptions[0].text;
   document.getElementById('lapChartTitle').textContent='Ringkasan '+periodLabel+', '+(group==='bulan'?'per bulan':'per hari');
@@ -5007,6 +5053,7 @@ function printLaporanKeuangan(){
     <h2>Laporan Arus Kas (Sederhana)</h2>
     <table>
       <tr><td>Kas Masuk (dari servis)</td><td class="r">${rp(ak.kasMasuk)}</td></tr>
+      ${ak.kasMasukMetode.map(m=>`<tr><td style="padding-left:16px;color:#555">${escH(m.nama)}</td><td class="r" style="color:#555">${rp(m.jumlah)}</td></tr>`).join('')}
       <tr><td>Kas Keluar - Beban Operasional</td><td class="r">(${rp(ak.kasKeluarBeban)})</td></tr>
       <tr><td>Kas Keluar - Pembelian Stok</td><td class="r">(${rp(ak.kasKeluarPembelian)})</td></tr>
       <tr class="line bold"><td>ARUS KAS BERSIH</td><td class="r">${rp(ak.kasBersih)}</td></tr>
