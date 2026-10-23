@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- Skrip dan tombol aplikasi masih inline, jadi 'unsafe-inline' perlu. Yang dibatasi:
      data hanya boleh dikirim ke server Supabase sendiri dan gambar hanya dari aplikasi,
      supaya skrip sisipan tidak bisa mengirim sesi login ke server lain. -->
@@ -1176,6 +1176,24 @@
     .btn-icon{ width:28px; height:28px; }
     .btn-icon svg{ width:14px; height:14px; }
     .row-actions{ gap:4px; }
+  }
+  /* iPhone/iPad: viewport-fit=cover menggambar aplikasi sampai ke bawah status bar
+     dan garis home, jadi setiap lapisan memberi jarak sebesar area aman. Di desktop dan
+     Android (WebView sudah diberi jarak oleh MainActivity) nilainya 0. */
+  .sidebar{ padding-top:calc(16px + env(safe-area-inset-top,0px)); }
+  .main{ padding-top:env(safe-area-inset-top,0px); }
+  .modal-bg,.dlg-bg,.login-bg{ padding-top:calc(20px + env(safe-area-inset-top,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px)); }
+  .modal{ max-height:min(90vh, calc(100vh - 40px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); }
+  @media(max-width:900px){
+    /* Isi yang digulir tidak boleh terlihat di bawah jam dan sinyal. */
+    body::after{ content:''; position:fixed; left:0; right:0; top:0; height:env(safe-area-inset-top,0px); background:var(--bg); z-index:590; pointer-events:none; }
+    body[data-page=dashboard]::after{ background:var(--primary); }
+    /* Beranda HP: hero hijau sudah memberi jarak status bar sendiri. */
+    body[data-page=dashboard] .main{ padding-top:0; }
+    /* Huruf 16px supaya iOS tidak memperbesar layar saat kolom isian diketuk. Sengaja
+       !important: beberapa kolom (login, tanggal kustom) punya ukuran sendiri yang lebih
+       spesifik, dan satu kolom kecil saja cukup membuat seluruh halaman ter-zoom. */
+    input,select,textarea,.cs-btn{ font-size:16px !important; }
   }
 </style>
 </head>
@@ -2853,7 +2871,7 @@ if(/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent||'')){ const k
     const need=Math.min(pop.scrollHeight+2,300);
     const up=below<need&&above>below;
     pop.style.minWidth=Math.max(r.width,160)+'px';
-    pop.style.left=Math.min(r.left,innerWidth-pop.offsetWidth-8)+'px';
+    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-pop.offsetWidth-8))+'px';
     pop.style.maxHeight=Math.max(120,Math.min(300,up?above:below))+'px';
     pop.style.top=up?'auto':(r.bottom+4)+'px';
     pop.style.bottom=up?(innerHeight-r.top+4)+'px':'auto';
