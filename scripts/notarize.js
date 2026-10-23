@@ -15,7 +15,6 @@ exports.default = async function notarizing(context) {
 
   console.log(`Notarizing ${appPath}... (bisa makan waktu beberapa menit)`);
   await notarize({
-    tool: 'notarytool',
     appPath,
     appleId: process.env.APPLE_ID,
     appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
