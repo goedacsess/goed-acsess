@@ -10,6 +10,21 @@ const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 
+// IPC hanya boleh dipanggil oleh halaman aplikasi sendiri di jendela utama, bukan
+// dari jendela cetak atau halaman lain yang mungkin termuat.
+function dariAplikasi(event) {
+  try {
+    return !!mainWindow && event.sender === mainWindow.webContents &&
+      !!event.senderFrame && event.senderFrame.url.startsWith('file://');
+  } catch (e) { return false; }
+}
+const _handle = ipcMain.handle.bind(ipcMain);
+ipcMain.handle = (channel, fn) => _handle(channel, (event, ...args) => {
+  if (!dariAplikasi(event)) throw new Error('IPC ditolak: pengirim tidak dikenal');
+  return fn(event, ...args);
+});
+
+
 /* ============ AUTO UPDATE (download + install otomatis via GitHub Releases) ============ */
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
