@@ -4967,8 +4967,11 @@ function lapMetodePop(btn,key){
   pop.innerHTML=list.map(m=>`<div class="lap-pop-row"><span>${escH(m.nama)}</span><b>${rp(m.jumlah)}</b></div>`).join('');
   document.body.appendChild(pop); btn.setAttribute('aria-expanded','true');
   const r=btn.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+  // Di HP, menu bawah dan bilah mode demo menempel di bawah layar: jangan tutupi keduanya.
+  const bawah=['tabbar','demoBar'].map(id=>document.getElementById(id)).filter(el=>el&&el.getClientRects().length&&getComputedStyle(el).position==='fixed')
+    .reduce((b,el)=>Math.min(b,el.getBoundingClientRect().top),innerHeight);
   pop.style.left=Math.max(8,Math.min(r.right-w, innerWidth-w-8))+'px';
-  pop.style.top=(r.bottom+6+h>innerHeight-8 ? Math.max(8,r.top-6-h) : r.bottom+6)+'px';
+  pop.style.top=(r.bottom+6+h>bawah-8 ? Math.max(8,r.top-6-h) : r.bottom+6)+'px';
 }
 document.addEventListener('click',e=>{ if(!e.target.closest('.lap-pop,.lap-dd')) lapMetodeTutup(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') lapMetodeTutup(); });
