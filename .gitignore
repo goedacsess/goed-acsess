@@ -19,3 +19,12 @@ latest.yml
 
 # Duplikat lama src/index.html, jangan dibuat lagi di root
 /index.html
+
+# File pribadi di Mac ini, jangan pernah commit
+.claude/launch.json
+.claude/worktrees/
+github-recovery-codes.txt
+*.mov
+*.MOV
+*.mp4
+*.MP4
